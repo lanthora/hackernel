@@ -1,4 +1,5 @@
 #include "netlink.h"
+#include "syscall.h"
 #include <linux/init.h>
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -15,6 +16,7 @@ static int init(void)
 
 static void cleanup(void)
 {
+	restore_sys_call();
 	netlink_kernel_stop();
 	return;
 }

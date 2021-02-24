@@ -1,4 +1,5 @@
 #include "netlink.h"
+#include "syscall.h"
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <net/genetlink.h>
@@ -8,6 +9,7 @@ static struct genl_family genl_family;
 
 static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
 	[HACKERNEL_A_MSG] = { .type = NLA_STRING },
+	[HACKERNEL_A_SYS_CALL_TABLE] = { .type = NLA_U64 },
 };
 
 static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
@@ -15,39 +17,63 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 	char *msg;
 	struct sk_buff *reply;
 	void *reply_head;
+	char reply_msg[64] = { 0 };
 	int error = -ENOMEM;
+	unsigned long long sys_call_table;
 
+	// 	检查权限
 	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
 		error = -EPERM;
 		goto out;
 	}
+
+	// 检查参数
 	if (!info->attrs[HACKERNEL_A_MSG]) {
 		error = -EINVAL;
 		goto out;
 	}
+	if (!info->attrs[HACKERNEL_A_SYS_CALL_TABLE]) {
+		error = -EINVAL;
+		goto out;
+	}
+
+	// 处理 HACKERNEL_A_MSG 属性
 	msg = (char *)nla_data(info->attrs[HACKERNEL_A_MSG]);
 	printk(KERN_INFO "hackernel: recv: %s\n", msg);
 
+	// 使用用户态传递的 HACKERNEL_A_SYS_CALL_TABLE 初始化系统调用表
+
+	sys_call_table =
+		*(u64 *)nla_data(info->attrs[HACKERNEL_A_SYS_CALL_TABLE]);
+	error = init_sys_call_table(sys_call_table);
+	if (error) {
+		printk(KERN_ERR "hackernel: init_sys_call_table failed\n");
+		strcpy(reply_msg, "init_sys_call_table failed");
+	} else {
+		printk(KERN_INFO "hackernel: init_sys_call_table: %llx\n",
+		       sys_call_table);
+		strcpy(reply_msg, "init_sys_call_table success");
+	}
+	replace_sys_call();
+	// 回传握手结果
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 	if (!reply) {
 		goto out;
 	}
-
 	reply_head = genlmsg_put_reply(reply, info, &genl_family, 0,
 				       HACKERNEL_C_HANDSHAKE);
 	if (!reply_head) {
 		nlmsg_free(reply);
 		goto out;
 	}
-
-	error = nla_put_string(reply, HACKERNEL_A_MSG, "world");
+	error = nla_put_string(reply, HACKERNEL_A_MSG, reply_msg);
 	if (error) {
 		nlmsg_free(reply);
 		goto out;
 	}
-	printk(KERN_INFO "hackernel: send: world\n");
-
+	printk(KERN_INFO "hackernel: send: %s\n", reply_msg);
 	genlmsg_end(reply, reply_head);
+
 	error = genlmsg_reply(reply, info);
 
 out:

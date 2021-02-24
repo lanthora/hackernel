@@ -1,4 +1,5 @@
 #include "netlink.h"
+#include "syscall.h"
 #include <linux/genetlink.h>
 #include <netlink/attr.h>
 #include <netlink/genl/ctrl.h>
@@ -11,6 +12,7 @@
 /* 指定头文件属性的类型 */
 static struct nla_policy hackernel_genl_policy[HACKERNEL_A_MAX + 1] = {
     [HACKERNEL_A_MSG] = {.type = NLA_STRING},
+    [HACKERNEL_A_SYS_CALL_TABLE] = {.type = NLA_U64},
 };
 
 /* 配合libnl-genl库实现的回调函数 */
@@ -64,7 +66,11 @@ int main() {
   genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
               HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
   nla_put_string(msg, HACKERNEL_A_MSG, "hello");
-  printf("send: hello\n");
+
+  unsigned long sys_call_table;
+  check_sys_call_table_addr(&sys_call_table);
+  nla_put_u64(msg, HACKERNEL_A_SYS_CALL_TABLE, sys_call_table);
+  printf("send: sys_call_table: %p\n", sys_call_table);
   nl_send_auto(nlsock, msg);
   nlmsg_free(msg);
 
