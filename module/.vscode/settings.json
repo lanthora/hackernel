@@ -1,14 +1,15 @@
 {
-        "files.associations": {
+	"files.associations": {
 		"init.h": "c",
 		"netlink.h": "c",
 		"module.h": "c",
 		"kernel.h": "c",
 		"net_namespace.h": "c",
 		"genetlink.h": "c",
-		"genl.h": "c"
+		"genl.h": "c",
+		"kallsyms.h": "c"
 	},
-        "editor.insertSpaces": false,
+	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
 	"C_Cpp.clang_format_sortIncludes": true
 }
