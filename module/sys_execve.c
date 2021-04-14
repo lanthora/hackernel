@@ -1,5 +1,6 @@
 #include "sys_execve.h"
 #include "syscall.h"
+#include "util.h"
 #include <linux/syscalls.h>
 
 static sys_call_ptr_t real_execve = NULL;
@@ -16,6 +17,7 @@ asmlinkage u64 custom_execve(const struct pt_regs *regs)
 	envp = (char **)regs->dx;
 
 	printk("hackernel: filename=%s", pathname);
+	printk("hackernel: argv count=%d", argc(argv));
 	return real_execve(regs);
 }
 
