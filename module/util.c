@@ -5,6 +5,7 @@ uint8_t argc(char **argv)
 	char *current_argv = *argv;
 	while (current_argv && count != (uint8_t)(-1)) {
 		++count;
+		current_argv = ++argv;
 	}
 	return count;
 }
