@@ -3,6 +3,6 @@
 
 #include <linux/kernel.h>
 
-uint8_t argc(char **argv);
+static int count_strings(const char *const *argv);
 
 #endif

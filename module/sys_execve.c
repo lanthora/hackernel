@@ -11,13 +11,13 @@ asmlinkage u64 custom_execve(const struct pt_regs *regs)
 	// 这种指针最后一个指针指向一个空字符串 "\0"
 	char **argv;
 	char **envp;
-	
+
 	pathname = (char *)regs->di;
 	argv = (char **)regs->si;
 	envp = (char **)regs->dx;
 
 	printk("hackernel: filename=%s", pathname);
-	printk("hackernel: argv count=%d", argc(argv));
+	printk("hackernel: argv count=%d", count_strings(argv));
 	return real_execve(regs);
 }
 

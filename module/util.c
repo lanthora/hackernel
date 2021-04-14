@@ -1,11 +1,18 @@
 #include "util.h"
-uint8_t argc(char **argv)
+#include <linux/kernel.h>
+#include <uapi/asm-generic/errno-base.h>
+#include <uapi/linux/binfmts.h>
+
+static int count_strings(const char *const *argv)
 {
-	uint8_t count = 0;
-	char *current_argv = *argv;
-	while (current_argv && count != (uint8_t)(-1)) {
-		++count;
-		current_argv = ++argv;
+	int i;
+
+	if (!argv)
+		return 0;
+
+	for (i = 0; argv[i]; ++i) {
+		if (i >= MAX_ARG_STRINGS)
+			return -E2BIG;
 	}
-	return count;
+	return i;
 }
