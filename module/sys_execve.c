@@ -14,6 +14,7 @@ asmlinkage u64 custom_execve(const struct pt_regs *regs)
 
 	printk("hackernel: filename=%s", pathname);
 	printk("hackernel: argv count=%d", count_strings(argv));
+	printk("hackernel: envp count=%d", count_strings(envp));
 	return real_execve(regs);
 }
 
