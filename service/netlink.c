@@ -68,7 +68,10 @@ int main() {
   nla_put_string(msg, HACKERNEL_A_MSG, "hello");
 
   unsigned long sys_call_table;
-  check_sys_call_table_addr(&sys_call_table);
+  if (init_sys_call_table_addr(&sys_call_table)) {
+    printf("init_sys_call_table_addr failed. exit now!\n");
+    exit(1);
+  }
   nla_put_u64(msg, HACKERNEL_A_SYS_CALL_TABLE, sys_call_table);
   printf("send: sys_call_table: %p\n", sys_call_table);
   nl_send_auto(nlsock, msg);

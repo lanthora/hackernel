@@ -9,23 +9,29 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int check_sys_call_table_addr(unsigned long *sys_call_table) {
+int init_sys_call_table_addr(unsigned long *sys_call_table) {
   int retval = -1;
   char line[128];
+
   if (sys_call_table == NULL) {
     return retval;
   }
+
+  *sys_call_table = 0UL;
+
   FILE *kallsyms = fopen("/proc/kallsyms", "r");
   if (kallsyms == NULL) {
     return retval;
   }
+
   while (fgets(line, sizeof(line), kallsyms)) {
-    if (!strstr(line, " sys_call_table")) continue;
+    if (!strstr(line, " sys_call_table"))
+      continue;
     sscanf(line, "%lx", sys_call_table);
-    retval = 0;
   }
+
   fclose(kallsyms);
-  return retval;
+  return !*sys_call_table;
 }
 
 int insmod(const char *filename) {
@@ -36,20 +42,25 @@ int insmod(const char *filename) {
   int image_size = 0;
 
   fd = open(filename, O_RDONLY);
-  if (fd < 0) goto out;
+  if (fd < 0)
+    goto out;
 
   error = fstat(fd, &st);
-  if (error) goto closefd;
+  if (error)
+    goto closefd;
 
   image_size = st.st_size;
   image = malloc(image_size);
-  if (!image) goto closefd;
+  if (!image)
+    goto closefd;
 
   error = read(fd, image, image_size);
-  if (error < 0) goto freemem;
+  if (error < 0)
+    goto freemem;
 
   error = syscall(__NR_init_module, image, image_size, "");
-  if (error) goto freemem;
+  if (error)
+    goto freemem;
 
   error = 0;
 freemem:
