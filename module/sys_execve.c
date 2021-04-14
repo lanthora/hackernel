@@ -6,7 +6,16 @@ static sys_call_ptr_t real_execve = NULL;
 
 asmlinkage u64 custom_execve(const struct pt_regs *regs)
 {
-	printk("hackernel: custom_execve");
+	char *pathname;
+	// 这种指针最后一个指针指向一个空字符串 "\0"
+	char **argv;
+	char **envp;
+	
+	pathname = (char *)regs->di;
+	argv = (char **)regs->si;
+	envp = (char **)regs->dx;
+
+	printk("hackernel: filename=%s", pathname);
 	return real_execve(regs);
 }
 
