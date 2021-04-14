@@ -27,10 +27,24 @@ void restore_sys_call(void)
 	}
 }
 
-void enable_write_protection(void)
+static inline void
+write_cr0_forced(unsigned long val)
 {
+    unsigned long __force_order;
+
+    asm volatile(
+        "mov %0, %%cr0"
+        : "+r"(val), "+m"(__force_order));
 }
 
-void disable_write_protection(void)
+void enable_write_protect(void)
 {
+	write_cr0_forced(read_cr0() & (~0x10000));
+	return;
+}
+
+void disable_write_protect(void)
+{
+	write_cr0_forced(read_cr0() & ~0x00010000);
+	return;
 }

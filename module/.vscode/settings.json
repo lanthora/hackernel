@@ -7,7 +7,8 @@
 		"net_namespace.h": "c",
 		"genetlink.h": "c",
 		"genl.h": "c",
-		"kallsyms.h": "c"
+		"kallsyms.h": "c",
+		"syscall.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

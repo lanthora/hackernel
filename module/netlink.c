@@ -54,6 +54,8 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 		       sys_call_table);
 		strcpy(reply_msg, "init_sys_call_table success");
 	}
+
+	// 在这里直接替换系统调用，这是在做测试，真实使用场景需要根据发送过来的命令进行处理
 	replace_sys_call();
 	// 回传握手结果
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
