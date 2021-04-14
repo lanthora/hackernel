@@ -3,7 +3,7 @@
 #include <uapi/asm-generic/errno-base.h>
 #include <uapi/linux/binfmts.h>
 
-static int count_strings(const char *const *argv)
+int count_strings(const char *const *argv)
 {
 	int i;
 

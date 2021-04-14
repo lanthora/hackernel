@@ -3,6 +3,6 @@
 
 #include <linux/kernel.h>
 
-static int count_strings(const char *const *argv);
+int count_strings(const char *const *argv);
 
 #endif
