@@ -9,7 +9,8 @@
 		"genl.h": "c",
 		"kallsyms.h": "c",
 		"syscall.h": "c",
-		"limits.h": "c"
+		"limits.h": "c",
+		"errno-base.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
