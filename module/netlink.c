@@ -56,7 +56,10 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 	}
 
 	// 在这里直接替换系统调用，这是在做测试，真实使用场景需要根据发送过来的命令进行处理
-	replace_sys_call();
+	if(!error){
+		replace_sys_call();
+	}
+	
 	// 回传握手结果
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 	if (!reply) {
