@@ -9,40 +9,58 @@ static sys_call_ptr_t real_execve = NULL;
 static int sys_evecve(char __user *pathname, char __user *__user *argv,
 		      char __user *__user *envp)
 {
-	char path[PATH_SIZE];
-	char *params, *cursor;
-	long size, idx, remain;
+	char *path = NULL, *params = NULL, *cursor;
+	long idx, remain, size;
+	unsigned long lack_size;
+	int error = 0;
 
-	size = strncpy_from_user((char *)&path, pathname, PATH_SIZE);
-	if (!size) {
-		printk(KERN_ERR "read pathname from user failed! pathname=%p\n",
-		       pathname);
-		return -1;
+	path = kzalloc(PATH_MAX, GFP_KERNEL);
+	if (!path) {
+		printk(KERN_ERR "hackernel: kmalloc path failed!\n");
+		error = -1;
+		goto out;
 	}
 
-	params = kzalloc(BUFFSIZE, GFP_KERNEL);
+	lack_size = copy_from_user(path, pathname, strnlen_user(pathname, PATH_MAX));
+	if (lack_size) {
+		printk(KERN_ERR "hackernel: read pathname from user failed! pathname=%p\n",
+		       pathname);
+		error = -1;
+		goto out;
+	}
+	printk(KERN_INFO "hackernel: path=%s\n", path);
+
+	params = kzalloc(ARG_MAX, GFP_KERNEL);
+	if (!params) {
+		printk(KERN_ERR "hackernel: kmalloc params failed!\n");
+		error = -1;
+		goto out;
+	}
 
 	for (idx = 0, size = 0, cursor = params; argv[idx]; ++idx) {
-		remain = BUFFSIZE - (cursor - params);
+		remain = ARG_MAX - (cursor - params);
 		if (remain <= 0) {
 			printk(KERN_WARNING
 			       "hackernel: the parameter is too long and is truncated\n");
 			break;
 		}
-		size = strncpy_from_user(cursor, argv[idx], remain);
-		if (!size) {
-			printk(KERN_ERR "read argv from user failed! argv=%p\n",
+		size = strnlen_user(argv[idx], remain);
+		lack_size = copy_from_user(cursor, argv[idx],size);
+		if (lack_size) {
+			printk(KERN_ERR "hackernel: read argv from user failed! argv=%p\n",
 			       argv);
 			break;
 		}
 		cursor += size;
-		*(cursor++) = ' ';
+		*(cursor-1) = ' ';
 	}
-	*(cursor-1) = 0;
 
-	//printk(KERN_INFO "hackernel: cmd[%ld]=%s\n", cursor-params, params);
+	printk(KERN_INFO "hackernel: cmd=%s\n", params);
+
+out:
+	kfree(path);
 	kfree(params);
-	return 0;
+	return error;
 }
 
 asmlinkage u64 raw_sys_execve(struct pt_regs *regs)
@@ -50,10 +68,11 @@ asmlinkage u64 raw_sys_execve(struct pt_regs *regs)
 	char *pathname = (char *)regs->di;
 	char **argv = (char **)regs->si;
 	char **envp = (char **)regs->dx;
-	
+
 	if (sys_evecve(pathname, argv, envp)) {
+		restore_execve();
 	}
-	
+
 	return real_execve(regs);
 }
 
