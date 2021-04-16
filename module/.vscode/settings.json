@@ -10,7 +10,12 @@
 		"kallsyms.h": "c",
 		"syscall.h": "c",
 		"limits.h": "c",
-		"errno-base.h": "c"
+		"errno-base.h": "c",
+		"hash_map": "c",
+		"bitset": "c",
+		"chrono": "c",
+		"algorithm": "c",
+		"hash_set": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

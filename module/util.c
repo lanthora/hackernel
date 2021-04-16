@@ -1,18 +1,33 @@
 #include "util.h"
+#include <asm/current.h>
 #include <linux/kernel.h>
 #include <uapi/asm-generic/errno-base.h>
 #include <uapi/linux/binfmts.h>
+#include <asm/uaccess.h>
 
-int count_strings(const char *const *argv)
+static const char __user *get_user_arg_ptr(char __user * __user *argv, int nr)
 {
-	int i;
+	const char __user *native;
+	if (get_user(native, argv + nr))
+		return ERR_PTR(-EFAULT);
 
-	if (!argv)
-		return 0;
+	return native;
+}
 
-	for (i = 0; argv[i]; ++i) {
-		if (i >= MAX_ARG_STRINGS)
-			return -E2BIG;
+int count(char __user * __user *argv, int max)
+{
+	int i = 0;
+	if (!argv) {
+		return i;
 	}
+
+	for (;;) {
+		const char __user *p = get_user_arg_ptr(argv, i);
+
+		if (!p)
+			break;
+		++i;
+	}
+
 	return i;
 }
