@@ -3,7 +3,7 @@
 
 #include <linux/kernel.h>
 
-typedef asmlinkage u64 (*sys_call_ptr_t)(const struct pt_regs *);
+typedef asmlinkage u64 (*sys_call_ptr_t)(struct pt_regs *);
 
 extern sys_call_ptr_t *g_sys_call_table;
 

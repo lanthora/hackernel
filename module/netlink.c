@@ -39,7 +39,7 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 
 	// 处理 HACKERNEL_A_MSG 属性
 	msg = (char *)nla_data(info->attrs[HACKERNEL_A_MSG]);
-	printk(KERN_INFO "hackernel: recv: %s\n", msg);
+	printk(KERN_DEBUG "hackernel: recv: %s\n", msg);
 
 	// 使用用户态传递的 HACKERNEL_A_SYS_CALL_TABLE 初始化系统调用表
 
@@ -50,16 +50,16 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 		printk(KERN_ERR "hackernel: init_sys_call_table failed\n");
 		strcpy(reply_msg, "init_sys_call_table failed");
 	} else {
-		printk(KERN_INFO "hackernel: init_sys_call_table: %llx\n",
+		printk(KERN_DEBUG "hackernel: init_sys_call_table: %llx\n",
 		       sys_call_table);
 		strcpy(reply_msg, "init_sys_call_table success");
 	}
 
 	// 在这里直接替换系统调用，这是在做测试，真实使用场景需要根据发送过来的命令进行处理
-	if(!error){
+	if (!error) {
 		replace_sys_call();
 	}
-	
+
 	// 回传握手结果
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 	if (!reply) {
@@ -76,7 +76,7 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 		nlmsg_free(reply);
 		goto out;
 	}
-	printk(KERN_INFO "hackernel: send: %s\n", reply_msg);
+	printk(KERN_DEBUG "hackernel: send: %s\n", reply_msg);
 	genlmsg_end(reply, reply_head);
 
 	error = genlmsg_reply(reply, info);

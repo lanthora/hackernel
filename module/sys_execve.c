@@ -6,45 +6,54 @@
 static sys_call_ptr_t real_execve = NULL;
 
 // 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
-// 在 include/linux/compat_sys_execve 中存在另一个系统调用的实现
-static int sys_evecve(const char *pathname, const char *const *argv,
-		      const char *const *envp)
+static int sys_evecve(char __user *pathname, char __user *__user *argv,
+		      char __user *__user *envp)
 {
-	int i;
-	int argv_cout;
-	int envp_cout;
+	char path[PATH_SIZE];
+	char *params, *cursor;
+	long size, idx, remain;
 
-	printk(KERN_DEBUG "hackernel: pathname=%s\n", pathname);
-
-	// 这两个函数复杂度较高，可能会影响系统运行效率
-	argv_cout = count_strings(argv);
-	envp_cout = count_strings(envp);
-
-	for (i = 1; i < argv_cout; ++i) {
-		printk(KERN_DEBUG "hackernel: argv[%d]=%s\n", i, argv[i]);
+	size = strncpy_from_user((char *)&path, pathname, PATH_SIZE);
+	if (!size) {
+		printk(KERN_ERR "read pathname from user failed! pathname=%p\n",
+		       pathname);
+		return -1;
 	}
 
-	for (i = 0; i < envp_cout; ++i) {
-		printk(KERN_DEBUG "hackernel: %s\n", envp[i]);
-	}
+	params = kzalloc(BUFFSIZE, GFP_KERNEL);
 
+	for (idx = 0, size = 0, cursor = params; argv[idx]; ++idx) {
+		remain = BUFFSIZE - (cursor - params);
+		if (remain <= 0) {
+			printk(KERN_WARNING
+			       "hackernel: the parameter is too long and is truncated\n");
+			break;
+		}
+		size = strncpy_from_user(cursor, argv[idx], remain);
+		if (!size) {
+			printk(KERN_ERR "read argv from user failed! argv=%p\n",
+			       argv);
+			break;
+		}
+		cursor += size;
+		*(cursor++) = ' ';
+	}
+	*(cursor-1) = 0;
+
+	//printk(KERN_INFO "hackernel: cmd[%ld]=%s\n", cursor-params, params);
+	kfree(params);
 	return 0;
 }
 
-asmlinkage u64 raw_sys_execve(const struct pt_regs *regs)
+asmlinkage u64 raw_sys_execve(struct pt_regs *regs)
 {
-	const char *pathname = (const char *)regs->di;
-	const char *const *argv = (const char *const *)regs->si;
-	const char *const *envp = (const char *const *)regs->dx;
-	static atomic_t running_execve_cnt = ATOMIC_INIT(0);
-
-	// 检查正在执行的sys_evecve系统调用的个数
-	int cnt = atomic_inc_return(&running_execve_cnt);
-	printk(KERN_DEBUG "hackernel: running execve cnt=%d\n", cnt);
-	if (sys_evecve(pathname, argv, envp))
-		return -EPERM;
-
-	atomic_dec(&running_execve_cnt);
+	char *pathname = (char *)regs->di;
+	char **argv = (char **)regs->si;
+	char **envp = (char **)regs->dx;
+	
+	if (sys_evecve(pathname, argv, envp)) {
+	}
+	
 	return real_execve(regs);
 }
 
@@ -65,7 +74,8 @@ int replace_execve(void)
 int restore_execve(void)
 {
 	if (!g_sys_call_table || !real_execve) {
-		printk(KERN_INFO "hackernel: restore_execve before replace\n");
+		printk(KERN_WARNING
+		       "hackernel: restore_execve before replace\n");
 		return 0;
 	}
 	disable_write_protection();
