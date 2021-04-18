@@ -10,9 +10,7 @@ static sys_call_ptr_t real_execve = NULL;
 static int sys_evecve(char __user *pathname, char __user *__user *argv,
 		      char __user *__user *envp)
 {
-	char *path = NULL, *params = NULL, **p, *cursor;
-	long idx, remain, size;
-	unsigned long lack_size;
+	char *path = NULL, *params = NULL;
 	int error = 0;
 
 	path = kzalloc(PATH_MAX, GFP_KERNEL);
@@ -22,15 +20,7 @@ static int sys_evecve(char __user *pathname, char __user *__user *argv,
 		goto out;
 	}
 
-	lack_size = copy_from_user(path, pathname,
-				   strnlen_user(pathname, PATH_MAX));
-	if (lack_size) {
-		printk(KERN_ERR
-		       "hackernel: read pathname from user failed! pathname=%p\n",
-		       pathname);
-		error = -1;
-		goto out;
-	}
+	parse_pathname(pathname, path, PATH_MAX);
 	printk(KERN_INFO "hackernel: path=%s\n", path);
 
 	params = kzalloc(ARG_MAX, GFP_KERNEL);
@@ -39,42 +29,10 @@ static int sys_evecve(char __user *pathname, char __user *__user *argv,
 		error = -1;
 		goto out;
 	}
-	size = count(argv, MAX_ARG_STRINGS);
-	p = kzalloc((size + 1) * sizeof(char *), GFP_KERNEL);
-
-
-	lack_size = copy_from_user(p,argv,size * sizeof(char *));
-	if(lack_size){
-		printk(KERN_ERR
-		       "hackernel: read path from user failed! argv=%p\n",
-		       argv);
-		error = -1;
-		goto out;
-	}
-
-	for (idx = 0, size = 0, cursor = params; p[idx]; ++idx) {
-		remain = ARG_MAX - (cursor - params);
-		if (remain <= 0) {
-			printk(KERN_WARNING
-			       "hackernel: the parameter is too long and is truncated\n");
-			break;
-		}
-		size = strnlen_user(p[idx], remain);
-		lack_size = copy_from_user(cursor, p[idx], size);
-		if (lack_size) {
-			printk(KERN_ERR
-			       "hackernel: read argv from user failed! argv=%p\n",
-			       argv);
-			break;
-		}
-		cursor += size;
-		*(cursor - 1) = ' ';
-	}
-
+	parse_argv((const char *const *)argv, params, ARG_MAX);
 	printk(KERN_INFO "hackernel: cmd=%s\n", params);
 
 out:
-	kfree(p);
 	kfree(path);
 	kfree(params);
 	return error;

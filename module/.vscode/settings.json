@@ -15,7 +15,8 @@
 		"bitset": "c",
 		"chrono": "c",
 		"algorithm": "c",
-		"hash_set": "c"
+		"hash_set": "c",
+		"binfmts.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
