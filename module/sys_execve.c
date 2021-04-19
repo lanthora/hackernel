@@ -33,7 +33,6 @@ asmlinkage u64 raw_sys_execve(struct pt_regs *regs)
 	char **envp = (char **)regs->dx;
 
 	if (sys_evecve(pathname, argv, envp)) {
-		restore_execve();
 	}
 	return real_execve(regs);
 }
@@ -41,10 +40,15 @@ asmlinkage u64 raw_sys_execve(struct pt_regs *regs)
 int replace_execve(void)
 {
 	if (!g_sys_call_table) {
-		printk(KERN_ERR
-		       "hackernel: g_sys_call_table must be initialized before calling replace_execve\n");
+		printk(KERN_ERR "hackernel: must init syscall table\n");
 		return -1;
 	}
+
+	if (real_execve) {
+		printk(KERN_ERR "hackernel: execve doulbe init\n");
+		return 0;
+	}
+
 	real_execve = g_sys_call_table[__NR_execve];
 	disable_write_protection();
 	g_sys_call_table[__NR_execve] = &raw_sys_execve;
@@ -55,12 +59,13 @@ int replace_execve(void)
 int restore_execve(void)
 {
 	if (!g_sys_call_table || !real_execve) {
-		printk(KERN_WARNING
-		       "hackernel: restore_execve before replace\n");
+		printk(KERN_WARNING "hackernel: restore failed\n");
 		return 0;
 	}
+
 	disable_write_protection();
 	g_sys_call_table[__NR_execve] = real_execve;
 	enable_write_protection();
+	real_execve = NULL;
 	return 0;
 }
