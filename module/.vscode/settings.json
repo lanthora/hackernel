@@ -16,7 +16,12 @@
 		"chrono": "c",
 		"algorithm": "c",
 		"hash_set": "c",
-		"binfmts.h": "c"
+		"binfmts.h": "c",
+		"limits": "c",
+		"syscalls.h": "c",
+		"syscall_wrapper.h": "c",
+		"slab.h": "c",
+		"gfp.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
