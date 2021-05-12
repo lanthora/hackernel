@@ -43,7 +43,7 @@ write_cr0_forced(unsigned long val)
 
 void enable_write_protection(void)
 {
-	write_cr0_forced(read_cr0() & (~0x10000));
+	write_cr0_forced(read_cr0() | (0x00010000));
 	return;
 }
 
