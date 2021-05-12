@@ -21,7 +21,7 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 	int error = -ENOMEM;
 	unsigned long long sys_call_table;
 
-	// 	检查权限
+	// 检查权限
 	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
 		error = -EPERM;
 		goto out;
