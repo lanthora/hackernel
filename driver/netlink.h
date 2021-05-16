@@ -19,6 +19,11 @@ enum {
 };
 #define HACKERNEL_C_MAX (__HACKERNEL_C_MAX - 1)
 
+struct handshake_data {
+	int status;
+	char msg[64];
+};
+
 void netlink_kernel_start(void);
 void netlink_kernel_stop(void);
 

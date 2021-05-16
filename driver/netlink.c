@@ -12,76 +12,96 @@ static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
 	[HACKERNEL_A_SYS_CALL_TABLE] = { .type = NLA_U64 },
 };
 
+static int handshake_permissions_check(struct sk_buff *skb,
+				       struct genl_info *info)
+{
+	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
+		return -EPERM;
+	}
+
+	if (!info->attrs[HACKERNEL_A_SYS_CALL_TABLE]) {
+		return -EINVAL;
+	}
+	return 0;
+}
+
+static int handshake_result_build(struct sk_buff *skb, struct genl_info *info,
+				  struct handshake_data *data,
+				  struct sk_buff *reply)
+{
+	int error = 0;
+	void *head = NULL;
+
+	head = genlmsg_put_reply(reply, info, &genl_family, 0,
+				 HACKERNEL_C_HANDSHAKE);
+	if (!head) {
+		nlmsg_free(reply);
+		return -ENOMEM;
+	}
+	error = nla_put_string(reply, HACKERNEL_A_MSG, data->msg);
+	if (error) {
+		nlmsg_free(reply);
+		return -ENOMEM;
+	}
+	genlmsg_end(reply, head);
+	return 0;
+}
+
 static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 {
-	char *msg;
-	struct sk_buff *reply;
-	void *reply_head;
-	char reply_msg[64] = { 0 };
-	int error = -ENOMEM;
-	unsigned long long sys_call_table;
+	int error = 0;
+	unsigned long long syscall_table = 0;
+	struct handshake_data *data = NULL;
+	struct sk_buff *reply = NULL;
 
-	// 检查权限
-	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
-		error = -EPERM;
+	// 检查握手包中的参数
+	error = handshake_permissions_check(skb, info);
+	if (error) {
 		goto out;
 	}
 
-	// 检查参数
-	if (!info->attrs[HACKERNEL_A_MSG]) {
-		error = -EINVAL;
-		goto out;
-	}
-	if (!info->attrs[HACKERNEL_A_SYS_CALL_TABLE]) {
-		error = -EINVAL;
+	// 为 handshake_data 数据结构分配内存
+	data = kzalloc(sizeof(struct handshake_data), GFP_KERNEL);
+	if (!data) {
+		error = -ENOMEM;
 		goto out;
 	}
 
-	// 处理 HACKERNEL_A_MSG 属性
-	msg = (char *)nla_data(info->attrs[HACKERNEL_A_MSG]);
-	printk(KERN_DEBUG "hackernel: recv: %s\n", msg);
+	// 从用户空间获取系统调用表地址，并更新系统调用表全局变量
+	syscall_table = nla_get_u64(info->attrs[HACKERNEL_A_SYS_CALL_TABLE]);
+	error = init_sys_call_table(syscall_table);
 
-	// 使用用户态传递的 HACKERNEL_A_SYS_CALL_TABLE 初始化系统调用表
-
-	sys_call_table =
-		*(u64 *)nla_data(info->attrs[HACKERNEL_A_SYS_CALL_TABLE]);
-	error = init_sys_call_table(sys_call_table);
+	// 准备返回结果，这个数据后面可以优化成 handshake_data 里的 status
 	if (error) {
 		printk(KERN_ERR "hackernel: init_sys_call_table failed\n");
-		strcpy(reply_msg, "init_sys_call_table failed");
+		strcpy(data->msg, "init_sys_call_table failed");
 	} else {
-		printk(KERN_DEBUG "hackernel: init_sys_call_table: %llx\n",
-		       sys_call_table);
-		strcpy(reply_msg, "init_sys_call_table success");
+		strcpy(data->msg, "init_sys_call_table success");
 	}
 
-	// 在这里直接替换系统调用，这是在做测试，真实使用场景需要根据发送过来的命令进行处理
+	// 临时测试，替换系统调用表，后面需要单独拆出一个命令执行
 	if (!error) {
 		replace_sys_call();
 	}
 
-	// 回传握手结果
+	// 为将要返回给用户空间的数据分配内存
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 	if (!reply) {
+		error = -ENOMEM;
 		goto out;
 	}
-	reply_head = genlmsg_put_reply(reply, info, &genl_family, 0,
-				       HACKERNEL_C_HANDSHAKE);
-	if (!reply_head) {
-		nlmsg_free(reply);
-		goto out;
-	}
-	error = nla_put_string(reply, HACKERNEL_A_MSG, reply_msg);
+
+	// 根据 handshake_data 的内容填充分配的内存
+	error = handshake_result_build(skb, info, data, reply);
 	if (error) {
-		nlmsg_free(reply);
 		goto out;
 	}
-	printk(KERN_DEBUG "hackernel: send: %s\n", reply_msg);
-	genlmsg_end(reply, reply_head);
 
+	// 向用户空间发送消息
 	error = genlmsg_reply(reply, info);
-
 out:
+	// 释放 handshake_data 内存
+	kfree(data);
 	return error;
 }
 
