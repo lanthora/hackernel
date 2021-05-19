@@ -6,6 +6,7 @@
 
 enum {
 	HACKERNEL_A_UNSPEC,
+	HACKERNEL_A_CODE,
 	HACKERNEL_A_MSG,
 	HACKERNEL_A_SYS_CALL_TABLE,
 	__HACKERNEL_A_MAX,
@@ -15,12 +16,13 @@ enum {
 enum {
 	HACKERNEL_C_UNSPEC,
 	HACKERNEL_C_HANDSHAKE,
+	HACKERNEL_C_AUDIT,
 	__HACKERNEL_C_MAX,
 };
 #define HACKERNEL_C_MAX (__HACKERNEL_C_MAX - 1)
 
 struct handshake_data {
-	int status;
+	int code;
 	char msg[64];
 };
 

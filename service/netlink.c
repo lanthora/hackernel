@@ -11,6 +11,7 @@
 
 /* 指定头文件属性的类型 */
 static struct nla_policy hackernel_genl_policy[HACKERNEL_A_MAX + 1] = {
+    [HACKERNEL_A_CODE] = {.type = NLA_S32},
     [HACKERNEL_A_MSG] = {.type = NLA_STRING},
     [HACKERNEL_A_SYS_CALL_TABLE] = {.type = NLA_U64},
 };
@@ -24,9 +25,9 @@ static int parse_cb(struct nl_msg *msg, void *arg) {
 static int handshake_handler(struct nl_cache_ops *unused,
                              struct genl_cmd *genl_cmd,
                              struct genl_info *genl_info, void *arg) {
-  char *msg = (char *)nla_data(genl_info->attrs[HACKERNEL_A_MSG]);
-  printf("recv: %s\n", msg);
-  return 0;
+  int code = nla_get_s32(genl_info->attrs[HACKERNEL_A_CODE]);
+  printf("recv: code=%d\n", code);
+  return code;
 }
 
 /* 定义命令对应的回调函数 */
@@ -65,8 +66,7 @@ int main() {
   struct nl_msg *msg = nlmsg_alloc();
   genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
               HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
-  nla_put_string(msg, HACKERNEL_A_MSG, "hello");
-
+  
   unsigned long sys_call_table;
   if (init_sys_call_table_addr(&sys_call_table)) {
     printf("init_sys_call_table_addr failed. exit now!\n");

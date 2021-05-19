@@ -8,6 +8,7 @@
 static struct genl_family genl_family;
 
 static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
+	[HACKERNEL_A_CODE] = { .type = NLA_S32 },
 	[HACKERNEL_A_MSG] = { .type = NLA_STRING },
 	[HACKERNEL_A_SYS_CALL_TABLE] = { .type = NLA_U64 },
 };
@@ -38,11 +39,13 @@ static int handshake_result_build(struct sk_buff *skb, struct genl_info *info,
 		nlmsg_free(reply);
 		return -ENOMEM;
 	}
-	error = nla_put_string(reply, HACKERNEL_A_MSG, data->msg);
+
+	error = nla_put_s32(reply, HACKERNEL_A_CODE, data->code);
 	if (error) {
 		nlmsg_free(reply);
 		return -ENOMEM;
 	}
+
 	genlmsg_end(reply, head);
 	return 0;
 }
@@ -71,18 +74,8 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 	syscall_table = nla_get_u64(info->attrs[HACKERNEL_A_SYS_CALL_TABLE]);
 	error = init_sys_call_table(syscall_table);
 
-	// 准备返回结果，这个数据后面可以优化成 handshake_data 里的 status
-	if (error) {
-		printk(KERN_ERR "hackernel: init_sys_call_table failed\n");
-		strcpy(data->msg, "init_sys_call_table failed");
-	} else {
-		strcpy(data->msg, "init_sys_call_table success");
-	}
-
-	// 临时测试，替换系统调用表，后面需要单独拆出一个命令执行
-	if (!error) {
-		replace_sys_call();
-	}
+	// 准备返回结果
+	data->code = error;
 
 	// 为将要返回给用户空间的数据分配内存
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
