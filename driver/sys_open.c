@@ -48,15 +48,39 @@ static int is_relative_path(const char *filename)
 	return strncmp(filename, "/", 1);
 }
 
-static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
+static int get_prefix_path(int dirfd, char *prefix)
 {
-	int error;
-	char *filename;
-	char *abspath;
 	struct file *file;
 
-	filename = kzalloc(PATH_MAX, GFP_KERNEL);
+	// 需要获取当前进程所在路径，这个函数需要直接返回
+	if (dirfd == AT_FDCWD) {
+		printk(KERN_ERR "hackernel: dirfd == AT_FDCWD\n");
+		return -1;
+	}
 
+	// 如果dirfd不是AT_FDCWD的话，需要从文件描述符中获取路径
+	file = fget(dirfd);
+	if (!file) {
+		printk(KERN_ERR "hackernel: fget failed\n");
+	}
+	prefix = d_path(&file->f_path, prefix, PATH_MAX);
+	if (IS_ERR(prefix)) {
+		printk(KERN_ERR "hackernel: d_path failed\n");
+	}
+	fput(file);
+	printk(KERN_INFO "hackernel: dir=%s\n", prefix);
+}
+
+static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
+{
+	int error = 0;
+	char *filename;
+	char *prefix;
+
+	filename = kzalloc(PATH_MAX, GFP_KERNEL);
+	if (!filename) {
+		goto out;
+	}
 	error = strncpy_from_user(filename, pathname, PATH_MAX);
 	if (error == -EFAULT) {
 		goto out;
@@ -67,15 +91,16 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
 	}
 
 	if (is_relative_path(filename)) {
-		printk(KERN_INFO "hackernel: is_relative_path\n");
-		printk(KERN_INFO "hackernel: openat=%s\n", filename);
-	} else {
-		printk(KERN_INFO "hackernel: openat=%s\n", filename);
+		prefix = kzalloc(PATH_MAX, GFP_KERNEL);
+		get_prefix_path(dirfd, prefix);
+		printk(KERN_INFO "hackernel: prefix=%s\n", prefix);
 	}
-
+show:
+	printk(KERN_INFO "hackernel: openat=%s\n", filename);
 skip:
 	error = 0;
 out:
+	kfree(prefix);
 	kfree(filename);
 	return error;
 }
