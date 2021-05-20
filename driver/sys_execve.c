@@ -23,7 +23,7 @@ static int sys_execve_hook(char __user *pathname, char __user *__user *argv,
 	if (error) {
 		goto out;
 	}
-	printk(KERN_INFO "hackernel: cmd=%s\n", cmd);
+	printk(KERN_INFO "hackernel: exec=%s\n", cmd);
 
 out:
 	kfree(cmd);
@@ -62,14 +62,16 @@ int replace_execve(void)
 
 int restore_execve(void)
 {
-	if (!g_sys_call_table || !__x64_sys_execve) {
-		printk(KERN_WARNING "hackernel: restore failed\n");
+	if (!g_sys_call_table) {
 		return 0;
 	}
 
-	disable_write_protection();
-	g_sys_call_table[__NR_execve] = __x64_sys_execve;
-	enable_write_protection();
-	__x64_sys_execve = NULL;
+	if (__x64_sys_execve) {
+		disable_write_protection();
+		g_sys_call_table[__NR_execve] = __x64_sys_execve;
+		enable_write_protection();
+		__x64_sys_execve = NULL;
+	}
+
 	return 0;
 }

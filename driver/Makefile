@@ -1,6 +1,6 @@
 ifneq ($(KERNELRELEASE),)
 obj-m :=hackernel.o
-hackernel-objs :=core.o netlink.o syscall.o sys_execve.o util.o
+hackernel-objs :=core.o netlink.o syscall.o util.o sys_execve.o sys_open.o
 else
 KDIR :=/usr/src/linux
 

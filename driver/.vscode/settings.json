@@ -21,7 +21,12 @@
 		"syscalls.h": "c",
 		"syscall_wrapper.h": "c",
 		"slab.h": "c",
-		"gfp.h": "c"
+		"gfp.h": "c",
+		"uaccess.h": "c",
+		"array": "c",
+		"string_view": "c",
+		"initializer_list": "c",
+		"utility": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

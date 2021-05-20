@@ -64,6 +64,7 @@ int main() {
 
   /* 向内核发送一条消息 */
   struct nl_msg *msg = nlmsg_alloc();
+  /* 握手 */
   genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
               HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
   
@@ -74,6 +75,13 @@ int main() {
   }
   nla_put_u64(msg, HACKERNEL_A_SYS_CALL_TABLE, sys_call_table);
   printf("send: sys_call_table: %p\n", sys_call_table);
+  nl_send_auto(nlsock, msg);
+  nlmsg_free(msg);
+
+  /* hook open 系统调用 */
+  msg = nlmsg_alloc();
+  genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
+              HACKERNEL_C_FILE_PROTECT, HACKERNEL_FAMLY_VERSION);
   nl_send_auto(nlsock, msg);
   nlmsg_free(msg);
 

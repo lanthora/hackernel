@@ -16,7 +16,8 @@ static int init(void)
 
 static void cleanup(void)
 {
-	restore_sys_call();
+	disable_process_protect();
+	disable_file_protect();
 	netlink_kernel_stop();
 	return;
 }

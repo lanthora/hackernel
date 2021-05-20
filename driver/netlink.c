@@ -11,6 +11,8 @@ static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
 	[HACKERNEL_A_CODE] = { .type = NLA_S32 },
 	[HACKERNEL_A_MSG] = { .type = NLA_STRING },
 	[HACKERNEL_A_SYS_CALL_TABLE] = { .type = NLA_U64 },
+	[HACKERNEL_A_PROCESS_NAME] = { .type = NLA_U64 },
+	[HACKERNEL_A_FILE_NAME] = { .type = NLA_U64 },
 };
 
 static int handshake_permissions_check(struct sk_buff *skb,
@@ -98,11 +100,34 @@ out:
 	return error;
 }
 
+static int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
+{
+	enable_process_protect();
+	return 0;
+}
+
+static int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
+{
+	printk(KERN_INFO "hackernel: file_protect_handler\n");
+	enable_file_protect();
+	return 0;
+}
+
 static struct genl_small_ops genl_small_ops[] = {
 	{
 		.cmd = HACKERNEL_C_HANDSHAKE,
 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
 		.doit = handshake_handler,
+	},
+	{
+		.cmd = HACKERNEL_C_PROCESS_PROTECT,
+		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
+		.doit = process_protect_handler,
+	},
+	{
+		.cmd = HACKERNEL_C_FILE_PROTECT,
+		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
+		.doit = file_protect_handler,
 	},
 };
 

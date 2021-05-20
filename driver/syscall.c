@@ -1,5 +1,6 @@
 #include "syscall.h"
 #include "sys_execve.h"
+#include "sys_open.h"
 #include <asm/special_insns.h>
 #include <net/net_namespace.h>
 
@@ -15,7 +16,7 @@ int init_sys_call_table(u64 sys_call_table)
 	return 0;
 }
 
-void replace_sys_call(void)
+void enable_process_protect(void)
 {
 	int error;
 	error = replace_execve();
@@ -23,13 +24,31 @@ void replace_sys_call(void)
 	}
 }
 
-void restore_sys_call(void)
+void disable_process_protect(void)
 {
 	int error;
 	error = restore_execve();
 	if (error) {
 	}
 }
+
+void enable_file_protect(void)
+{
+	int error;
+	error = replace_open();
+	if (error) {
+		printk(KERN_ERR "replace open failed!\n");
+	}
+}
+
+void disable_file_protect(void)
+{
+	int error;
+	error = restore_open();
+	if (error) {
+	}
+}
+
 
 static inline void write_cr0_forced(unsigned long val)
 {
