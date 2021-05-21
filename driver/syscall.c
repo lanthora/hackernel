@@ -41,6 +41,9 @@ void enable_file_protect(void)
 	error = replace_openat();
 	if (error) {
 	}
+	error = replace_unlinkat();
+	if (error) {
+	}
 }
 
 void disable_file_protect(void)
@@ -50,6 +53,9 @@ void disable_file_protect(void)
 	if (error) {
 	}
 	error = restore_openat();
+	if (error) {
+	}
+	error = restore_unlinkat();
 	if (error) {
 	}
 }
