@@ -44,6 +44,9 @@ void enable_file_protect(void)
 	error = replace_unlinkat();
 	if (error) {
 	}
+	error = replace_renameat2();
+	if (error) {
+	}
 }
 
 void disable_file_protect(void)
@@ -56,6 +59,9 @@ void disable_file_protect(void)
 	if (error) {
 	}
 	error = restore_unlinkat();
+	if (error) {
+	}
+	error = restore_renameat2();
 	if (error) {
 	}
 }

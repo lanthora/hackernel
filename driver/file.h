@@ -12,6 +12,9 @@ int restore_openat(void);
 int replace_unlinkat(void);
 int restore_unlinkat(void);
 
-#define PATH_MIN 32
+int replace_renameat2(void);
+int restore_renameat2(void);
+
+#define PATH_MIN 64
 
 #endif

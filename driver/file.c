@@ -14,10 +14,11 @@
 static sys_call_ptr_t __x64_sys_open = NULL;
 static sys_call_ptr_t __x64_sys_openat = NULL;
 static sys_call_ptr_t __x64_sys_unlinkat = NULL;
+static sys_call_ptr_t __x64_sys_renameat2 = NULL;
 
 // 最后一个元素必须是"",这个元素用来判断数组的结束
 const char whitelist[][PATH_MIN] = { "/run", "/proc", "" };
-const char blacklist[][PATH_MIN] = { "/root/test/protect/123", "" };
+const char blacklist[][PATH_MIN] = { "/root/test/protect/can-not-be-deleted", "" };
 
 // 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
 static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
@@ -40,6 +41,7 @@ static int list_contain(const char (*list)[PATH_MIN], const char *filename)
 {
 	char *item = (char *)*list;
 	while (*item) {
+		// 这种效果是根据文件前缀保护，如果完全匹配就没法绕过内核日志文件了
 		if (!strncmp(filename, item, strlen(item))) {
 			return 1;
 		}
@@ -104,6 +106,43 @@ out:
 	return error;
 }
 
+static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
+			      char __user *dstpath, int flags)
+{
+	int error = 0;
+	char *src;
+	char *dst;
+
+	src = get_absolute_path_alloc(srcfd, srcpath);
+	if (!src) {
+		error = -1;
+		goto out;
+	}
+
+	if (list_contain(blacklist, src)) {
+		error = -EPERM;
+		goto out;
+	}
+
+	dst = get_absolute_path_alloc(dstfd, dstpath);
+	if (!dst) {
+		error = -1;
+		goto out;
+	}
+
+	if (list_contain(blacklist, dst)) {
+		error = -EPERM;
+		goto out;
+	}
+
+	printk(KERN_INFO "hackernel: renameat2: src=%s dst=%s\n", src, dst);
+
+out:
+	kfree(src);
+	kfree(dst);
+	return error;
+}
+
 asmlinkage u64 sys_open_wrapper(struct pt_regs *regs)
 {
 	char *pathname = (char *)regs->di;
@@ -139,15 +178,27 @@ asmlinkage u64 sys_unlinkat_wrapper(struct pt_regs *regs)
 	return __x64_sys_unlinkat(regs);
 }
 
+asmlinkage u64 sys_renameat2_wrapper(struct pt_regs *regs)
+{
+	int srcfd = (int)regs->di;
+	char *srcpath = (char *)regs->si;
+	int dstfd = (int)regs->dx;
+	char *dstpath = (char *)regs->r10;
+	int flags = (int)regs->r8;
+
+	if (sys_renameat2_hook(srcfd, srcpath, dstfd, dstpath, flags)) {
+		return -EPERM;
+	}
+	return __x64_sys_renameat2(regs);
+}
+
 int replace_open(void)
 {
 	if (!g_sys_call_table) {
-		printk(KERN_ERR "hackernel: must init syscall table\n");
 		return -1;
 	}
 
 	if (__x64_sys_open) {
-		printk(KERN_ERR "hackernel: open doulbe init\n");
 		return 0;
 	}
 
@@ -162,11 +213,9 @@ int replace_open(void)
 int replace_openat(void)
 {
 	if (!g_sys_call_table) {
-		printk(KERN_ERR "hackernel: must init syscall table\n");
 		return -1;
 	}
 	if (__x64_sys_openat) {
-		printk(KERN_ERR "hackernel: open doulbe init\n");
 		return 0;
 	}
 	__x64_sys_openat = g_sys_call_table[__NR_openat];
@@ -180,12 +229,10 @@ int replace_openat(void)
 int replace_unlinkat(void)
 {
 	if (!g_sys_call_table) {
-		printk(KERN_ERR "hackernel: must init syscall table\n");
 		return -1;
 	}
 
 	if (__x64_sys_unlinkat) {
-		printk(KERN_ERR "hackernel: unlinkat doulbe init\n");
 		return 0;
 	}
 
@@ -193,6 +240,24 @@ int replace_unlinkat(void)
 
 	disable_write_protection();
 	g_sys_call_table[__NR_unlinkat] = &sys_unlinkat_wrapper;
+	enable_write_protection();
+	return 0;
+}
+
+int replace_renameat2(void)
+{
+	if (!g_sys_call_table) {
+		return -1;
+	}
+
+	if (__x64_sys_renameat2) {
+		return 0;
+	}
+
+	__x64_sys_renameat2 = g_sys_call_table[__NR_renameat2];
+
+	disable_write_protection();
+	g_sys_call_table[__NR_renameat2] = &sys_renameat2_wrapper;
 	enable_write_protection();
 	return 0;
 }
@@ -242,5 +307,21 @@ int restore_unlinkat(void)
 	g_sys_call_table[__NR_unlinkat] = __x64_sys_unlinkat;
 	enable_write_protection();
 	__x64_sys_unlinkat = NULL;
+	return 0;
+}
+
+int restore_renameat2(void)
+{
+	if (!g_sys_call_table) {
+		return 0;
+	}
+
+	if (!__x64_sys_renameat2) {
+		return 0;
+	}
+	disable_write_protection();
+	g_sys_call_table[__NR_renameat2] = __x64_sys_renameat2;
+	enable_write_protection();
+	__x64_sys_renameat2 = NULL;
 	return 0;
 }

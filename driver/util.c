@@ -180,7 +180,7 @@ static int get_base_path(int dirfd, char *base)
 	return 0;
 }
 
-static size_t roll_back(char *path, size_t slow)
+static size_t backtrack(char *path, size_t slow)
 {
 	int cnt = 0;
 	while (slow > 0) {
@@ -210,7 +210,7 @@ static char *adjust_absolute_path(char *path)
 			}
 			if (!strncmp(path + fast, "../", 3)) {
 				fast += 3;
-				slow = roll_back(path, slow);
+				slow = backtrack(path, slow);
 				continue;
 			}
 			break;
