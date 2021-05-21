@@ -1,5 +1,5 @@
-#ifndef HACKERNEL_UTIL
-#define HACKERNEL_UTIL
+#ifndef HACKERNEL_UTIL_H
+#define HACKERNEL_UTIL_H
 
 #include <linux/kernel.h>
 #include <linux/sched.h>

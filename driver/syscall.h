@@ -1,5 +1,5 @@
-#ifndef HACKERNEL_SYSCALL
-#define HACKERNEL_SYSCALL
+#ifndef HACKERNEL_SYSCALL_H
+#define HACKERNEL_SYSCALL_H
 
 #include <linux/kernel.h>
 

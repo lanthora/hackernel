@@ -1,4 +1,4 @@
-#include "sys_execve.h"
+#include "process.h"
 #include "syscall.h"
 #include "util.h"
 #include <linux/binfmts.h>
@@ -23,7 +23,7 @@ static int sys_execve_hook(char __user *pathname, char __user *__user *argv,
 	if (error) {
 		goto out;
 	}
-	printk(KERN_INFO "hackernel: exec: %s\n", cmd);
+	printk(KERN_INFO "hackernel: execve: %s\n", cmd);
 
 out:
 	kfree(cmd);

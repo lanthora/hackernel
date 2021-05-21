@@ -1,5 +1,5 @@
-#ifndef HACKERNEL_SYS_EXECVE
-#define HACKERNEL_SYS_EXECVE
+#ifndef HACKERNEL_PROCESS_H
+#define HACKERNEL_PROCESS_H
 
 #include "syscall.h"
 

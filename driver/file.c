@@ -1,4 +1,4 @@
-#include "sys_open.h"
+#include "file.h"
 #include "syscall.h"
 #include "util.h"
 #include <asm/uaccess.h>
@@ -13,6 +13,10 @@
 
 static sys_call_ptr_t __x64_sys_open = NULL;
 static sys_call_ptr_t __x64_sys_openat = NULL;
+
+// 最后一个元素必须是"",这个元素用来判断数组的结束
+const char whitelist[][PATH_MIN] = { "/run", "/proc", "" };
+const char blacklist[][PATH_MIN] = { "/root/test/protect", "" };
 
 // 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
 static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
@@ -31,16 +35,14 @@ out:
 	return error;
 }
 
-static int is_whitelist(const char *filename)
+static int list_contain(const char (*list)[PATH_MIN], const char *filename)
 {
-	// 内核日志目录，打印openat的日志会调用openat函数，所以要过滤
-	if (!strncmp(filename, "/run", 4)) {
-		return 1;
-	}
-
-	// vscode一直打印日志，先关掉它
-	if (!strncmp(filename, "/proc", 5)) {
-		return 1;
+	char *item = (char *)*list;
+	while (*item) {
+		if (!strncmp(filename, item, strlen(item))) {
+			return 1;
+		}
+		item += PATH_MIN;
 	}
 	return 0;
 }
@@ -102,10 +104,16 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
 	}
 	strncat(path, filename, PATH_MAX);
 
-	if (is_whitelist(path)) {
+	if (list_contain(whitelist, path)) {
 		goto skip;
 	}
-	printk(KERN_INFO "hackernel: open: %s\n", path);
+
+	if (list_contain(blacklist, path)) {
+		error = -EPERM;
+		goto out;
+	}
+
+	printk(KERN_INFO "hackernel: openat: %s\n", path);
 skip:
 	error = 0;
 out:
@@ -132,6 +140,7 @@ asmlinkage u64 sys_openat_wrapper(struct pt_regs *regs)
 	int flags = (int)regs->dx;
 
 	if (sys_openat_hook(dirfd, pathname, flags)) {
+		return -EPERM;
 	}
 	return __x64_sys_openat(regs);
 }
@@ -148,15 +157,27 @@ int replace_open(void)
 		return 0;
 	}
 
+	__x64_sys_open = g_sys_call_table[__NR_open];
+
+	disable_write_protection();
+	g_sys_call_table[__NR_open] = &sys_open_wrapper;
+	enable_write_protection();
+	return 0;
+}
+
+int replace_openat(void)
+{
+	if (!g_sys_call_table) {
+		printk(KERN_ERR "hackernel: must init syscall table\n");
+		return -1;
+	}
 	if (__x64_sys_openat) {
 		printk(KERN_ERR "hackernel: open doulbe init\n");
 		return 0;
 	}
-
-	__x64_sys_open = g_sys_call_table[__NR_open];
 	__x64_sys_openat = g_sys_call_table[__NR_openat];
+
 	disable_write_protection();
-	g_sys_call_table[__NR_open] = &sys_open_wrapper;
 	g_sys_call_table[__NR_openat] = &sys_openat_wrapper;
 	enable_write_protection();
 	return 0;
@@ -168,18 +189,28 @@ int restore_open(void)
 		return 0;
 	}
 
-	if (__x64_sys_open) {
-		disable_write_protection();
-		g_sys_call_table[__NR_open] = __x64_sys_open;
-		enable_write_protection();
-		__x64_sys_open = NULL;
+	if (!__x64_sys_open) {
+		return 0;
+	}
+	disable_write_protection();
+	g_sys_call_table[__NR_open] = __x64_sys_open;
+	enable_write_protection();
+	__x64_sys_open = NULL;
+	return 0;
+}
+
+int restore_openat(void)
+{
+	if (!g_sys_call_table) {
+		return 0;
 	}
 
-	if (__x64_sys_openat) {
-		disable_write_protection();
-		g_sys_call_table[__NR_openat] = __x64_sys_openat;
-		enable_write_protection();
-		__x64_sys_openat = NULL;
+	if (!__x64_sys_openat) {
+		return 0;
 	}
+	disable_write_protection();
+	g_sys_call_table[__NR_openat] = __x64_sys_openat;
+	enable_write_protection();
+	__x64_sys_openat = NULL;
 	return 0;
 }

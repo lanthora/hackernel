@@ -1,6 +1,6 @@
 #include "syscall.h"
-#include "sys_execve.h"
-#include "sys_open.h"
+#include "file.h"
+#include "process.h"
 #include <asm/special_insns.h>
 #include <net/net_namespace.h>
 
@@ -37,7 +37,9 @@ void enable_file_protect(void)
 	int error;
 	error = replace_open();
 	if (error) {
-		printk(KERN_ERR "replace open failed!\n");
+	}
+	error = replace_openat();
+	if (error) {
 	}
 }
 
@@ -47,8 +49,10 @@ void disable_file_protect(void)
 	error = restore_open();
 	if (error) {
 	}
+	error = restore_openat();
+	if (error) {
+	}
 }
-
 
 static inline void write_cr0_forced(unsigned long val)
 {
