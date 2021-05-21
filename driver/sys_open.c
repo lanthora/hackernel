@@ -6,7 +6,9 @@
 #include <linux/dcache.h>
 #include <linux/file.h>
 #include <linux/fs.h>
+#include <linux/fs_struct.h>
 #include <linux/gfp.h>
+#include <linux/sched.h>
 #include <linux/slab.h>
 
 static sys_call_ptr_t __x64_sys_open = NULL;
@@ -48,35 +50,43 @@ static int is_relative_path(const char *filename)
 	return strncmp(filename, "/", 1);
 }
 
-static int get_prefix_path(int dirfd, char *prefix)
+static int get_base_path(int dirfd, char *base)
 {
 	struct file *file;
+	char *buffer;
+	char *d_path_base;
 
-	// 需要获取当前进程所在路径，这个函数需要直接返回
-	if (dirfd == AT_FDCWD) {
-		printk(KERN_ERR "hackernel: dirfd == AT_FDCWD\n");
+	if (!base) {
 		return -1;
 	}
-
-	// 如果dirfd不是AT_FDCWD的话，需要从文件描述符中获取路径
-	file = fget(dirfd);
-	if (!file) {
-		printk(KERN_ERR "hackernel: fget failed\n");
+	if (dirfd == AT_FDCWD) {
+		buffer = kzalloc(PATH_MAX, GFP_KERNEL);
+		strncpy(base, get_cw_path(buffer, PATH_MAX), PATH_MAX);
+		kfree(buffer);
+	} else {
+		file = fget_raw(dirfd);
+		if (!file) {
+			printk(KERN_ERR "hackernel: fget failed\n");
+			return -1;
+		}
+		d_path_base = d_path(&file->f_path, base, PATH_MAX);
+		if (IS_ERR(d_path_base)) {
+			printk(KERN_ERR "hackernel: d_path failed\n");
+			return -1;
+		}
+		fput(file);
+		strncpy(base, d_path_base, PATH_MAX);
 	}
-	prefix = d_path(&file->f_path, prefix, PATH_MAX);
-	if (IS_ERR(prefix)) {
-		printk(KERN_ERR "hackernel: d_path failed\n");
-	}
-	fput(file);
-	printk(KERN_INFO "hackernel: dir=%s\n", prefix);
+	return 0;
 }
 
 static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
 {
 	int error = 0;
 	char *filename;
-	char *prefix;
+	char *path;
 
+	path = kzalloc(PATH_MAX, GFP_KERNEL);
 	filename = kzalloc(PATH_MAX, GFP_KERNEL);
 	if (!filename) {
 		goto out;
@@ -86,21 +96,20 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
 		goto out;
 	}
 
-	if (is_whitelist(filename)) {
+	if (is_relative_path(filename)) {
+		get_base_path(dirfd, path);
+		strcat(path, "/");
+	}
+	strncat(path, filename, PATH_MAX);
+
+	if (is_whitelist(path)) {
 		goto skip;
 	}
-
-	if (is_relative_path(filename)) {
-		prefix = kzalloc(PATH_MAX, GFP_KERNEL);
-		get_prefix_path(dirfd, prefix);
-		printk(KERN_INFO "hackernel: prefix=%s\n", prefix);
-	}
-show:
-	printk(KERN_INFO "hackernel: openat=%s\n", filename);
+	printk(KERN_INFO "hackernel: open: %s\n", path);
 skip:
 	error = 0;
 out:
-	kfree(prefix);
+	kfree(path);
 	kfree(filename);
 	return error;
 }

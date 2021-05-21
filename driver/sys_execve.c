@@ -23,7 +23,7 @@ static int sys_execve_hook(char __user *pathname, char __user *__user *argv,
 	if (error) {
 		goto out;
 	}
-	printk(KERN_INFO "hackernel: exec=%s\n", cmd);
+	printk(KERN_INFO "hackernel: exec: %s\n", cmd);
 
 out:
 	kfree(cmd);

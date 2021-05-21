@@ -108,7 +108,6 @@ static int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 
 static int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 {
-	printk(KERN_INFO "hackernel: file_protect_handler\n");
 	enable_file_protect();
 	return 0;
 }
