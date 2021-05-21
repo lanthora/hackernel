@@ -67,7 +67,7 @@ int main() {
   /* 握手 */
   genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
               HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
-  
+
   unsigned long sys_call_table;
   if (init_sys_call_table_addr(&sys_call_table)) {
     printf("init_sys_call_table_addr failed. exit now!\n");
@@ -82,6 +82,12 @@ int main() {
   msg = nlmsg_alloc();
   genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
               HACKERNEL_C_FILE_PROTECT, HACKERNEL_FAMLY_VERSION);
+  nl_send_auto(nlsock, msg);
+  nlmsg_free(msg);
+
+  msg = nlmsg_alloc();
+  genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
+              HACKERNEL_C_PROCESS_PROTECT, HACKERNEL_FAMLY_VERSION);
   nl_send_auto(nlsock, msg);
   nlmsg_free(msg);
 
