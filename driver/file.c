@@ -17,8 +17,10 @@ static sys_call_ptr_t __x64_sys_unlinkat = NULL;
 static sys_call_ptr_t __x64_sys_renameat2 = NULL;
 
 // 最后一个元素必须是"",这个元素用来判断数组的结束
+// 白名单和黑名单可以优化成红黑树
 const char whitelist[][PATH_MIN] = { "/run", "/proc", "" };
-const char blacklist[][PATH_MIN] = { "/root/test/protect/can-not-be-deleted", "" };
+const char blacklist[][PATH_MIN] = { "/root/test/protect/can-not-be-deleted",
+				     "" };
 
 // 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
 static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
@@ -65,7 +67,7 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
 		goto skip;
 	}
 
-	if (list_contain(blacklist, path)) {
+	if (list_contain(blacklist, path) && (flags & O_WRONLY)) {
 		error = -EPERM;
 		goto out;
 	}
