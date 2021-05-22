@@ -223,6 +223,35 @@ static char *adjust_absolute_path(char *path)
 	return path;
 }
 
+static char *post_adjust_absolute_path(char *path)
+{
+	size_t slow = 0;
+	size_t fast = 0;
+	size_t len;
+	len = strlen(path);
+	while (fast < len) {
+		while (1) {
+			if (!strncmp(path + fast, "//", 2)) {
+				fast += 1;
+				continue;
+			}
+			break;
+		}
+		path[slow] = path[fast];
+		++slow;
+		++fast;
+	}
+	if (slow >= 2 && !strncmp(path + slow - 2, "/.", 2)) {
+		--slow;
+	}
+
+	if (slow >= 2 && !strncmp(path + slow - 1, "/", 1)) {
+		--slow;
+	}
+	path[slow] = '\0';
+	return path;
+}
+
 char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 {
 	char *filename;
@@ -247,8 +276,10 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 	}
 	strncat(path, filename, PATH_MAX);
 
-	// 这里需要移除路径中的..
+	// 移除路径中的../和./
 	path = adjust_absolute_path(path);
+	// 移除路径中连续的//和末尾的/.
+	path = post_adjust_absolute_path(path);
 
 	kfree(filename);
 	return path;
