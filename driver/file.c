@@ -20,6 +20,7 @@ DEFINE_HOOK(renameat2);
 // 白名单和黑名单可以优化成红黑树
 const char whitelist[][PATH_MIN] = { "/run", "/proc", "" };
 const char blacklist[][PATH_MIN] = { "/root/test/protect/can-not-be-deleted",
+				     "/root/test/protect"
 				     "" };
 
 // 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
@@ -39,7 +40,8 @@ out:
 	return error;
 }
 
-static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
+static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
+			   mode_t mode)
 {
 	int error = 0;
 	char *path;
@@ -54,7 +56,8 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
 		goto skip;
 	}
 
-	if (list_contain_bottom_up(blacklist, path) && (flags & O_WRONLY)) {
+	// 禁止被保护的目录内创建文件
+	if (list_contain_top_down(blacklist, path) && (flags & O_WRONLY)) {
 		error = -EPERM;
 		goto out;
 	}
@@ -82,12 +85,13 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 		goto skip;
 	}
 
+	// 禁止删除被保护文件和其父目录
 	if (list_contain_bottom_up(blacklist, path)) {
 		error = -EPERM;
 		goto out;
 	}
 
-	printk(KERN_INFO "hackernel: openat: %s\n", path);
+	printk(KERN_INFO "hackernel: unlinkat: %s\n", path);
 skip:
 	error = 0;
 out:
@@ -119,6 +123,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		goto out;
 	}
 
+	// 禁止修改保护文件和父目录的路径
 	if (list_contain_bottom_up(blacklist, dst)) {
 		error = -EPERM;
 		goto out;
@@ -148,8 +153,9 @@ asmlinkage u64 sys_openat_wrapper(struct pt_regs *regs)
 	int dirfd = (int)regs->di;
 	char *pathname = (char *)regs->si;
 	int flags = (int)regs->dx;
+	mode_t mode = (mode_t)regs->r10;
 
-	if (sys_openat_hook(dirfd, pathname, flags)) {
+	if (sys_openat_hook(dirfd, pathname, flags, mode)) {
 		return -EPERM;
 	}
 	return __x64_sys_openat(regs);
