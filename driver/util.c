@@ -8,6 +8,7 @@
 #include <linux/kernel.h>
 #include <linux/limits.h>
 #include <linux/mm.h>
+#include <linux/namei.h>
 #include <linux/sched.h>
 #include <linux/syscalls.h>
 #include <linux/uaccess.h>
@@ -329,4 +330,16 @@ int list_contain_bottom_up(const char (*list)[PATH_MIN], const char *filename)
 		item += PATH_MIN;
 	}
 	return 0;
+}
+
+unsigned long get_ino_by_path(int dfd, const char __user *name)
+{
+	struct path path;
+	int error;
+	unsigned int lookup_flags = LOOKUP_OPEN;
+	error = user_path_at_empty(dfd, name, lookup_flags, &path, NULL);
+	if (error) {
+		return 0;
+	}
+	return path.dentry->d_inode->i_ino;
 }
