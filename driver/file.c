@@ -11,10 +11,10 @@
 #include <linux/sched.h>
 #include <linux/slab.h>
 
-static sys_call_ptr_t __x64_sys_open = NULL;
-static sys_call_ptr_t __x64_sys_openat = NULL;
-static sys_call_ptr_t __x64_sys_unlinkat = NULL;
-static sys_call_ptr_t __x64_sys_renameat2 = NULL;
+DEFINE_HOOK(open);
+DEFINE_HOOK(openat);
+DEFINE_HOOK(unlinkat);
+DEFINE_HOOK(renameat2);
 
 // 最后一个元素必须是"",这个元素用来判断数组的结束
 // 白名单和黑名单可以优化成红黑树
@@ -39,19 +39,6 @@ out:
 	return error;
 }
 
-static int list_contain(const char (*list)[PATH_MIN], const char *filename)
-{
-	char *item = (char *)*list;
-	while (*item) {
-		// 这种效果是根据文件前缀保护，如果完全匹配就没法绕过内核日志文件了
-		if (!strncmp(filename, item, strlen(item))) {
-			return 1;
-		}
-		item += PATH_MIN;
-	}
-	return 0;
-}
-
 static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
 {
 	int error = 0;
@@ -63,11 +50,11 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags)
 		goto out;
 	}
 
-	if (list_contain(whitelist, path)) {
+	if (list_contain_top_down(whitelist, path)) {
 		goto skip;
 	}
 
-	if (list_contain(blacklist, path) && (flags & O_WRONLY)) {
+	if (list_contain_bottom_up(blacklist, path) && (flags & O_WRONLY)) {
 		error = -EPERM;
 		goto out;
 	}
@@ -91,11 +78,11 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 		goto out;
 	}
 
-	if (list_contain(whitelist, path)) {
+	if (list_contain_top_down(whitelist, path)) {
 		goto skip;
 	}
 
-	if (list_contain(blacklist, path)) {
+	if (list_contain_bottom_up(blacklist, path)) {
 		error = -EPERM;
 		goto out;
 	}
@@ -121,7 +108,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		goto out;
 	}
 
-	if (list_contain(blacklist, src)) {
+	if (list_contain_bottom_up(blacklist, src)) {
 		error = -EPERM;
 		goto out;
 	}
@@ -132,7 +119,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		goto out;
 	}
 
-	if (list_contain(blacklist, dst)) {
+	if (list_contain_bottom_up(blacklist, dst)) {
 		error = -EPERM;
 		goto out;
 	}
@@ -192,138 +179,4 @@ asmlinkage u64 sys_renameat2_wrapper(struct pt_regs *regs)
 		return -EPERM;
 	}
 	return __x64_sys_renameat2(regs);
-}
-
-int replace_open(void)
-{
-	if (!g_sys_call_table) {
-		return -1;
-	}
-
-	if (__x64_sys_open) {
-		return 0;
-	}
-
-	__x64_sys_open = g_sys_call_table[__NR_open];
-
-	disable_write_protection();
-	g_sys_call_table[__NR_open] = &sys_open_wrapper;
-	enable_write_protection();
-	return 0;
-}
-
-int replace_openat(void)
-{
-	if (!g_sys_call_table) {
-		return -1;
-	}
-	if (__x64_sys_openat) {
-		return 0;
-	}
-	__x64_sys_openat = g_sys_call_table[__NR_openat];
-
-	disable_write_protection();
-	g_sys_call_table[__NR_openat] = &sys_openat_wrapper;
-	enable_write_protection();
-	return 0;
-}
-
-int replace_unlinkat(void)
-{
-	if (!g_sys_call_table) {
-		return -1;
-	}
-
-	if (__x64_sys_unlinkat) {
-		return 0;
-	}
-
-	__x64_sys_unlinkat = g_sys_call_table[__NR_unlinkat];
-
-	disable_write_protection();
-	g_sys_call_table[__NR_unlinkat] = &sys_unlinkat_wrapper;
-	enable_write_protection();
-	return 0;
-}
-
-int replace_renameat2(void)
-{
-	if (!g_sys_call_table) {
-		return -1;
-	}
-
-	if (__x64_sys_renameat2) {
-		return 0;
-	}
-
-	__x64_sys_renameat2 = g_sys_call_table[__NR_renameat2];
-
-	disable_write_protection();
-	g_sys_call_table[__NR_renameat2] = &sys_renameat2_wrapper;
-	enable_write_protection();
-	return 0;
-}
-
-int restore_open(void)
-{
-	if (!g_sys_call_table) {
-		return 0;
-	}
-
-	if (!__x64_sys_open) {
-		return 0;
-	}
-	disable_write_protection();
-	g_sys_call_table[__NR_open] = __x64_sys_open;
-	enable_write_protection();
-	__x64_sys_open = NULL;
-	return 0;
-}
-
-int restore_openat(void)
-{
-	if (!g_sys_call_table) {
-		return 0;
-	}
-
-	if (!__x64_sys_openat) {
-		return 0;
-	}
-	disable_write_protection();
-	g_sys_call_table[__NR_openat] = __x64_sys_openat;
-	enable_write_protection();
-	__x64_sys_openat = NULL;
-	return 0;
-}
-
-int restore_unlinkat(void)
-{
-	if (!g_sys_call_table) {
-		return 0;
-	}
-
-	if (!__x64_sys_unlinkat) {
-		return 0;
-	}
-	disable_write_protection();
-	g_sys_call_table[__NR_unlinkat] = __x64_sys_unlinkat;
-	enable_write_protection();
-	__x64_sys_unlinkat = NULL;
-	return 0;
-}
-
-int restore_renameat2(void)
-{
-	if (!g_sys_call_table) {
-		return 0;
-	}
-
-	if (!__x64_sys_renameat2) {
-		return 0;
-	}
-	disable_write_protection();
-	g_sys_call_table[__NR_renameat2] = __x64_sys_renameat2;
-	enable_write_protection();
-	__x64_sys_renameat2 = NULL;
-	return 0;
 }

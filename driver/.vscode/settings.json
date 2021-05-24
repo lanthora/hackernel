@@ -28,7 +28,12 @@
 		"initializer_list": "c",
 		"utility": "c",
 		"mm.h": "c",
-		"fs.h": "c"
+		"fs.h": "c",
+		"typeinfo": "cpp",
+		"util.h": "c",
+		"file.h": "c",
+		"*.tcc": "c",
+		"fstream": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

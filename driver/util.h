@@ -14,4 +14,10 @@ char *get_cw_path(void *buffer, size_t buffer_size);
 // 根据目录文件描述符和用户空间传入的参数获得绝对路径
 // 函数内会申请内存,调用方需要释放内存
 char *get_absolute_path_alloc(int dirfd, char __user *pathname);
+
+#define PATH_MIN 64
+int is_prefix_or_complate_match(const char *modle, const char *string);
+int list_contain_top_down(const char (*list)[PATH_MIN], const char *filename);
+int list_contain_bottom_up(const char (*list)[PATH_MIN], const char *filename);
+
 #endif

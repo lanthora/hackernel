@@ -22,4 +22,49 @@ void disable_file_protect(void);
 void disable_write_protection(void);
 void enable_write_protection(void);
 
+#ifndef DEFINE_HOOK_HEADER
+#define DEFINE_HOOK_HEADER(name)                                               \
+	int replace_##name(void);                                              \
+	int restore_##name(void);
+#endif
+
+#ifndef DEFINE_HOOK
+#define DEFINE_HOOK(name)                                                      \
+	asmlinkage u64 sys_##name##_wrapper(struct pt_regs *regs);             \
+	static sys_call_ptr_t __x64_sys_##name = NULL;                         \
+	int replace_##name(void)                                               \
+	{                                                                      \
+		if (!g_sys_call_table) {                                       \
+			return -1;                                             \
+		}                                                              \
+                                                                               \
+		if (__x64_sys_##name) {                                        \
+			return 0;                                              \
+		}                                                              \
+                                                                               \
+		__x64_sys_##name = g_sys_call_table[__NR_##name];              \
+                                                                               \
+		disable_write_protection();                                    \
+		g_sys_call_table[__NR_##name] = &sys_##name##_wrapper;         \
+		enable_write_protection();                                     \
+		return 0;                                                      \
+	}                                                                      \
+                                                                               \
+	int restore_##name(void)                                               \
+	{                                                                      \
+		if (!g_sys_call_table) {                                       \
+			return 0;                                              \
+		}                                                              \
+                                                                               \
+		if (!__x64_sys_##name) {                                       \
+			return 0;                                              \
+		}                                                              \
+		disable_write_protection();                                    \
+		g_sys_call_table[__NR_##name] = __x64_sys_##name;              \
+		enable_write_protection();                                     \
+		__x64_sys_##name = NULL;                                       \
+		return 0;                                                      \
+	}
+#endif
+
 #endif

@@ -289,3 +289,44 @@ err:
 	kfree(filename);
 	return NULL;
 }
+
+int is_prefix_or_complate_match(const char *modle, const char *string)
+{
+	if (strlen(modle) > strlen(string)) {
+		return 0;
+	}
+
+	if (strlen(modle) == strlen(string)) {
+		return !strcmp(modle, string);
+	}
+
+	if (string[strlen(modle)] != '/') {
+		return 0;
+	}
+
+	return !strncmp(modle, string, strlen(modle));
+}
+
+int list_contain_top_down(const char (*list)[PATH_MIN], const char *filename)
+{
+	char *item = (char *)*list;
+	while (*item) {
+		if (is_prefix_or_complate_match(item, filename)) {
+			return 1;
+		}
+		item += PATH_MIN;
+	}
+	return 0;
+}
+
+int list_contain_bottom_up(const char (*list)[PATH_MIN], const char *filename)
+{
+	char *item = (char *)*list;
+	while (*item) {
+		if (is_prefix_or_complate_match(filename, item)) {
+			return 1;
+		}
+		item += PATH_MIN;
+	}
+	return 0;
+}

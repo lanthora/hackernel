@@ -3,7 +3,6 @@
 
 #include "syscall.h"
 
-int replace_execve(void);
-int restore_execve(void);
+DEFINE_HOOK_HEADER(execve);
 
 #endif
