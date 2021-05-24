@@ -7,7 +7,6 @@
 
 DEFINE_HOOK(execve);
 
-// 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
 static int sys_execve_hook(char __user *pathname, char __user *__user *argv,
 			   char __user *__user *envp)
 {
@@ -23,7 +22,7 @@ static int sys_execve_hook(char __user *pathname, char __user *__user *argv,
 	if (error) {
 		goto out;
 	}
-	printk(KERN_INFO "hackernel: execve=%s\n", cmd);
+	printk(KERN_INFO "hackernel: execve cmd=%s\n", cmd);
 
 out:
 	kfree(cmd);

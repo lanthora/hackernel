@@ -33,7 +33,8 @@
 		"util.h": "c",
 		"file.h": "c",
 		"*.tcc": "c",
-		"fstream": "c"
+		"fstream": "c",
+		"fs_struct.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
