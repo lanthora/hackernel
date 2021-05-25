@@ -18,8 +18,15 @@ DEFINE_HOOK(renameat2);
 
 // 最后一个元素必须是"",这个元素用来判断数组的结束
 // 白名单和黑名单可以优化成红黑树
-const char whitelist[][PATH_MIN] = { "/run", "/proc", "" };
-const char blacklist[][PATH_MIN] = { "/root/test/protect/modify-me", "" };
+const char whitelist[][PATH_MIN] = { "/run",
+				     "/proc",
+				     "/usr/local/share/dbus-1/system-services",
+				     "/usr/share/dbus-1/system-services",
+				     "/lib/dbus-1/system-services",
+				     "" };
+const char blacklist[][PATH_MIN] = { "/root/test/protect/modify-me",
+
+				     "" };
 
 // inode number of "/root/test/protect/modify-me"
 unsigned long blackino = 7087550;
@@ -53,8 +60,11 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 	int error = 0;
 	char *path;
 	unsigned long ino;
+	uuid_t uuid;
+	char uuid_buffer[37];
 
 	ino = get_ino_by_path(dirfd, pathname);
+	uuid = get_uuid_by_path(dirfd, pathname);
 	if (ino == blackino && (flags & O_WRONLY)) {
 		error = -1;
 		goto out;
@@ -76,7 +86,10 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 		goto out;
 	}
 
-	printk(KERN_INFO "hackernel: openat fd=[%ld] path=%s\n", ino, path);
+	uuid_unparse(uuid, (char *)&uuid_buffer);
+
+	printk(KERN_INFO "hackernel: openat uuid=[%s] fd=[%ld] path=[%s]\n",
+	       uuid_buffer, ino, path);
 
 out:
 	kfree(path);
@@ -100,7 +113,7 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 	}
 
 	// 禁止删除被保护文件和其父目录
-	if (list_contain_bottom_up(blacklist, path)) {
+	if (ino == blackino && list_contain_bottom_up(blacklist, path)) {
 		error = -EPERM;
 	}
 
@@ -127,7 +140,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	}
 	ino = get_ino_by_path(srcfd, srcpath);
 	printk(KERN_INFO "hackernel: renameat2 fd=[%ld] dst=%s\n", ino, src);
-	if (list_contain_bottom_up(blacklist, src)) {
+	if (ino == blackino && list_contain_bottom_up(blacklist, src)) {
 		error = -EPERM;
 		goto out;
 	}
@@ -141,7 +154,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	printk(KERN_INFO "hackernel: renameat2 fd=[%ld] dst=%s\n", ino, dst);
 
 	// 禁止修改保护文件和父目录的路径
-	if (list_contain_bottom_up(blacklist, dst)) {
+	if (ino == blackino && list_contain_bottom_up(blacklist, dst)) {
 		error = -EPERM;
 		goto out;
 	}

@@ -343,3 +343,33 @@ unsigned long get_ino_by_path(int dfd, const char __user *name)
 	}
 	return path.dentry->d_inode->i_ino;
 }
+
+uuid_t get_uuid_by_path(int dfd, const char __user *name)
+{
+	struct path path;
+	int error;
+	unsigned int lookup_flags = LOOKUP_OPEN;
+	error = user_path_at_empty(dfd, name, lookup_flags, &path, NULL);
+	if (error) {
+		return uuid_null;
+	}
+	return path.mnt->mnt_sb->s_uuid;
+}
+
+int uuid_unparse(const uuid_t uuid, char *buffer)
+{
+	u8 tmp[16];
+	int idx;
+	int offset = 0;
+
+	export_uuid(tmp, &uuid);
+
+	for (idx = 0; idx < UUID_SIZE; ++idx) {
+		if (idx == 4 || idx == 6 || idx == 8 || idx == 10) {
+			sprintf(buffer + 2 * idx + offset, "-");
+			++offset;
+		}
+		sprintf(buffer + 2 * idx + offset, "%02x", tmp[idx]);
+	}
+	return 0;
+}

@@ -3,6 +3,7 @@
 
 #include <linux/kernel.h>
 #include <linux/sched.h>
+#include <linux/uuid.h>
 
 int parse_pathname(const char __user *pathname, char *path, long size);
 int parse_argv(const char __user *const __user *argv, char *params, long size);
@@ -24,4 +25,9 @@ int list_contain_bottom_up(const char (*list)[PATH_MIN], const char *filename);
 // 获取inode number
 unsigned long get_ino_by_path(int dfd, const char __user *name);
 
+// 获取uuid
+uuid_t get_uuid_by_path(int dfd, const char __user *name);
+
+// uuid类型转换为字符串,buffer大小至少为37字节
+int uuid_unparse(const uuid_t uuid, char *buffer);
 #endif
