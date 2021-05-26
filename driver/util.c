@@ -337,16 +337,17 @@ unsigned long get_fsid(const char *name)
 {
 	int error;
 	struct path path;
-	unsigned int lookup_flags = LOOKUP_OPEN;
 	struct kstatfs kstatfs;
 	unsigned long retval;
-	error = kern_path(name, lookup_flags, &path);
+
+	error = kern_path(name, LOOKUP_OPEN, &path);
 	if (error) {
 		return 0;
 	}
 
 	path.mnt->mnt_sb->s_op->statfs(path.dentry, &kstatfs);
 	memcpy(&retval, &kstatfs.f_fsid, sizeof(unsigned long));
+	path_put(&path);
 	return retval;
 }
 
@@ -354,10 +355,12 @@ unsigned long get_ino(const char *name)
 {
 	struct path path;
 	int error;
-	unsigned int lookup_flags = LOOKUP_OPEN;
-	error = kern_path(name, lookup_flags, &path);
+	unsigned long retval;
+	error = kern_path(name, LOOKUP_OPEN, &path);
 	if (error) {
 		return 0;
 	}
-	return path.dentry->d_inode->i_ino;
+	retval = path.dentry->d_inode->i_ino;
+	path_put(&path);
+	return retval;
 }
