@@ -19,10 +19,9 @@ DEFINE_HOOK(renameat2);
 // 最后一个元素必须是"",这个元素用来判断数组的结束
 // 白名单和黑名单可以优化成红黑树
 const char whitelist[][PATH_MIN] = { "/run", "/proc", "" };
-const char blacklist[][PATH_MIN] = { "/root/test/protect/modify-me", "" };
 
 // inode number of "/root/test/protect/modify-me"
-unsigned long blackino = 7087550;
+unsigned long blackino = 7087818;
 
 // 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
 static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
@@ -60,20 +59,13 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 		goto out;
 	}
 
-	ino = get_ino(path);
-	if (ino == blackino && (flags & O_WRONLY)) {
-		error = -1;
-		goto out;
-	}
-
 	if (list_contain_top_down(whitelist, path)) {
 		goto out;
 	}
 
-	// 禁止被保护的目录内创建文件
-	if (list_contain_top_down(blacklist, path) && (flags & O_WRONLY)) {
+	ino = get_ino(path);
+	if (ino == blackino && (flags & O_WRONLY)) {
 		error = -1;
-		goto out;
 	}
 
 	fsid = get_fsid(path);
@@ -101,12 +93,11 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 		goto out;
 	}
 
-	// 禁止删除被保护文件和其父目录
-	if (ino == blackino && list_contain_bottom_up(blacklist, path)) {
+	ino = get_ino(path);
+	if (ino == blackino) {
 		error = -EPERM;
 	}
 
-	ino = get_ino(path);
 	printk(KERN_INFO "hackernel: unlinkat fd=[%ld] path=%s\n", ino, path);
 
 out:
@@ -129,7 +120,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	}
 	ino = get_ino(src);
 	printk(KERN_INFO "hackernel: renameat2 fd=[%ld] dst=%s\n", ino, src);
-	if (ino == blackino && list_contain_bottom_up(blacklist, src)) {
+	if (ino == blackino) {
 		error = -EPERM;
 		goto out;
 	}
@@ -140,13 +131,11 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		goto out;
 	}
 	ino = get_ino(dst);
-	printk(KERN_INFO "hackernel: renameat2 fd=[%ld] dst=%s\n", ino, dst);
-
-	// 禁止修改保护文件和父目录的路径
-	if (ino == blackino && list_contain_bottom_up(blacklist, dst)) {
+	if (ino == blackino) {
 		error = -EPERM;
 		goto out;
 	}
+	printk(KERN_INFO "hackernel: renameat2 fd=[%ld] dst=%s\n", ino, dst);
 
 out:
 	kfree(src);
