@@ -39,7 +39,7 @@ static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
 		goto out;
 	}
 	ino = get_ino(path);
-	printk(KERN_INFO "hackernel: open fd=[%ld] path=%s\n", ino, path);
+	printk(KERN_INFO "hackernel: open ino=[%ld] path=%s\n", ino, path);
 
 out:
 	kfree(path);
@@ -69,7 +69,7 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 	}
 
 	fsid = get_fsid(path);
-	printk(KERN_INFO "hackernel: openat fsid=[%ld] fd=[%ld] path=[%s]\n",
+	printk(KERN_INFO "hackernel: openat fsid=[%ld] ino=[%ld] path=[%s]\n",
 	       fsid, ino, path);
 
 out:
@@ -98,7 +98,7 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 		error = -EPERM;
 	}
 
-	printk(KERN_INFO "hackernel: unlinkat fd=[%ld] path=%s\n", ino, path);
+	printk(KERN_INFO "hackernel: unlinkat ino=[%ld] path=%s\n", ino, path);
 
 out:
 	kfree(path);
@@ -119,7 +119,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		goto out;
 	}
 	ino = get_ino(src);
-	printk(KERN_INFO "hackernel: renameat2 fd=[%ld] dst=%s\n", ino, src);
+	printk(KERN_INFO "hackernel: renameat2 ino=[%ld] dst=%s\n", ino, src);
 	if (ino == blackino) {
 		error = -EPERM;
 		goto out;
@@ -135,7 +135,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		error = -EPERM;
 		goto out;
 	}
-	printk(KERN_INFO "hackernel: renameat2 fd=[%ld] dst=%s\n", ino, dst);
+	printk(KERN_INFO "hackernel: renameat2 ino=[%ld] dst=%s\n", ino, dst);
 
 out:
 	kfree(src);
