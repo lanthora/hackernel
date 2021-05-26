@@ -22,12 +22,8 @@ int is_prefix_or_complate_match(const char *modle, const char *string);
 int list_contain_top_down(const char (*list)[PATH_MIN], const char *filename);
 int list_contain_bottom_up(const char (*list)[PATH_MIN], const char *filename);
 
-// 获取inode number
-unsigned long get_ino_by_path(int dfd, const char __user *name);
+// 获取文件系统id和文件描述符id,通过这两个id可以唯一确定操作系统中的一个文件
+unsigned long get_fsid(const char *name);
+unsigned long get_ino(const char *name);
 
-// 获取uuid
-uuid_t get_uuid_by_path(int dfd, const char __user *name);
-
-// uuid类型转换为字符串,buffer大小至少为37字节
-int uuid_unparse(const uuid_t uuid, char *buffer);
 #endif

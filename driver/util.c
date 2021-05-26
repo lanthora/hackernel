@@ -10,6 +10,7 @@
 #include <linux/mm.h>
 #include <linux/namei.h>
 #include <linux/sched.h>
+#include <linux/statfs.h>
 #include <linux/syscalls.h>
 #include <linux/uaccess.h>
 #include <uapi/asm-generic/errno-base.h>
@@ -332,44 +333,31 @@ int list_contain_bottom_up(const char (*list)[PATH_MIN], const char *filename)
 	return 0;
 }
 
-unsigned long get_ino_by_path(int dfd, const char __user *name)
+unsigned long get_fsid(const char *name)
+{
+	int error;
+	struct path path;
+	unsigned int lookup_flags = LOOKUP_OPEN;
+	struct kstatfs kstatfs;
+	unsigned long retval;
+	error = kern_path(name, lookup_flags, &path);
+	if (error) {
+		return 0;
+	}
+
+	path.mnt->mnt_sb->s_op->statfs(path.dentry, &kstatfs);
+	memcpy(&retval, &kstatfs.f_fsid, sizeof(unsigned long));
+	return retval;
+}
+
+unsigned long get_ino(const char *name)
 {
 	struct path path;
 	int error;
 	unsigned int lookup_flags = LOOKUP_OPEN;
-	error = user_path_at_empty(dfd, name, lookup_flags, &path, NULL);
+	error = kern_path(name, lookup_flags, &path);
 	if (error) {
 		return 0;
 	}
 	return path.dentry->d_inode->i_ino;
-}
-
-uuid_t get_uuid_by_path(int dfd, const char __user *name)
-{
-	struct path path;
-	int error;
-	unsigned int lookup_flags = LOOKUP_OPEN;
-	error = user_path_at_empty(dfd, name, lookup_flags, &path, NULL);
-	if (error) {
-		return uuid_null;
-	}
-	return path.mnt->mnt_sb->s_uuid;
-}
-
-int uuid_unparse(const uuid_t uuid, char *buffer)
-{
-	u8 tmp[16];
-	int idx;
-	int offset = 0;
-
-	export_uuid(tmp, &uuid);
-
-	for (idx = 0; idx < UUID_SIZE; ++idx) {
-		if (idx == 4 || idx == 6 || idx == 8 || idx == 10) {
-			sprintf(buffer + 2 * idx + offset, "-");
-			++offset;
-		}
-		sprintf(buffer + 2 * idx + offset, "%02x", tmp[idx]);
-	}
-	return 0;
 }

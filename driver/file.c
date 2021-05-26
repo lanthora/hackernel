@@ -18,15 +18,8 @@ DEFINE_HOOK(renameat2);
 
 // 最后一个元素必须是"",这个元素用来判断数组的结束
 // 白名单和黑名单可以优化成红黑树
-const char whitelist[][PATH_MIN] = { "/run",
-				     "/proc",
-				     "/usr/local/share/dbus-1/system-services",
-				     "/usr/share/dbus-1/system-services",
-				     "/lib/dbus-1/system-services",
-				     "" };
-const char blacklist[][PATH_MIN] = { "/root/test/protect/modify-me",
-
-				     "" };
+const char whitelist[][PATH_MIN] = { "/run", "/proc", "" };
+const char blacklist[][PATH_MIN] = { "/root/test/protect/modify-me", "" };
 
 // inode number of "/root/test/protect/modify-me"
 unsigned long blackino = 7087550;
@@ -46,7 +39,7 @@ static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
 	if (error) {
 		goto out;
 	}
-	ino = get_ino_by_path(AT_FDCWD, pathname);
+	ino = get_ino(path);
 	printk(KERN_INFO "hackernel: open fd=[%ld] path=%s\n", ino, path);
 
 out:
@@ -59,19 +52,16 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 {
 	int error = 0;
 	char *path;
-	unsigned long ino;
-	uuid_t uuid;
-	char uuid_buffer[37];
+	unsigned long ino, fsid;
 
-	ino = get_ino_by_path(dirfd, pathname);
-	uuid = get_uuid_by_path(dirfd, pathname);
-	if (ino == blackino && (flags & O_WRONLY)) {
+	path = get_absolute_path_alloc(dirfd, pathname);
+	if (!path) {
 		error = -1;
 		goto out;
 	}
 
-	path = get_absolute_path_alloc(dirfd, pathname);
-	if (!path) {
+	ino = get_ino(path);
+	if (ino == blackino && (flags & O_WRONLY)) {
 		error = -1;
 		goto out;
 	}
@@ -86,10 +76,9 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 		goto out;
 	}
 
-	uuid_unparse(uuid, (char *)&uuid_buffer);
-
-	printk(KERN_INFO "hackernel: openat uuid=[%s] fd=[%ld] path=[%s]\n",
-	       uuid_buffer, ino, path);
+	fsid = get_fsid(path);
+	printk(KERN_INFO "hackernel: openat fsid=[%ld] fd=[%ld] path=[%s]\n",
+	       fsid, ino, path);
 
 out:
 	kfree(path);
@@ -117,7 +106,7 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 		error = -EPERM;
 	}
 
-	ino = get_ino_by_path(dirfd, pathname);
+	ino = get_ino(path);
 	printk(KERN_INFO "hackernel: unlinkat fd=[%ld] path=%s\n", ino, path);
 
 out:
@@ -138,7 +127,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		error = -1;
 		goto out;
 	}
-	ino = get_ino_by_path(srcfd, srcpath);
+	ino = get_ino(src);
 	printk(KERN_INFO "hackernel: renameat2 fd=[%ld] dst=%s\n", ino, src);
 	if (ino == blackino && list_contain_bottom_up(blacklist, src)) {
 		error = -EPERM;
@@ -150,7 +139,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		error = -1;
 		goto out;
 	}
-	ino = get_ino_by_path(dstfd, dstpath);
+	ino = get_ino(dst);
 	printk(KERN_INFO "hackernel: renameat2 fd=[%ld] dst=%s\n", ino, dst);
 
 	// 禁止修改保护文件和父目录的路径
