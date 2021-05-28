@@ -50,8 +50,8 @@ static int fperm_tree_insert(struct rb_root *root, struct fperm_node *data)
 
 		this = container_of(*new, struct fperm_node, node);
 		result = fperm_node_cmp(data, this);
-
 		parent = *new;
+
 		if (result < 0) {
 			new = &((*new)->rb_left);
 		} else if (result > 0) {
@@ -77,6 +77,7 @@ static struct fperm_node *fperm_tree_search(struct rb_root *root, ino_t ino)
 
 		data = container_of(node, struct fperm_node, node);
 		result = ino_cmp(ino, data->ino);
+
 		if (result < 0) {
 			node = node->rb_left;
 		} else if (result > 0) {
@@ -85,17 +86,16 @@ static struct fperm_node *fperm_tree_search(struct rb_root *root, ino_t ino)
 			return data;
 		}
 	}
+
 	return NULL;
 }
 
 static int fperm_tree_destory(struct rb_root *root)
 {
 	struct fperm_node *data;
+
 	while (!RB_EMPTY_ROOT(root)) {
 		data = container_of(rb_first(root), struct fperm_node, node);
-		if (!data) {
-			continue;
-		}
 		rb_erase(&data->node, root);
 		kfree(data);
 	}
@@ -121,11 +121,13 @@ static int fperm_list_add(struct fperm_list *data)
 static struct rb_root *fperm_list_search(fsid_t fsid)
 {
 	struct fperm_list *data;
+
 	list_for_each_entry (data, &head->node, node) {
 		if (data->fsid == fsid) {
 			return data->root;
 		}
 	}
+
 	data = kzalloc(sizeof(struct fperm_list), GFP_KERNEL);
 	if (!data) {
 		goto err;
@@ -176,7 +178,9 @@ perm_t fperm_get(const fsid_t fsid, ino_t ino)
 	struct rb_root *root;
 	struct fperm_node *node;
 	perm_t retval = 0;
+
 	read_lock(lock);
+
 	root = fperm_list_search(fsid);
 	if (!root) {
 		goto out;
@@ -186,10 +190,12 @@ perm_t fperm_get(const fsid_t fsid, ino_t ino)
 	if (node) {
 		retval = node->perm;
 	}
+
 out:
 	read_unlock(lock);
 	return retval;
 }
+
 int fperm_set(const fsid_t fsid, ino_t ino, perm_t perm)
 {
 	struct rb_root *root;
@@ -205,7 +211,6 @@ int fperm_set(const fsid_t fsid, ino_t ino, perm_t perm)
 	}
 
 	node = fperm_tree_search(root, ino);
-
 	if (node) {
 		node->perm = perm;
 		goto out;
@@ -216,9 +221,11 @@ int fperm_set(const fsid_t fsid, ino_t ino, perm_t perm)
 		retval = -EAGAIN;
 		goto out;
 	}
+
 	node->ino = ino;
 	node->perm = perm;
 	fperm_tree_insert(root, node);
+
 out:
 	write_unlock(lock);
 	return retval;
