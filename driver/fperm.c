@@ -117,12 +117,6 @@ static int fperm_list_init(void)
 	return 0;
 }
 
-static int fperm_list_add(struct fperm_list *data)
-{
-	list_add_tail(&data->node, &head->node);
-	return 0;
-}
-
 // 查找fsid对应的权限红黑树,如果不存在就初始化红黑树
 static struct rb_root *fperm_list_search(fsid_t fsid)
 {
@@ -132,10 +126,19 @@ static struct rb_root *fperm_list_search(fsid_t fsid)
 		goto err;
 	}
 
+	data = list_first_entry_or_null(&head->node, struct fperm_list, node);
+	if (data && data->fsid == fsid) {
+		return data->root;
+	}
+
 	list_for_each_entry (data, &head->node, node) {
-		if (data->fsid == fsid) {
-			return data->root;
+		if (data->fsid != fsid) {
+			continue;
 		}
+
+		list_del(&data->node);
+		list_add(&data->node, &head->node);
+		return data->root;
 	}
 
 	data = kzalloc(sizeof(struct fperm_list), GFP_KERNEL);
@@ -149,7 +152,7 @@ static struct rb_root *fperm_list_search(fsid_t fsid)
 		goto err;
 	}
 
-	fperm_list_add(data);
+	list_add(&data->node, &head->node);
 	return data->root;
 
 err:
