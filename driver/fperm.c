@@ -106,7 +106,13 @@ static int fperm_tree_destory(struct rb_root *root)
 
 static int fperm_list_init(void)
 {
+	if (head) {
+		return -EBUSY;
+	}
 	head = kzalloc(sizeof(struct fperm_list), GFP_KERNEL);
+	if (!head) {
+		return -ENOMEM;
+	}
 	INIT_LIST_HEAD(&head->node);
 	return 0;
 }
@@ -120,7 +126,11 @@ static int fperm_list_add(struct fperm_list *data)
 // 查找fsid对应的权限红黑树,如果不存在就初始化红黑树
 static struct rb_root *fperm_list_search(fsid_t fsid)
 {
-	struct fperm_list *data;
+	struct fperm_list *data = NULL;
+
+	if (!head) {
+		goto err;
+	}
 
 	list_for_each_entry (data, &head->node, node) {
 		if (data->fsid == fsid) {
@@ -153,24 +163,43 @@ err:
 static int fperm_list_destory(void)
 {
 	struct fperm_list *data, *n;
+
+	if (!head) {
+		return -EPERM;
+	}
+
 	list_for_each_entry_safe (data, n, &head->node, node) {
 		list_del(&data->node);
 		fperm_tree_destory(data->root);
+		kfree(data);
 	}
+	kfree(head);
+	head = NULL;
 	return 0;
 }
 
-void fperm_init(void)
+int fperm_init(void)
 {
-	fperm_list_init();
+	int error;
+	error = fperm_list_init();
+	if (error) {
+		return error;
+	}
+
 	lock = kmalloc(sizeof(rwlock_t), GFP_KERNEL);
+	if (!lock) {
+		return -ENOMEM;
+	}
 	rwlock_init(lock);
+	return 0;
 }
 
-void fperm_exit(void)
+int fperm_destory(void)
 {
 	fperm_list_destory();
 	kfree(lock);
+	lock = NULL;
+	return 0;
 }
 
 perm_t fperm_get(const fsid_t fsid, ino_t ino)

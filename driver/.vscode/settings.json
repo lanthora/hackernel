@@ -34,7 +34,11 @@
 		"file.h": "c",
 		"*.tcc": "c",
 		"fstream": "c",
-		"fs_struct.h": "c"
+		"fs_struct.h": "c",
+		"mutex": "c",
+		"condition_variable": "c",
+		"ostream": "c",
+		"stop_token": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
