@@ -236,8 +236,7 @@ int fperm_set(const fsid_t fsid, ino_t ino, perm_t perm)
 	int retval = 0;
 
 	if (fsid == BAD_FSID || ino == BAD_INO) {
-		retval = -EINVAL;
-		goto out;
+		return -EINVAL;
 	}
 
 	write_lock(lock);
