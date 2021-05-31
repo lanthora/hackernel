@@ -38,7 +38,8 @@
 		"mutex": "c",
 		"condition_variable": "c",
 		"ostream": "c",
-		"stop_token": "c"
+		"stop_token": "c",
+		"fperm.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

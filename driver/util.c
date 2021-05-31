@@ -292,45 +292,25 @@ err:
 	return NULL;
 }
 
-int is_prefix_or_complate_match(const char *modle, const char *string)
+char *get_parent_path_alloc(char *path)
 {
-	if (strlen(modle) > strlen(string)) {
-		return 0;
-	}
+	char *parent_path;
+	size_t len;
 
-	if (strlen(modle) == strlen(string)) {
-		return !strcmp(modle, string);
+	parent_path = kzalloc(PATH_MAX, GFP_KERNEL);
+	if (!parent_path) {
+		goto err;
 	}
-
-	if (string[strlen(modle)] != '/') {
-		return 0;
+	strcpy(parent_path, path);
+	len = strlen(parent_path);
+	while (len > 0 && parent_path[len] != '/') {
+		--len;
 	}
-
-	return !strncmp(modle, string, strlen(modle));
-}
-
-int list_contain_top_down(const char (*list)[PATH_MIN], const char *filename)
-{
-	char *item = (char *)*list;
-	while (*item) {
-		if (is_prefix_or_complate_match(item, filename)) {
-			return 1;
-		}
-		item += PATH_MIN;
-	}
-	return 0;
-}
-
-int list_contain_bottom_up(const char (*list)[PATH_MIN], const char *filename)
-{
-	char *item = (char *)*list;
-	while (*item) {
-		if (is_prefix_or_complate_match(filename, item)) {
-			return 1;
-		}
-		item += PATH_MIN;
-	}
-	return 0;
+	parent_path[len] = '\0';
+	return parent_path;
+err:
+	kfree(parent_path);
+	return NULL;
 }
 
 unsigned long get_fsid(const char *name)

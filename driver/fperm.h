@@ -12,6 +12,9 @@ typedef u32 perm_t;
 #define UNLINK_PROTECT_MASK 4
 #define RENAME_PROTECT_MASK 8
 
+#define BAD_FSID 0
+#define BAD_INO 1
+
 // fperm_init分配必要的内存,使用set/get前需要调用
 // fperm_destory释放init和set过程中申请的内存
 int fperm_init(void);

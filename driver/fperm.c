@@ -234,6 +234,11 @@ int fperm_set(const fsid_t fsid, ino_t ino, perm_t perm)
 	struct fperm_node *node;
 	int retval = 0;
 
+	if (fsid == BAD_FSID || ino == BAD_INO) {
+		retval = -EINVAL;
+		goto out;
+	}
+
 	write_lock(lock);
 
 	root = fperm_list_search(fsid);

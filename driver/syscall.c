@@ -1,6 +1,8 @@
 #include "syscall.h"
 #include "file.h"
+#include "fperm.h"
 #include "process.h"
+#include "util.h"
 #include <asm/special_insns.h>
 #include <net/net_namespace.h>
 
@@ -32,6 +34,29 @@ void disable_process_protect(void)
 	}
 }
 
+static void file_protect_test(void)
+{
+	unsigned long fsid, ino;
+
+	fsid = get_fsid("/root/test/protect/modify-me");
+	ino = get_ino("/root/test/protect/modify-me");
+	fperm_set(fsid, ino,
+		  UNLINK_PROTECT_MASK | WRITE_PROTECT_MASK |
+			  RENAME_PROTECT_MASK);
+
+	fsid = get_fsid("/root/test/protect");
+	ino = get_ino("/root/test/protect");
+	fperm_set(fsid, ino, RENAME_PROTECT_MASK | WRITE_PROTECT_MASK);
+
+	fsid = get_fsid("/root/test");
+	ino = get_ino("/root/test");
+	fperm_set(fsid, ino, RENAME_PROTECT_MASK);
+
+	fsid = get_fsid("/root");
+	ino = get_ino("/root");
+	fperm_set(fsid, ino, RENAME_PROTECT_MASK);
+}
+
 void enable_file_protect(void)
 {
 	int error;
@@ -47,6 +72,8 @@ void enable_file_protect(void)
 	error = replace_renameat2();
 	if (error) {
 	}
+
+	file_protect_test();
 }
 
 void disable_file_protect(void)

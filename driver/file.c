@@ -1,4 +1,5 @@
 #include "file.h"
+#include "fperm.h"
 #include "syscall.h"
 #include "util.h"
 #include <asm/uaccess.h>
@@ -16,19 +17,13 @@ DEFINE_HOOK(openat);
 DEFINE_HOOK(unlinkat);
 DEFINE_HOOK(renameat2);
 
-// 最后一个元素必须是"",这个元素用来判断数组的结束
-// 白名单和黑名单可以优化成红黑树
-const char whitelist[][PATH_MIN] = { "/run", "/proc", "" };
-
-// inode number of "/root/test/protect/modify-me"
-unsigned long blackino = 7087818;
-
 // 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
 static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
 {
 	int error = 0;
 	char *path;
-	unsigned long ino;
+	unsigned long fsid, ino;
+	perm_t perm;
 
 	path = kzalloc(PATH_MAX, GFP_KERNEL);
 	if (!path) {
@@ -38,8 +33,9 @@ static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
 	if (error) {
 		goto out;
 	}
+	fsid = get_fsid(path);
 	ino = get_ino(path);
-	printk(KERN_INFO "hackernel: open ino=[%ld] path=%s\n", ino, path);
+	perm = fperm_get(fsid, ino);
 
 out:
 	kfree(path);
@@ -50,30 +46,47 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 			   mode_t mode)
 {
 	int error = 0;
-	char *path;
-	unsigned long ino, fsid;
+	char *path = NULL;
+	char *parent_path = NULL;
+	unsigned long fsid, ino;
+	perm_t perm;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
 	if (!path) {
-		error = -1;
+		error = -EINVAL;
 		goto out;
-	}
-
-	if (list_contain_top_down(whitelist, path)) {
-		goto out;
-	}
-
-	ino = get_ino(path);
-	if (ino == blackino && (flags & O_WRONLY)) {
-		error = -1;
 	}
 
 	fsid = get_fsid(path);
-	printk(KERN_INFO "hackernel: openat fsid=[%ld] ino=[%ld] path=[%s]\n",
-	       fsid, ino, path);
+	ino = get_ino(path);
+	perm = fperm_get(fsid, ino);
+
+	if ((flags & O_RDONLY) && (perm & READ_PROTECT_MASK)) {
+		error = -EPERM;
+		goto out;
+	}
+
+	if ((flags & O_WRONLY) && (perm & WRITE_PROTECT_MASK)) {
+		error = -EPERM;
+		goto out;
+	}
+
+	// 父目录有写保护，禁止创建文件
+	if (!(flags & O_CREAT)) {
+		goto out;
+	}
+	parent_path = get_parent_path_alloc(path);
+	fsid = get_fsid(parent_path);
+	ino = get_ino(parent_path);
+	perm = fperm_get(fsid, ino);
+	if (perm & WRITE_PROTECT_MASK) {
+		error = -EPERM;
+		goto out;
+	}
 
 out:
 	kfree(path);
+	kfree(parent_path);
 	return error;
 }
 
@@ -81,24 +94,22 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 {
 	int error = 0;
 	char *path;
-	unsigned long ino;
+	unsigned long fsid, ino;
+	perm_t perm;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
 	if (!path) {
-		error = -1;
+		error = -EINVAL;
 		goto out;
 	}
 
-	if (list_contain_top_down(whitelist, path)) {
-		goto out;
-	}
-
+	fsid = get_fsid(path);
 	ino = get_ino(path);
-	if (ino == blackino) {
+	perm = fperm_get(fsid, ino);
+	if (perm & UNLINK_PROTECT_MASK) {
 		error = -EPERM;
+		goto out;
 	}
-
-	printk(KERN_INFO "hackernel: unlinkat ino=[%ld] path=%s\n", ino, path);
 
 out:
 	kfree(path);
@@ -111,16 +122,18 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	int error = 0;
 	char *src;
 	char *dst;
-	unsigned long ino;
+	unsigned long fsid, ino;
+	perm_t perm;
 
 	src = get_absolute_path_alloc(srcfd, srcpath);
 	if (!src) {
 		error = -1;
 		goto out;
 	}
+	fsid = get_fsid(src);
 	ino = get_ino(src);
-	printk(KERN_INFO "hackernel: renameat2 ino=[%ld] dst=%s\n", ino, src);
-	if (ino == blackino) {
+	perm = fperm_get(fsid, ino);
+	if (perm & RENAME_PROTECT_MASK) {
 		error = -EPERM;
 		goto out;
 	}
@@ -130,12 +143,14 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		error = -1;
 		goto out;
 	}
+
+	fsid = get_fsid(dst);
 	ino = get_ino(dst);
-	if (ino == blackino) {
+	perm = fperm_get(fsid, ino);
+	if (perm & RENAME_PROTECT_MASK) {
 		error = -EPERM;
 		goto out;
 	}
-	printk(KERN_INFO "hackernel: renameat2 ino=[%ld] dst=%s\n", ino, dst);
 
 out:
 	kfree(src);
