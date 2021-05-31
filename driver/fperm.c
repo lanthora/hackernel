@@ -1,4 +1,5 @@
 #include "fperm.h"
+#include "util.h"
 #include <linux/list.h>
 #include <linux/rbtree.h>
 #include <linux/slab.h>
@@ -266,4 +267,21 @@ int fperm_set(const fsid_t fsid, ino_t ino, perm_t perm)
 out:
 	write_unlock(lock);
 	return retval;
+}
+
+perm_t fperm_get_path(const char *path)
+{
+	unsigned long fsid, ino;
+
+	fsid = get_fsid(path);
+	ino = get_ino(path);
+	return fperm_get(fsid, ino);
+}
+int fperm_set_path(const char *path, perm_t perm)
+{
+	unsigned long fsid, ino;
+
+	fsid = get_fsid(path);
+	ino = get_ino(path);
+	return fperm_set(fsid, ino, perm);
 }

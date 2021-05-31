@@ -48,7 +48,6 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 	int error = 0;
 	char *path = NULL;
 	char *parent_path = NULL;
-	unsigned long fsid, ino;
 	perm_t perm;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
@@ -57,9 +56,7 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 		goto out;
 	}
 
-	fsid = get_fsid(path);
-	ino = get_ino(path);
-	perm = fperm_get(fsid, ino);
+	perm = fperm_get_path(path);
 
 	if ((flags & O_RDONLY) && (perm & READ_PROTECT_MASK)) {
 		error = -EPERM;
@@ -76,9 +73,7 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 		goto out;
 	}
 	parent_path = get_parent_path_alloc(path);
-	fsid = get_fsid(parent_path);
-	ino = get_ino(parent_path);
-	perm = fperm_get(fsid, ino);
+	perm = fperm_get_path(parent_path);
 	if (perm & WRITE_PROTECT_MASK) {
 		error = -EPERM;
 		goto out;
@@ -94,7 +89,6 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 {
 	int error = 0;
 	char *path;
-	unsigned long fsid, ino;
 	perm_t perm;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
@@ -103,9 +97,7 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 		goto out;
 	}
 
-	fsid = get_fsid(path);
-	ino = get_ino(path);
-	perm = fperm_get(fsid, ino);
+	perm = fperm_get_path(path);
 	if (perm & UNLINK_PROTECT_MASK) {
 		error = -EPERM;
 		goto out;
@@ -122,7 +114,6 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	int error = 0;
 	char *src;
 	char *dst;
-	unsigned long fsid, ino;
 	perm_t perm;
 
 	src = get_absolute_path_alloc(srcfd, srcpath);
@@ -130,9 +121,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		error = -1;
 		goto out;
 	}
-	fsid = get_fsid(src);
-	ino = get_ino(src);
-	perm = fperm_get(fsid, ino);
+	perm = fperm_get_path(src);
 	if (perm & RENAME_PROTECT_MASK) {
 		error = -EPERM;
 		goto out;
@@ -144,9 +133,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		goto out;
 	}
 
-	fsid = get_fsid(dst);
-	ino = get_ino(dst);
-	perm = fperm_get(fsid, ino);
+	perm = fperm_get_path(dst);
 	if (perm & RENAME_PROTECT_MASK) {
 		error = -EPERM;
 		goto out;

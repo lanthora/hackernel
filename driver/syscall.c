@@ -18,65 +18,49 @@ int init_sys_call_table(u64 sys_call_table)
 	return 0;
 }
 
-void enable_process_protect(void)
+int enable_process_protect(void)
 {
 	int error;
 	error = replace_execve();
 	if (error) {
+		LOG("replace_execve failed");
 	}
+	return error;
 }
 
-void disable_process_protect(void)
+int disable_process_protect(void)
 {
 	int error;
 	error = restore_execve();
 	if (error) {
+		LOG("restore_execve failed");
 	}
+	return error;
 }
 
-static void file_protect_test(void)
-{
-	unsigned long fsid, ino;
-
-	fsid = get_fsid("/root/test/protect/modify-me");
-	ino = get_ino("/root/test/protect/modify-me");
-	fperm_set(fsid, ino,
-		  UNLINK_PROTECT_MASK | WRITE_PROTECT_MASK |
-			  RENAME_PROTECT_MASK);
-
-	fsid = get_fsid("/root/test/protect");
-	ino = get_ino("/root/test/protect");
-	fperm_set(fsid, ino, RENAME_PROTECT_MASK | WRITE_PROTECT_MASK);
-
-	fsid = get_fsid("/root/test");
-	ino = get_ino("/root/test");
-	fperm_set(fsid, ino, RENAME_PROTECT_MASK);
-
-	fsid = get_fsid("/root");
-	ino = get_ino("/root");
-	fperm_set(fsid, ino, RENAME_PROTECT_MASK);
-}
-
-void enable_file_protect(void)
+int enable_file_protect(void)
 {
 	int error;
 	error = replace_open();
 	if (error) {
+		LOG("replace_open failed");
 	}
 	error = replace_openat();
 	if (error) {
+		LOG("replace_openat failed");
 	}
 	error = replace_unlinkat();
 	if (error) {
+		LOG("replace_unlinkat failed");
 	}
 	error = replace_renameat2();
 	if (error) {
+		LOG("replace_renameat2 failed");
 	}
-
-	file_protect_test();
+	return error;
 }
 
-void disable_file_protect(void)
+int disable_file_protect(void)
 {
 	int error;
 	error = restore_open();
@@ -91,6 +75,7 @@ void disable_file_protect(void)
 	error = restore_renameat2();
 	if (error) {
 	}
+	return error;
 }
 
 static inline void write_cr0_forced(unsigned long val)

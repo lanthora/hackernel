@@ -25,4 +25,7 @@ int fperm_destory(void);
 perm_t fperm_get(const fsid_t fsid, ino_t ino);
 int fperm_set(const fsid_t fsid, ino_t ino, perm_t perm);
 
+perm_t fperm_get_path(const char *path);
+int fperm_set_path(const char *path, perm_t perm);
+
 #endif

@@ -39,7 +39,8 @@
 		"condition_variable": "c",
 		"ostream": "c",
 		"stop_token": "c",
-		"fperm.h": "c"
+		"fperm.h": "c",
+		"cmath": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

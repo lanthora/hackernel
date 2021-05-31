@@ -40,6 +40,13 @@ static struct genl_cmd genl_cmds[] = {
         .c_attr_policy = hackernel_genl_policy,
         .c_msg_parser = &handshake_handler,
     },
+    {
+        .c_id = HACKERNEL_C_FILE_PROTECT,
+        .c_name = "HACKERNEL_C_FILE_PROTECT",
+        .c_maxattr = HACKERNEL_A_MAX,
+        .c_attr_policy = hackernel_genl_policy,
+        .c_msg_parser = &handshake_handler,
+    },
 };
 
 /* 定义famly */
@@ -52,7 +59,7 @@ static struct genl_ops ops = {
 int main() {
   /* 变量初始化 */
   int error = 0;
-
+  struct nl_msg *msg;
   /* 与内核通信的socket */
   struct nl_sock *nlsock = nl_socket_alloc();
   genl_connect(nlsock);
@@ -63,39 +70,45 @@ int main() {
   int famid = ops.o_id;
   nl_socket_modify_cb(nlsock, NL_CB_VALID, NL_CB_CUSTOM, parse_cb, NULL);
 
-  /* 向内核发送一条消息 */
-  struct nl_msg *msg = nlmsg_alloc();
-  /* 握手 */
-  genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
-              HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
+  {
+    msg = nlmsg_alloc();
+    genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
+                HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
 
-  unsigned long sys_call_table;
-  if (init_sys_call_table_addr(&sys_call_table)) {
-    printf("init_sys_call_table_addr failed. exit now!\n");
-    exit(1);
+    unsigned long sys_call_table;
+    if (init_sys_call_table_addr(&sys_call_table)) {
+      exit(1);
+    }
+    nla_put_u64(msg, HACKERNEL_A_SCTH, sys_call_table);
+
+    nl_send_auto(nlsock, msg);
+    nlmsg_free(msg);
+
+    // nl_recvmsgs_default(nlsock);
   }
-  nla_put_u64(msg, HACKERNEL_A_SCTH, sys_call_table);
-  printf("send: sys_call_table: %p\n", sys_call_table);
-  nl_send_auto(nlsock, msg);
-  nlmsg_free(msg);
 
-  /* hook open 系统调用 */
-  msg = nlmsg_alloc();
-  genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
-              HACKERNEL_C_FILE_PROTECT, HACKERNEL_FAMLY_VERSION);
-  nl_send_auto(nlsock, msg);
-  nlmsg_free(msg);
+  {
+    msg = nlmsg_alloc();
+    genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
+                HACKERNEL_C_FILE_PROTECT, HACKERNEL_FAMLY_VERSION);
+    nla_put_u32(msg, HACKERNEL_A_CODE, FILE_PROTECT_ENABLE);
+    nl_send_auto(nlsock, msg);
+    nlmsg_free(msg);
+    // nl_recvmsgs_default(nlsock);
+  }
 
-  msg = nlmsg_alloc();
-  genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
-              HACKERNEL_C_PROCESS_PROTECT, HACKERNEL_FAMLY_VERSION);
-  nl_send_auto(nlsock, msg);
-  nlmsg_free(msg);
+  {
+    msg = nlmsg_alloc();
+    genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST,
+                HACKERNEL_C_FILE_PROTECT, HACKERNEL_FAMLY_VERSION);
+    nla_put_s32(msg, HACKERNEL_A_CODE, FILE_PROTECT_SET);
+    nla_put_string(msg, HACKERNEL_A_NAME, "/root/test/protect/modify-me");
+    nla_put_u32(msg, HACKERNEL_A_PERM, 14);
+    nl_send_auto(nlsock, msg);
+    nlmsg_free(msg);
+    // nl_recvmsgs_default(nlsock);
+  }
 
-  /* 接收内核回传的消息 */
-  nl_recvmsgs_default(nlsock);
-
-  /* 释放资源 */
   nl_close(nlsock);
   nl_socket_free(nlsock);
 

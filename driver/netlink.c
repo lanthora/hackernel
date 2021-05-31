@@ -1,5 +1,7 @@
 #include "netlink.h"
+#include "fperm.h"
 #include "syscall.h"
+#include "util.h"
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <net/genetlink.h>
@@ -14,89 +16,61 @@ static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
 	[HACKERNEL_A_PERM] = { .type = NLA_U32 },
 };
 
-static int handshake_permissions_check(struct sk_buff *skb,
-				       struct genl_info *info)
-{
-	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
-		return -EPERM;
-	}
-
-	if (!info->attrs[HACKERNEL_A_SCTH]) {
-		return -EINVAL;
-	}
-	return 0;
-}
-
-static int handshake_result_build(struct sk_buff *skb, struct genl_info *info,
-				  struct handshake_data *data,
-				  struct sk_buff *reply)
-{
-	int error = 0;
-	void *head = NULL;
-
-	head = genlmsg_put_reply(reply, info, &genl_family, 0,
-				 HACKERNEL_C_HANDSHAKE);
-	if (!head) {
-		nlmsg_free(reply);
-		return -ENOMEM;
-	}
-
-	error = nla_put_s32(reply, HACKERNEL_A_CODE, data->code);
-	if (error) {
-		nlmsg_free(reply);
-		return -ENOMEM;
-	}
-
-	genlmsg_end(reply, head);
-	return 0;
-}
-
 static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 {
 	int error = 0;
 	unsigned long long syscall_table = 0;
-	struct handshake_data *data = NULL;
 	struct sk_buff *reply = NULL;
-
-	// 检查握手包中的参数
-	error = handshake_permissions_check(skb, info);
-	if (error) {
-		goto out;
+	void *head = NULL;
+	int code;
+	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
+		code = -EPERM;
+		LOG("netlink_capable failed");
+		goto response;
 	}
 
-	// 为 handshake_data 数据结构分配内存
-	data = kzalloc(sizeof(struct handshake_data), GFP_KERNEL);
-	if (!data) {
-		error = -ENOMEM;
-		goto out;
+	if (!info->attrs[HACKERNEL_A_SCTH]) {
+		code = -EINVAL;
+		LOG("HACKERNEL_A_SCTH failed");
+		goto response;
 	}
 
-	// 从用户空间获取系统调用表地址，并更新系统调用表全局变量
 	syscall_table = nla_get_u64(info->attrs[HACKERNEL_A_SCTH]);
-	error = init_sys_call_table(syscall_table);
+	code = init_sys_call_table(syscall_table);
 
-	// 准备返回结果
-	data->code = error;
+response:
 
-	// 为将要返回给用户空间的数据分配内存
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-	if (!reply) {
-		error = -ENOMEM;
-		goto out;
+	if (unlikely(!reply)) {
+		LOG("genlmsg_new failed");
+		goto err;
 	}
 
-	// 根据 handshake_data 的内容填充分配的内存
-	error = handshake_result_build(skb, info, data, reply);
-	if (error) {
-		goto out;
+	head = genlmsg_put_reply(reply, info, &genl_family, 0,
+				 HACKERNEL_C_HANDSHAKE);
+	if (unlikely(!head)) {
+		LOG("genlmsg_put_reply failed");
+		goto err;
 	}
 
-	// 向用户空间发送消息
+	error = nla_put_s32(reply, HACKERNEL_A_CODE, code);
+	if (unlikely(error)) {
+		LOG("nla_put_s32 failed");
+		goto err;
+	}
+
+	genlmsg_end(reply, head);
+
+	// reply指向的内存由 genlmsg_reply 释放
+	// 此处调用 nlmsg_free(reply) 会引起内核crash
 	error = genlmsg_reply(reply, info);
-out:
-	// 释放 handshake_data 内存
-	kfree(data);
-	return error;
+	if (unlikely(error)) {
+		LOG("genlmsg_reply failed");
+	}
+	return 0;
+err:
+	nlmsg_free(reply);
+	return 0;
 }
 
 static int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
@@ -107,7 +81,95 @@ static int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 
 static int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 {
-	enable_file_protect();
+	int error = 0;
+	int code = 0;
+	struct sk_buff *reply = NULL;
+	void *head = NULL;
+	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
+		code = -EPERM;
+		goto response;
+	}
+
+	if (!info->attrs[HACKERNEL_A_CODE]) {
+		code = -EINVAL;
+		goto response;
+	}
+
+	code = nla_get_s32(info->attrs[HACKERNEL_A_CODE]);
+	switch (code) {
+	case FILE_PROTECT_ENABLE: {
+		code = enable_file_protect();
+		break;
+	}
+	case FILE_PROTECT_DISABLE: {
+		code = disable_file_protect();
+		break;
+	}
+
+	case FILE_PROTECT_SET: {
+		perm_t perm;
+		char *path;
+		path = kmalloc(PATH_MAX, GFP_KERNEL);
+		if (!path) {
+			code = -ENOMEM;
+			goto response;
+		}
+
+		if (!info->attrs[HACKERNEL_A_NAME]) {
+			code = -EINVAL;
+			kfree(path);
+			goto response;
+		}
+
+		if (!info->attrs[HACKERNEL_A_PERM]) {
+			code = -EINVAL;
+			kfree(path);
+			goto response;
+		}
+		nla_strscpy(path, info->attrs[HACKERNEL_A_NAME], PATH_MAX);
+		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
+		code = fperm_set_path(path, perm);
+		kfree(path);
+		break;
+	}
+
+	default: {
+		LOG("Unknown file protect command");
+	}
+	}
+
+response:
+
+	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+	if (unlikely(!reply)) {
+		LOG("genlmsg_new failed");
+		goto err;
+	}
+
+	head = genlmsg_put_reply(reply, info, &genl_family, 0,
+				 HACKERNEL_C_FILE_PROTECT);
+	if (unlikely(!head)) {
+		LOG("genlmsg_put_reply failed");
+		goto err;
+	}
+
+	error = nla_put_s32(reply, HACKERNEL_A_CODE, code);
+	if (unlikely(error)) {
+		LOG("nla_put_s32 failed");
+		goto err;
+	}
+
+	genlmsg_end(reply, head);
+
+	// reply指向的内存由 genlmsg_reply 释放
+	// 此处调用 nlmsg_free(reply) 会引起内核crash
+	error = genlmsg_reply(reply, info);
+	if (unlikely(error)) {
+		LOG("genlmsg_reply failed");
+	}
+	return 0;
+err:
+	nlmsg_free(reply);
 	return 0;
 }
 
@@ -146,7 +208,7 @@ void netlink_kernel_start(void)
 
 	error = genl_register_family(&genl_family);
 	if (error) {
-		printk(KERN_ERR "hackernel: genl_register_family failed\n");
+		LOG("genl_register_family failed");
 	}
 }
 
@@ -156,6 +218,6 @@ void netlink_kernel_stop(void)
 
 	error = genl_unregister_family(&genl_family);
 	if (error) {
-		printk(KERN_ERR "hackernel: genl_unregister_family failed\n");
+		LOG("genl_unregister_family failed");
 	}
 }
