@@ -12,8 +12,9 @@
 /* 指定头文件属性的类型 */
 static struct nla_policy hackernel_genl_policy[HACKERNEL_A_MAX + 1] = {
     [HACKERNEL_A_CODE] = {.type = NLA_S32},
-    [HACKERNEL_A_MSG] = {.type = NLA_STRING},
-    [HACKERNEL_A_SYS_CALL_TABLE] = {.type = NLA_U64},
+    [HACKERNEL_A_SCTH] = {.type = NLA_U64},
+    [HACKERNEL_A_NAME] = {.type = NLA_STRING},
+    [HACKERNEL_A_PERM] = {.type = NLA_U32},
 };
 
 /* 配合libnl-genl库实现的回调函数 */
@@ -73,7 +74,7 @@ int main() {
     printf("init_sys_call_table_addr failed. exit now!\n");
     exit(1);
   }
-  nla_put_u64(msg, HACKERNEL_A_SYS_CALL_TABLE, sys_call_table);
+  nla_put_u64(msg, HACKERNEL_A_SCTH, sys_call_table);
   printf("send: sys_call_table: %p\n", sys_call_table);
   nl_send_auto(nlsock, msg);
   nlmsg_free(msg);

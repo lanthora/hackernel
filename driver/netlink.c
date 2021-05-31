@@ -9,10 +9,9 @@ static struct genl_family genl_family;
 
 static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
 	[HACKERNEL_A_CODE] = { .type = NLA_S32 },
-	[HACKERNEL_A_MSG] = { .type = NLA_STRING },
-	[HACKERNEL_A_SYS_CALL_TABLE] = { .type = NLA_U64 },
-	[HACKERNEL_A_PROCESS_NAME] = { .type = NLA_U64 },
-	[HACKERNEL_A_FILE_NAME] = { .type = NLA_U64 },
+	[HACKERNEL_A_SCTH] = { .type = NLA_U64 },
+	[HACKERNEL_A_NAME] = { .type = NLA_STRING },
+	[HACKERNEL_A_PERM] = { .type = NLA_U32 },
 };
 
 static int handshake_permissions_check(struct sk_buff *skb,
@@ -22,7 +21,7 @@ static int handshake_permissions_check(struct sk_buff *skb,
 		return -EPERM;
 	}
 
-	if (!info->attrs[HACKERNEL_A_SYS_CALL_TABLE]) {
+	if (!info->attrs[HACKERNEL_A_SCTH]) {
 		return -EINVAL;
 	}
 	return 0;
@@ -73,7 +72,7 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 	}
 
 	// 从用户空间获取系统调用表地址，并更新系统调用表全局变量
-	syscall_table = nla_get_u64(info->attrs[HACKERNEL_A_SYS_CALL_TABLE]);
+	syscall_table = nla_get_u64(info->attrs[HACKERNEL_A_SCTH]);
 	error = init_sys_call_table(syscall_table);
 
 	// 准备返回结果
