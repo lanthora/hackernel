@@ -71,4 +71,4 @@ out:
   return error;
 }
 
-int rmmod(const char *modulename) {}
+int rmmod(const char *modulename) { return 0; }

@@ -1,6 +1,10 @@
 #ifndef HACKERNEL_NETLINK_USER_SPACE
 #define HACKERNEL_NETLINK_USER_SPACE
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* 模仿内核对 ARRAY_SIZE 宏的实现 */
 #define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 
@@ -38,5 +42,11 @@ enum {
 
 void netlink_user_start(void);
 void netlink_user_stop(void);
+
+extern struct genl_ops hackernel_genl_ops;
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
