@@ -19,10 +19,10 @@ int enable_file_protect() {
 
     error = nl_send_sync(nlsock, msg);
     if (error) {
-        LOG("nl_send_sync failed");
+        LOG("nl_send_sync failed error=[%d]", error);
         return -1;
     }
-    
+
     return 0;
 }
 
@@ -53,7 +53,7 @@ int set_file_protect(const std::string &path, perm_t perm) {
     }
     error = nl_send_sync(nlsock, msg);
     if (error) {
-        LOG("nl_send_sync failed");
+        LOG("nl_send_sync failed [%d]", error);
         return -1;
     }
     return 0;

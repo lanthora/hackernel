@@ -85,7 +85,7 @@ static int init() {
         return -1;
     }
     famid = hackernel_genl_ops.o_id;
-    
+
     error = nl_socket_modify_cb(nlsock, NL_CB_VALID, NL_CB_CUSTOM, genl_handle_msg, NULL);
     if (error) {
         LOG("Generic Netlink modify callback failed");
@@ -118,7 +118,7 @@ void netlink_server_start(void) {
         if (error == 0) {
             continue;
         }
-        
+
         if (error < 0) {
             LOG("poll failed");
             break;
@@ -126,7 +126,7 @@ void netlink_server_start(void) {
 
         error = nl_recvmsgs_default(nlsock);
         if (error) {
-            LOG("nl_recvmsgs_default failed");
+            LOG("nl_recvmsgs_default failed error=[%d]", error);
         }
     }
 
