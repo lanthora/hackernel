@@ -8,6 +8,7 @@ add_executable(service ${DIR_SRCS})
 
 target_link_libraries(service nl-3)
 target_link_libraries(service nl-genl-3)
+target_link_libraries(service pthread)
 
 target_include_directories(service PRIVATE "/usr/include/libnl3")
 include_directories("/usr/include/libnl3")

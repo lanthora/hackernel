@@ -99,11 +99,11 @@ static int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	switch (code) {
 	case FILE_PROTECT_ENABLE: {
 		code = enable_file_protect();
-		break;
+		goto response;
 	}
 	case FILE_PROTECT_DISABLE: {
 		code = disable_file_protect();
-		break;
+		goto response;
 	}
 
 	case FILE_PROTECT_SET: {
