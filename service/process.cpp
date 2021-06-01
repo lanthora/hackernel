@@ -11,9 +11,9 @@ int enable_process_protect() {
     }
 
     genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_PROCESS_PROTECT, HACKERNEL_FAMLY_VERSION);
-    error = nl_send_sync(nlsock, msg);
-    if (error) {
-        LOG("nl_send_sync failed error=[%d]",error);
+    error = nl_send_auto(nlsock, msg);
+    if (error < 0) {
+        LOG("nl_send_auto failed error=[%d]", error);
         return -1;
     }
 

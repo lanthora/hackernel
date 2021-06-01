@@ -50,9 +50,9 @@ int handshake() {
         return -1;
     }
 
-    error = nl_send_sync(nlsock, msg);
-    if (error) {
-        LOG("nl_send_sync failed");
+    error = nl_send_auto(nlsock, msg);
+    if (error < 0) {
+        LOG("nl_send_auto failed error=[%d]", error);
         return -1;
     }
 

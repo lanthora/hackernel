@@ -17,9 +17,9 @@ int enable_file_protect() {
         return -1;
     }
 
-    error = nl_send_sync(nlsock, msg);
-    if (error) {
-        LOG("nl_send_sync failed error=[%d]", error);
+    error = nl_send_auto(nlsock, msg);
+    if (error < 0) {
+        LOG("nl_send_auto failed error=[%d]", error);
         return -1;
     }
 
@@ -51,9 +51,9 @@ int set_file_protect(const std::string &path, perm_t perm) {
         LOG("nla_put_u32 failed");
         return -1;
     }
-    error = nl_send_sync(nlsock, msg);
-    if (error) {
-        LOG("nl_send_sync failed [%d]", error);
+    error = nl_send_auto(nlsock, msg);
+    if (error < 0) {
+        LOG("nl_send_auto failed [%d]", error);
         return -1;
     }
     return 0;
