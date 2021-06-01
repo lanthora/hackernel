@@ -39,11 +39,11 @@ void enable_write_protection(void);
 	int replace_##name(void)                                               \
 	{                                                                      \
 		if (!g_sys_call_table) {                                       \
-			return -1;                                             \
+			return -EPERM;                                         \
 		}                                                              \
                                                                                \
 		if (__x64_sys_##name) {                                        \
-			return 0;                                              \
+			return -EPERM;                                         \
 		}                                                              \
                                                                                \
 		__x64_sys_##name = g_sys_call_table[__NR_##name];              \
@@ -57,11 +57,11 @@ void enable_write_protection(void);
 	int restore_##name(void)                                               \
 	{                                                                      \
 		if (!g_sys_call_table) {                                       \
-			return 0;                                              \
+			return -EPERM;                                         \
 		}                                                              \
                                                                                \
 		if (!__x64_sys_##name) {                                       \
-			return 0;                                              \
+			return -EPERM;                                         \
 		}                                                              \
 		disable_write_protection();                                    \
 		g_sys_call_table[__NR_##name] = __x64_sys_##name;              \

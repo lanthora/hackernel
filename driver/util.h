@@ -27,7 +27,7 @@ unsigned long get_ino(const char *name);
 // 打印错误日志,内核中应该尽可能地不打印日志
 #define LOG(fmt, arg...)                                                       \
 	do {                                                                   \
-		printk(KERN_ERR "hackernel: %s:%d " fmt, __FUNCTION__,         \
+		printk(KERN_ERR "hackernel: %s:%d " fmt "\n", __FILE__,        \
 		       __LINE__, ##arg);                                       \
 	} while (0)
 
