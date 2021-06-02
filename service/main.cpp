@@ -11,6 +11,7 @@
 #include <netlink/genl/genl.h>
 #include <netlink/genl/mngt.h>
 #include <netlink/msg.h>
+#include <signal.h>
 #include <thread>
 #include <unistd.h>
 
@@ -62,12 +63,20 @@ static void test() {
     }
 }
 
+void sig_handler(int sig) {
+    LOG("received signal, exit now");
+    netlink_server_stop();
+}
+
 int main() {
+
+    signal(SIGINT, sig_handler);
+    signal(SIGTERM, sig_handler);
+
     std::thread netlink_thread(netlink_server_start);
     std::thread test_thread(test);
+
     test_thread.join();
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-    netlink_server_stop();
     netlink_thread.join();
     return 0;
 }

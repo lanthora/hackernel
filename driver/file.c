@@ -200,6 +200,7 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 {
 	int error = 0;
 	int code = 0;
+	u8 type;
 	struct sk_buff *reply = NULL;
 	void *head = NULL;
 	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
@@ -207,13 +208,13 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		goto response;
 	}
 
-	if (!info->attrs[HACKERNEL_A_CODE]) {
+	if (!info->attrs[HACKERNEL_A_TYPE]) {
 		code = -EINVAL;
 		goto response;
 	}
 
-	code = nla_get_s32(info->attrs[HACKERNEL_A_CODE]);
-	switch (code) {
+	type = nla_get_u8(info->attrs[HACKERNEL_A_TYPE]);
+	switch (type) {
 	case FILE_PROTECT_ENABLE: {
 		code = enable_file_protect();
 		goto response;

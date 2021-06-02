@@ -17,10 +17,8 @@ int famid = 0;
 static int status = 0;
 
 static struct nla_policy hackernel_genl_policy[HACKERNEL_A_MAX + 1] = {
-    [HACKERNEL_A_CODE] = {.type = NLA_S32},
-    [HACKERNEL_A_SCTH] = {.type = NLA_U64},
-    [HACKERNEL_A_NAME] = {.type = NLA_STRING},
-    [HACKERNEL_A_PERM] = {.type = NLA_U32},
+    [HACKERNEL_A_CODE] = {.type = NLA_S32},    [HACKERNEL_A_TYPE] = {.type = NLA_U8},  [HACKERNEL_A_SCTH] = {.type = NLA_U64},
+    [HACKERNEL_A_NAME] = {.type = NLA_STRING}, [HACKERNEL_A_PERM] = {.type = NLA_U32},
 };
 
 // 在这里扩展 HACKERNEL_C_* 对应的 handler
