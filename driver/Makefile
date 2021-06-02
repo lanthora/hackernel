@@ -1,11 +1,16 @@
 ifneq ($(KERNELRELEASE),)
 obj-m :=hackernel.o
 hackernel-objs :=core.o netlink.o syscall.o util.o process.o file.o fperm.o
+ccflags-y += $(HACKERNEL_MODULE_CFLAGS)
 else
 KDIR :=/usr/src/linux
 
-build:
-	make -C $(KDIR) M=$(PWD) modules
+release:
+	$(MAKE) -C $(KDIR) M=$(PWD) modules
+
+debug:
+	$(MAKE) -C $(KDIR) M=$(PWD) HACKERNEL_MODULE_CFLAGS="-DDEBUG" modules
+
 clean:
-	rm -f *.ko *.o *.mod *.mod.o *.mod.c *.symvers *.order .*.cmd .*.d
+	$(MAKE) -C $(KDIR) M=$(PWD) clean
 endif 
