@@ -66,7 +66,7 @@ int main() {
     std::thread netlink_thread(netlink_server_start);
     std::thread test_thread(test);
     test_thread.join();
-    sleep(1);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
     netlink_server_stop();
     netlink_thread.join();
     return 0;
