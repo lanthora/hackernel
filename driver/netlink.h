@@ -31,4 +31,7 @@ enum {
 void netlink_kernel_start(void);
 void netlink_kernel_stop(void);
 
+
+extern struct genl_family genl_family;
+
 #endif

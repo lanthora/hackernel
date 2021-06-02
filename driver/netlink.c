@@ -1,13 +1,13 @@
 #include "netlink.h"
+#include "file.h"
 #include "fperm.h"
+#include "process.h"
 #include "syscall.h"
 #include "util.h"
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <net/genetlink.h>
 #include <net/netlink.h>
-
-static struct genl_family genl_family;
 
 static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
 	[HACKERNEL_A_CODE] = { .type = NLA_S32 },
@@ -43,20 +43,20 @@ response:
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 	if (unlikely(!reply)) {
 		LOG("genlmsg_new failed");
-		goto err;
+		goto errout;
 	}
 
 	head = genlmsg_put_reply(reply, info, &genl_family, 0,
 				 HACKERNEL_C_HANDSHAKE);
 	if (unlikely(!head)) {
 		LOG("genlmsg_put_reply failed");
-		goto err;
+		goto errout;
 	}
 
 	error = nla_put_s32(reply, HACKERNEL_A_CODE, code);
 	if (unlikely(error)) {
 		LOG("nla_put_s32 failed");
-		goto err;
+		goto errout;
 	}
 
 	genlmsg_end(reply, head);
@@ -68,107 +68,7 @@ response:
 		LOG("genlmsg_reply failed");
 	}
 	return 0;
-err:
-	nlmsg_free(reply);
-	return 0;
-}
-
-static int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
-{
-	enable_process_protect();
-	return 0;
-}
-
-static int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
-{
-	int error = 0;
-	int code = 0;
-	struct sk_buff *reply = NULL;
-	void *head = NULL;
-	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
-		code = -EPERM;
-		goto response;
-	}
-
-	if (!info->attrs[HACKERNEL_A_CODE]) {
-		code = -EINVAL;
-		goto response;
-	}
-
-	code = nla_get_s32(info->attrs[HACKERNEL_A_CODE]);
-	switch (code) {
-	case FILE_PROTECT_ENABLE: {
-		code = enable_file_protect();
-		goto response;
-	}
-	case FILE_PROTECT_DISABLE: {
-		code = disable_file_protect();
-		goto response;
-	}
-
-	case FILE_PROTECT_SET: {
-		perm_t perm;
-		char *path;
-		path = kmalloc(PATH_MAX, GFP_KERNEL);
-		if (!path) {
-			code = -ENOMEM;
-			goto response;
-		}
-
-		if (!info->attrs[HACKERNEL_A_NAME]) {
-			code = -EINVAL;
-			kfree(path);
-			goto response;
-		}
-
-		if (!info->attrs[HACKERNEL_A_PERM]) {
-			code = -EINVAL;
-			kfree(path);
-			goto response;
-		}
-		nla_strscpy(path, info->attrs[HACKERNEL_A_NAME], PATH_MAX);
-		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
-		code = fperm_set_path(path, perm);
-		kfree(path);
-		break;
-	}
-
-	default: {
-		LOG("Unknown file protect command");
-	}
-	}
-
-response:
-
-	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-	if (unlikely(!reply)) {
-		LOG("genlmsg_new failed");
-		goto err;
-	}
-
-	head = genlmsg_put_reply(reply, info, &genl_family, 0,
-				 HACKERNEL_C_FILE_PROTECT);
-	if (unlikely(!head)) {
-		LOG("genlmsg_put_reply failed");
-		goto err;
-	}
-
-	error = nla_put_s32(reply, HACKERNEL_A_CODE, code);
-	if (unlikely(error)) {
-		LOG("nla_put_s32 failed");
-		goto err;
-	}
-
-	genlmsg_end(reply, head);
-
-	// reply指向的内存由 genlmsg_reply 释放
-	// 此处调用 nlmsg_free(reply) 会引起内核crash
-	error = genlmsg_reply(reply, info);
-	if (unlikely(error)) {
-		LOG("genlmsg_reply failed");
-	}
-	return 0;
-err:
+errout:
 	nlmsg_free(reply);
 	return 0;
 }
@@ -191,7 +91,7 @@ static struct genl_small_ops genl_small_ops[] = {
 	},
 };
 
-static struct genl_family genl_family = {
+struct genl_family genl_family = {
 	.hdrsize = 0,
 	.name = HACKERNEL_FAMLY_NAME,
 	.version = HACKERNEL_FAMLY_VERSION,

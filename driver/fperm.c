@@ -124,7 +124,7 @@ static struct rb_root *fperm_list_search(fsid_t fsid)
 	struct fperm_list *data = NULL;
 
 	if (!head) {
-		goto err;
+		goto errout;
 	}
 
 	data = list_first_entry_or_null(&head->node, struct fperm_list, node);
@@ -144,19 +144,19 @@ static struct rb_root *fperm_list_search(fsid_t fsid)
 
 	data = kzalloc(sizeof(struct fperm_list), GFP_KERNEL);
 	if (!data) {
-		goto err;
+		goto errout;
 	}
 
 	data->fsid = fsid;
 	data->root = kzalloc(sizeof(struct rb_root), GFP_KERNEL);
 	if (!data->root) {
-		goto err;
+		goto errout;
 	}
 
 	list_add(&data->node, &head->node);
 	return data->root;
 
-err:
+errout:
 	if (data) {
 		kfree(data->root);
 	}
@@ -276,6 +276,7 @@ perm_t fperm_get_path(const char *path)
 	ino = get_ino(path);
 	return fperm_get(fsid, ino);
 }
+
 int fperm_set_path(const char *path, perm_t perm)
 {
 	unsigned long fsid, ino;

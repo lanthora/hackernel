@@ -262,15 +262,15 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 
 	path = kzalloc(PATH_MAX, GFP_KERNEL);
 	if (!path) {
-		goto err;
+		goto errout;
 	}
 	filename = kzalloc(PATH_MAX, GFP_KERNEL);
 	if (!filename) {
-		goto err;
+		goto errout;
 	}
 	error = strncpy_from_user(filename, pathname, PATH_MAX);
 	if (error == -EFAULT) {
-		goto err;
+		goto errout;
 	}
 	if (is_relative_path(filename)) {
 		get_base_path(dirfd, path);
@@ -286,7 +286,7 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 	kfree(filename);
 	return path;
 
-err:
+errout:
 	kfree(path);
 	kfree(filename);
 	return NULL;
@@ -299,7 +299,7 @@ char *get_parent_path_alloc(char *path)
 
 	parent_path = kzalloc(PATH_MAX, GFP_KERNEL);
 	if (!parent_path) {
-		goto err;
+		goto errout;
 	}
 	strcpy(parent_path, path);
 	len = strlen(parent_path);
@@ -308,7 +308,7 @@ char *get_parent_path_alloc(char *path)
 	}
 	parent_path[len] = '\0';
 	return parent_path;
-err:
+errout:
 	kfree(parent_path);
 	return NULL;
 }

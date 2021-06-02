@@ -1,5 +1,6 @@
 #include "file.h"
 #include "fperm.h"
+#include "netlink.h"
 #include "syscall.h"
 #include "util.h"
 #include <asm/uaccess.h>
@@ -193,4 +194,94 @@ asmlinkage u64 sys_renameat2_wrapper(struct pt_regs *regs)
 		return -EPERM;
 	}
 	return __x64_sys_renameat2(regs);
+}
+
+int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
+{
+	int error = 0;
+	int code = 0;
+	struct sk_buff *reply = NULL;
+	void *head = NULL;
+	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
+		code = -EPERM;
+		goto response;
+	}
+
+	if (!info->attrs[HACKERNEL_A_CODE]) {
+		code = -EINVAL;
+		goto response;
+	}
+
+	code = nla_get_s32(info->attrs[HACKERNEL_A_CODE]);
+	switch (code) {
+	case FILE_PROTECT_ENABLE: {
+		code = enable_file_protect();
+		goto response;
+	}
+	case FILE_PROTECT_DISABLE: {
+		code = disable_file_protect();
+		goto response;
+	}
+	case FILE_PROTECT_SET: {
+		perm_t perm;
+		char *path;
+		path = kmalloc(PATH_MAX, GFP_KERNEL);
+		if (!path) {
+			code = -ENOMEM;
+			goto response;
+		}
+
+		if (!info->attrs[HACKERNEL_A_NAME]) {
+			code = -EINVAL;
+			kfree(path);
+			goto response;
+		}
+
+		if (!info->attrs[HACKERNEL_A_PERM]) {
+			code = -EINVAL;
+			kfree(path);
+			goto response;
+		}
+		nla_strscpy(path, info->attrs[HACKERNEL_A_NAME], PATH_MAX);
+		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
+		code = fperm_set_path(path, perm);
+		kfree(path);
+		break;
+	}
+	default: {
+		LOG("Unknown file protect command");
+	}
+	}
+
+response:
+
+	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+	if (unlikely(!reply)) {
+		LOG("genlmsg_new failed");
+		goto errout;
+	}
+
+	head = genlmsg_put_reply(reply, info, &genl_family, 0,
+				 HACKERNEL_C_FILE_PROTECT);
+	if (unlikely(!head)) {
+		LOG("genlmsg_put_reply failed");
+		goto errout;
+	}
+
+	error = nla_put_s32(reply, HACKERNEL_A_CODE, code);
+	if (unlikely(error)) {
+		LOG("nla_put_s32 failed");
+		goto errout;
+	}
+
+	genlmsg_end(reply, head);
+
+	error = genlmsg_reply(reply, info);
+	if (unlikely(error)) {
+		LOG("genlmsg_reply failed");
+	}
+	return 0;
+errout:
+	nlmsg_free(reply);
+	return 0;
 }
