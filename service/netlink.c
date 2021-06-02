@@ -92,6 +92,12 @@ static int init() {
         return -1;
     }
 
+    error = nl_socket_set_nonblocking(nlsock);
+    if (error) {
+        LOG("Generic Netlink set noblocking failed");
+        return -1;
+    }
+
     return 0;
 }
 
