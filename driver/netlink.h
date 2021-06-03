@@ -31,6 +31,6 @@ void netlink_kernel_start(void);
 void netlink_kernel_stop(void);
 
 extern struct genl_family genl_family;
-extern u32 port_id;
+extern u32 portid;
 
 #endif

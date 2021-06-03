@@ -203,9 +203,9 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	u8 type;
 	struct sk_buff *reply = NULL;
 	void *head = NULL;
-	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
-		code = -EPERM;
-		goto response;
+
+	if (portid != info->snd_portid) {
+		return -EPERM;
 	}
 
 	if (!info->attrs[HACKERNEL_A_TYPE]) {

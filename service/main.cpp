@@ -17,6 +17,7 @@
 
 static void test() {
     int error = 0;
+
     while (!famid)
         ;
 

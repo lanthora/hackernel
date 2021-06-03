@@ -9,7 +9,7 @@
 #include <net/genetlink.h>
 #include <net/netlink.h>
 
-u32 port_id = 0;
+u32 portid = 0;
 
 static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
 	[HACKERNEL_A_CODE] = { .type = NLA_S32 },
@@ -26,11 +26,6 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 	struct sk_buff *reply = NULL;
 	void *head = NULL;
 	int code;
-	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
-		code = -EPERM;
-		LOG("netlink_capable failed");
-		goto response;
-	}
 
 	if (!info->attrs[HACKERNEL_A_SCTH]) {
 		code = -EINVAL;
@@ -40,7 +35,7 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 
 	syscall_table = nla_get_u64(info->attrs[HACKERNEL_A_SCTH]);
 	code = init_sys_call_table(syscall_table);
-	port_id = info->snd_portid;
+	portid = info->snd_portid;
 
 response:
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);

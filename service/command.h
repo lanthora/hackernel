@@ -13,6 +13,14 @@ typedef u_int32_t perm_t;
 #define UNLINK_PROTECT_MASK 4
 #define RENAME_PROTECT_MASK 8
 
+#define FILE_PROTECT_ENABLE 1
+#define FILE_PROTECT_DISABLE 2
+#define FILE_PROTECT_SET 3
+#define FILE_PROTECT_NOTIFY 4
+
+#define PROCESS_PROTECT_ENABLE 1
+#define PROCESS_PROTECT_NOTIFY 2
+
 int handshake();
 int enable_process_protect();
 int enable_file_protect();
