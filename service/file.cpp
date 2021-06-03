@@ -18,17 +18,14 @@ int enable_file_protect() {
     }
 
     error = nl_send_auto(nlsock, msg);
-    nlmsg_free(msg);
     if (error < 0) {
         LOG("nl_send_auto failed error=[%d]", error);
         goto errout;
     }
 
-    return 0;
-
 errout:
     nlmsg_free(msg);
-    return -1;
+    return error;
 }
 
 int set_file_protect(const std::string &path, perm_t perm) {
@@ -57,15 +54,12 @@ int set_file_protect(const std::string &path, perm_t perm) {
         goto errout;
     }
     error = nl_send_auto(nlsock, msg);
-    nlmsg_free(msg);
     if (error < 0) {
         LOG("nl_send_auto failed [%d]", error);
         goto errout;
     }
 
-    return 0;
-
 errout:
     nlmsg_free(msg);
-    return -1;
+    return error;
 }
