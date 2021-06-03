@@ -2,8 +2,10 @@
 #include "util.h"
 
 int enable_process_protect() {
-    int error;
+    int error = 0;
     struct nl_msg *msg = NULL;
+    int size;
+
     msg = nlmsg_alloc();
     if (!msg) {
         LOG("nlmsg_alloc failed");
@@ -12,9 +14,10 @@ int enable_process_protect() {
     }
 
     genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_PROCESS_PROTECT, HACKERNEL_FAMLY_VERSION);
-    error = nl_send_auto(nlsock, msg);
-    if (error < 0) {
+    size = nl_send_auto(nlsock, msg);
+    if (size < 0) {
         LOG("nl_send_auto failed error=[%d]", error);
+        error = size;
         goto errout;
     }
 

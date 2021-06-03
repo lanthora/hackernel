@@ -9,6 +9,8 @@
 #include <net/genetlink.h>
 #include <net/netlink.h>
 
+u32 port_id = 0;
+
 static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
 	[HACKERNEL_A_CODE] = { .type = NLA_S32 },
 	[HACKERNEL_A_TYPE] = { .type = NLA_U8 },
@@ -38,9 +40,9 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 
 	syscall_table = nla_get_u64(info->attrs[HACKERNEL_A_SCTH]);
 	code = init_sys_call_table(syscall_table);
+	port_id = info->snd_portid;
 
 response:
-
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 	if (unlikely(!reply)) {
 		LOG("genlmsg_new failed");

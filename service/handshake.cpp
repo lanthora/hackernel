@@ -29,8 +29,9 @@ static int init_sys_call_table_addr(unsigned long *sys_call_table) {
 }
 
 int handshake() {
-    int error;
+    int error = 0;
     struct nl_msg *msg = NULL;
+    int size;
 
     unsigned long sys_call_table;
     if (init_sys_call_table_addr(&sys_call_table)) {
@@ -50,9 +51,10 @@ int handshake() {
         goto errout;
     }
 
-    error = nl_send_auto(nlsock, msg);
-    if (error < 0) {
+    size = nl_send_auto(nlsock, msg);
+    if (size < 0) {
         LOG("nl_send_auto failed error=[%d]", error);
+        error = size;
         goto errout;
     }
 

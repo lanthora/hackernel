@@ -1,6 +1,8 @@
 #ifndef HACKERNEL_NETLINK_KERNEL_SPACE
 #define HACKERNEL_NETLINK_KERNEL_SPACE
 
+#include <linux/kernel.h>
+
 #define HACKERNEL_FAMLY_NAME "HACKERNEL"
 #define HACKERNEL_FAMLY_VERSION 1
 
@@ -25,12 +27,10 @@ enum {
 };
 #define HACKERNEL_C_MAX (__HACKERNEL_C_MAX - 1)
 
-
-
 void netlink_kernel_start(void);
 void netlink_kernel_stop(void);
 
-
 extern struct genl_family genl_family;
+extern u32 port_id;
 
 #endif

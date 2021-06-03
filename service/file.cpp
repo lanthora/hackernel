@@ -2,8 +2,10 @@
 #include "util.h"
 
 int enable_file_protect() {
-    int error;
+    int error = 0;
     struct nl_msg *msg;
+    int size;
+
     msg = nlmsg_alloc();
     if (!msg) {
         LOG("nlmsg_alloc failed");
@@ -17,9 +19,10 @@ int enable_file_protect() {
         goto errout;
     }
 
-    error = nl_send_auto(nlsock, msg);
-    if (error < 0) {
+    size = nl_send_auto(nlsock, msg);
+    if (size < 0) {
         LOG("nl_send_auto failed error=[%d]", error);
+        error = size;
         goto errout;
     }
 
@@ -29,8 +32,10 @@ errout:
 }
 
 int set_file_protect(const std::string &path, perm_t perm) {
-    int error;
+    int error = 0;
     struct nl_msg *msg;
+    int size;
+
     msg = nlmsg_alloc();
     if (!msg) {
         LOG("nlmsg_alloc failed");
@@ -53,9 +58,10 @@ int set_file_protect(const std::string &path, perm_t perm) {
         LOG("nla_put_u32 failed");
         goto errout;
     }
-    error = nl_send_auto(nlsock, msg);
-    if (error < 0) {
-        LOG("nl_send_auto failed [%d]", error);
+    size = nl_send_auto(nlsock, msg);
+    if (size < 0) {
+        LOG("nl_send_auto failed error=[%d]", error);
+        error = size;
         goto errout;
     }
 

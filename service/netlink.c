@@ -96,6 +96,11 @@ static int init() {
         return -1;
     }
 
+    // 应用层收到消息会检查当前期待收到的seq与上次发送的seq是否一致
+    nl_socket_disable_seq_check(nlsock);
+
+    // 内核收到消息会自动回复确认
+    nl_socket_disable_auto_ack(nlsock);
     return 0;
 }
 
