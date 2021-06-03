@@ -27,6 +27,11 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 	void *head = NULL;
 	int code;
 
+	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
+		LOG("netlink_capable failed");
+		return -EPERM;
+	}
+
 	if (!info->attrs[HACKERNEL_A_SCTH]) {
 		code = -EINVAL;
 		LOG("HACKERNEL_A_SCTH failed");
