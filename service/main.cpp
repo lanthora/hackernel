@@ -18,9 +18,6 @@
 static void test() {
     int error = 0;
 
-    while (!famid)
-        ;
-
     error = handshake();
     if (error) {
         LOG("handshake failed");
@@ -70,9 +67,15 @@ void sig_handler(int sig) {
 }
 
 int main() {
+    int error;
 
     signal(SIGINT, sig_handler);
     signal(SIGTERM, sig_handler);
+
+    error = netlink_server_init();
+    if (error) {
+        exit(1);
+    }
 
     std::thread netlink_thread(netlink_server_start);
     std::thread test_thread(test);

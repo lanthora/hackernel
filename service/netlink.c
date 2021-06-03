@@ -52,7 +52,7 @@ static struct genl_ops hackernel_genl_ops = {
     .o_ncmds = ARRAY_SIZE(hackernel_genl_cmds),
 };
 
-static int init() {
+int netlink_server_init() {
     int error;
 
     if (nlsock) {
@@ -63,37 +63,37 @@ static int init() {
     nlsock = nl_socket_alloc();
     if (!nlsock) {
         LOG("Netlink Socket memory alloc failed");
-        return -1;
+        goto errout;
     }
     error = genl_connect(nlsock);
     if (error) {
         LOG("Generic Netlink connect failed");
-        return -1;
+        goto errout;
     }
 
     error = genl_ops_resolve(nlsock, &hackernel_genl_ops);
     if (error) {
         LOG("Resolve a single Generic Netlink family failed");
-        return -1;
+        goto errout;
     }
 
     error = genl_register_family(&hackernel_genl_ops);
     if (error) {
         LOG("Generic Netlink Register failed");
-        return -1;
+        goto errout;
     }
     famid = hackernel_genl_ops.o_id;
 
     error = nl_socket_modify_cb(nlsock, NL_CB_VALID, NL_CB_CUSTOM, genl_handle_msg, NULL);
     if (error) {
         LOG("Generic Netlink modify callback failed");
-        return -1;
+        goto errout;
     }
 
     error = nl_socket_set_nonblocking(nlsock);
     if (error) {
         LOG("Generic Netlink set noblocking failed");
-        return -1;
+        goto errout;
     }
 
     // 应用层收到消息会检查当前期待收到的seq与上次发送的seq是否一致
@@ -102,16 +102,15 @@ static int init() {
     // 内核收到消息会自动回复确认
     nl_socket_disable_auto_ack(nlsock);
     return 0;
+
+errout:
+    LOG("Generic Netlink init failed");
+    return -1;
+
 }
 
-void netlink_server_start(void) {
+int netlink_server_start(void) {
     int error;
-
-    error = init();
-    if (error) {
-        LOG("Generic Netlink init failed");
-        return;
-    }
 
     struct pollfd fds = {
         .fd = nl_socket_get_fd(nlsock),
@@ -142,10 +141,10 @@ void netlink_server_start(void) {
     nl_close(nlsock);
     nl_socket_free(nlsock);
 
-    return;
+    return 0;
 }
 
-void netlink_server_stop(void) {
+int netlink_server_stop(void) {
     status = 0;
-    return;
+    return 0;
 }

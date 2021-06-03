@@ -36,8 +36,9 @@ enum {
 #define FILE_PROTECT_SET 3
 #define FILE_PROTECT_NOTIFY 4
 
-void netlink_server_start(void);
-void netlink_server_stop(void);
+int netlink_server_init(void);
+int netlink_server_start(void);
+int netlink_server_stop(void);
 
 extern struct nl_sock *nlsock;
 extern int famid;
