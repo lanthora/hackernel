@@ -31,7 +31,7 @@ errout:
     return error;
 }
 
-int set_file_protect(const std::string &path, perm_t perm) {
+int set_file_protect(const std::string &path, file_perm_t perm) {
     int error = 0;
     struct nl_msg *msg;
     int size;
@@ -53,7 +53,7 @@ int set_file_protect(const std::string &path, perm_t perm) {
         LOG("nla_put_string failed");
         goto errout;
     }
-    error = nla_put_u32(msg, HACKERNEL_A_PERM, perm);
+    error = nla_put_s32(msg, HACKERNEL_A_PERM, perm);
     if (error) {
         LOG("nla_put_u32 failed");
         goto errout;
@@ -69,3 +69,6 @@ errout:
     nlmsg_free(msg);
     return error;
 }
+
+
+

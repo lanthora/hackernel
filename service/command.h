@@ -6,7 +6,12 @@
 #include <netlink/msg.h>
 #include <string>
 
-typedef u_int32_t perm_t;
+// handshake
+int handshake();
+// handshake end
+
+// file protect
+typedef int32_t file_perm_t;
 
 #define READ_PROTECT_MASK 1
 #define WRITE_PROTECT_MASK 2
@@ -18,12 +23,24 @@ typedef u_int32_t perm_t;
 #define FILE_PROTECT_SET 3
 #define FILE_PROTECT_NOTIFY 4
 
-#define PROCESS_PROTECT_ENABLE 1
-#define PROCESS_PROTECT_NOTIFY 2
-
-int handshake();
-int enable_process_protect();
 int enable_file_protect();
-int set_file_protect(const std::string &path, perm_t perm);
+int set_file_protect(const std::string &path, file_perm_t perm);
+// file protect end
+
+// process protect
+typedef int process_perm_id_t;
+typedef int32_t process_perm_t;
+#define PROCESS_PROTECT_ENABLE 1
+#define PROCESS_PROTECT_REPORT 2
+
+#define PROCESS_INVAILD -1
+#define PROCESS_WATT 0
+#define PROCESS_ACCEPT 1
+#define PROCESS_REJECT 2
+
+int enable_process_protect();
+process_perm_t check_precess_perm(char *cmd);
+int reply_process_perm(process_perm_id_t id, process_perm_t perm);
+// process protect end
 
 #endif

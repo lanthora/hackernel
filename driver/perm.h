@@ -33,22 +33,22 @@ int file_perm_set_path(const char *path, file_perm_t perm);
 #define PROCESS_ACCEPT 1
 #define PROCESS_REJECT 2
 
-typedef s8 process_perm_t;
-typedef int seq_t;
+typedef s32 process_perm_t;
+typedef int process_perm_id_t;
 
 int process_perm_init(void);
 int process_perm_destory(void);
 
 // 添加序列号后进程休眠
-int precess_perm_insert(seq_t seq);
+int precess_perm_insert(process_perm_id_t seq);
 
 // 唤醒前更新
-int precess_perm_update(seq_t seq, process_perm_t status);
+int precess_perm_update(process_perm_id_t id, process_perm_t status);
 
 // 等待队列退出等待条件检查时,PROCESS_WATT 继续等待,否则退出等待
-process_perm_t precess_perm_search(seq_t seq);
+process_perm_t precess_perm_search(process_perm_id_t id);
 
 // 退出等待后,移除对应序列号中的数据
-int precess_perm_delele(seq_t seq);
+int precess_perm_delele(process_perm_id_t id);
 
 #endif

@@ -294,7 +294,7 @@ int file_perm_set_path(const char *path, file_perm_t perm)
 
 struct process_perm_node {
 	struct rb_node node;
-	int seq;
+	process_perm_id_t id;
 	process_perm_t perm;
 };
 static struct rb_root *process_perm_rb_root = NULL;
@@ -309,6 +309,7 @@ int process_perm_init(void)
 	}
 	process_perm_lock = kmalloc(sizeof(rwlock_t), GFP_KERNEL);
 	if (!process_perm_lock) {
+		LOG("process_perm_lock init failed");
 		return -ENOMEM;
 	}
 	rwlock_init(process_perm_lock);
@@ -329,7 +330,7 @@ int process_perm_destory(void)
 	return 0;
 }
 
-static int seq_cmp(int ns, int nt)
+static int process_perm_id_cmp(int ns, int nt)
 {
 	if (ns < nt) {
 		return -1;
@@ -340,7 +341,7 @@ static int seq_cmp(int ns, int nt)
 	return 0;
 }
 
-int precess_perm_insert(int seq)
+int precess_perm_insert(process_perm_id_t id)
 {
 	int error = 0;
 	struct process_perm_node *data;
@@ -353,7 +354,7 @@ int precess_perm_insert(int seq)
 		int result;
 
 		this = container_of(*new, struct process_perm_node, node);
-		result = seq_cmp(seq, this->seq);
+		result = process_perm_id_cmp(id, this->id);
 		parent = *new;
 
 		if (result < 0) {
@@ -372,7 +373,7 @@ int precess_perm_insert(int seq)
 		goto errout;
 	}
 
-	data->seq = seq;
+	data->id = id;
 	data->perm = PROCESS_WATT;
 
 	rb_link_node(&data->node, parent, new);
@@ -382,7 +383,7 @@ errout:
 	return error;
 }
 
-int precess_perm_update(seq_t seq, process_perm_t status)
+int precess_perm_update(process_perm_id_t id, process_perm_t status)
 {
 	int error = 0;
 	struct process_perm_node *data;
@@ -394,7 +395,7 @@ int precess_perm_update(seq_t seq, process_perm_t status)
 		int result;
 
 		data = container_of(node, struct process_perm_node, node);
-		result = seq_cmp(seq, data->seq);
+		result = process_perm_id_cmp(id, data->id);
 
 		if (result < 0) {
 			node = node->rb_left;
@@ -418,7 +419,7 @@ errout:
 	return error;
 }
 
-process_perm_t precess_perm_search(int seq)
+process_perm_t precess_perm_search(int id)
 {
 	process_perm_t perm = PROCESS_INVAILD;
 	struct rb_node *node = process_perm_rb_root->rb_node;
@@ -430,7 +431,7 @@ process_perm_t precess_perm_search(int seq)
 		int result;
 
 		data = container_of(node, struct process_perm_node, node);
-		result = seq_cmp(seq, data->seq);
+		result = process_perm_id_cmp(id, data->id);
 
 		if (result < 0) {
 			node = node->rb_left;
@@ -447,7 +448,7 @@ out:
 	return perm;
 }
 
-int precess_perm_delele(int seq)
+int precess_perm_delele(int id)
 {
 	int error = 0;
 	struct rb_node *node = process_perm_rb_root->rb_node;
@@ -459,7 +460,7 @@ int precess_perm_delele(int seq)
 		int result;
 
 		data = container_of(node, struct process_perm_node, node);
-		result = seq_cmp(seq, data->seq);
+		result = process_perm_id_cmp(id, data->id);
 
 		if (result < 0) {
 			node = node->rb_left;

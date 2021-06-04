@@ -22,11 +22,18 @@ int process_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_c
         LOG("nla_get_s32 code=[%d]", code);
         break;
     }
-    case PROCESS_PROTECT_NOTIFY: {
+    case PROCESS_PROTECT_REPORT: {
+        int error;
+        int id;
         char *name;
+
+        id = nla_get_s32(genl_info->attrs[HACKERNEL_A_EXID]);
         name = nla_get_string(genl_info->attrs[HACKERNEL_A_NAME]);
         LOG("execve=[%s]", name);
-        nl_socket_use_seq(nlsock);
+        error = reply_process_perm(id, check_precess_perm(name));
+        if (error) {
+            LOG("reply_process_perm failed");
+        }
         break;
     }
     default: {

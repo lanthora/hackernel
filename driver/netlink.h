@@ -12,7 +12,8 @@ enum {
 	HACKERNEL_A_TYPE, // 模块内部的操作类型
 	HACKERNEL_A_SCTH, // 系统调用表头(握手)
 	HACKERNEL_A_NAME, // 进程名(进程保护)或文件名(文件保护)
-	HACKERNEL_A_PERM, // 文件权限(文件保护)
+	HACKERNEL_A_PERM, // 文件权限(文件保护,进程保护)
+	HACKERNEL_A_EXID, // 标记execve要启动的进程的id
 	__HACKERNEL_A_MAX,
 };
 #define HACKERNEL_A_MAX (__HACKERNEL_A_MAX - 1)
