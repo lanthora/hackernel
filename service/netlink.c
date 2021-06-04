@@ -106,7 +106,6 @@ int netlink_server_init() {
 errout:
     LOG("Generic Netlink init failed");
     return -1;
-
 }
 
 int netlink_server_start(void) {

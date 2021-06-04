@@ -1,6 +1,6 @@
 #include "file.h"
-#include "fperm.h"
 #include "netlink.h"
+#include "perm.h"
 #include "syscall.h"
 #include "util.h"
 #include <asm/uaccess.h>
@@ -24,7 +24,7 @@ static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
 	int error = 0;
 	char *path;
 	unsigned long fsid, ino;
-	perm_t perm;
+	file_perm_t perm;
 
 	path = kzalloc(PATH_MAX, GFP_KERNEL);
 	if (!path) {
@@ -36,7 +36,7 @@ static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
 	}
 	fsid = get_fsid(path);
 	ino = get_ino(path);
-	perm = fperm_get(fsid, ino);
+	perm = file_perm_get(fsid, ino);
 
 out:
 	kfree(path);
@@ -49,7 +49,7 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 	int error = 0;
 	char *path = NULL;
 	char *parent_path = NULL;
-	perm_t perm;
+	file_perm_t perm;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
 	if (!path) {
@@ -57,7 +57,7 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 		goto out;
 	}
 
-	perm = fperm_get_path(path);
+	perm = file_perm_get_path(path);
 
 	if ((flags & O_RDONLY) && (perm & READ_PROTECT_MASK)) {
 		error = -EPERM;
@@ -74,7 +74,7 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 		goto out;
 	}
 	parent_path = get_parent_path_alloc(path);
-	perm = fperm_get_path(parent_path);
+	perm = file_perm_get_path(parent_path);
 	if (perm & WRITE_PROTECT_MASK) {
 		error = -EPERM;
 		goto out;
@@ -90,7 +90,7 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 {
 	int error = 0;
 	char *path;
-	perm_t perm;
+	file_perm_t perm;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
 	if (!path) {
@@ -98,7 +98,7 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 		goto out;
 	}
 
-	perm = fperm_get_path(path);
+	perm = file_perm_get_path(path);
 	if (perm & UNLINK_PROTECT_MASK) {
 		error = -EPERM;
 		goto out;
@@ -115,14 +115,14 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	int error = 0;
 	char *src;
 	char *dst;
-	perm_t perm;
+	file_perm_t perm;
 
 	src = get_absolute_path_alloc(srcfd, srcpath);
 	if (!src) {
 		error = -1;
 		goto out;
 	}
-	perm = fperm_get_path(src);
+	perm = file_perm_get_path(src);
 	if (perm & RENAME_PROTECT_MASK) {
 		error = -EPERM;
 		goto out;
@@ -134,7 +134,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 		goto out;
 	}
 
-	perm = fperm_get_path(dst);
+	perm = file_perm_get_path(dst);
 	if (perm & RENAME_PROTECT_MASK) {
 		error = -EPERM;
 		goto out;
@@ -224,7 +224,7 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		goto response;
 	}
 	case FILE_PROTECT_SET: {
-		perm_t perm;
+		file_perm_t perm;
 		char *path;
 		path = kmalloc(PATH_MAX, GFP_KERNEL);
 		if (!path) {
@@ -245,7 +245,7 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		}
 		nla_strscpy(path, info->attrs[HACKERNEL_A_NAME], PATH_MAX);
 		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
-		code = fperm_set_path(path, perm);
+		code = file_perm_set_path(path, perm);
 		kfree(path);
 		break;
 	}

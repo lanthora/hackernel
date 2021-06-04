@@ -9,7 +9,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-
 int insmod(const char *filename) {
     int error = -1;
     struct stat st;

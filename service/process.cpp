@@ -14,6 +14,7 @@ int enable_process_protect() {
     }
 
     genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_PROCESS_PROTECT, HACKERNEL_FAMLY_VERSION);
+
     error = nla_put_u8(msg, HACKERNEL_A_TYPE, PROCESS_PROTECT_ENABLE);
     if (error) {
         LOG("nla_put_u8 failed");

@@ -1,6 +1,6 @@
 #include "syscall.h"
 #include "file.h"
-#include "fperm.h"
+#include "perm.h"
 #include "process.h"
 #include "util.h"
 #include <asm/special_insns.h>

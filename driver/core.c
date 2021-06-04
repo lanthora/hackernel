@@ -1,5 +1,5 @@
-#include "fperm.h"
 #include "netlink.h"
+#include "perm.h"
 #include "syscall.h"
 #include <linux/init.h>
 #include <linux/kernel.h>
@@ -11,7 +11,7 @@ MODULE_DESCRIPTION("kernel helper");
 
 static int init(void)
 {
-	fperm_init();
+	file_perm_init();
 	netlink_kernel_start();
 	return 0;
 }
@@ -21,7 +21,7 @@ static void cleanup(void)
 	netlink_kernel_stop();
 	disable_process_protect();
 	disable_file_protect();
-	fperm_destory();
+	file_perm_destory();
 	return;
 }
 

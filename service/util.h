@@ -6,9 +6,8 @@
 #define LOG(fmt, arg...)                                                                                                                   \
     do {                                                                                                                                   \
         printf("hackernel: %s:%d " fmt "\n", __FILE__, __LINE__, ##arg);                                                                   \
+        fflush(stdout);                                                                                                                    \
     } while (0)
-
-
 
 int insmod(const char *filename);
 int rmmod(const char *modulename);
