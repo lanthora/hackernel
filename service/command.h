@@ -21,7 +21,7 @@ typedef int32_t file_perm_t;
 #define FILE_PROTECT_ENABLE 1
 #define FILE_PROTECT_DISABLE 2
 #define FILE_PROTECT_SET 3
-#define FILE_PROTECT_NOTIFY 4
+#define FILE_PROTECT_REPORT 4
 
 int enable_file_protect();
 int set_file_protect(const std::string &path, file_perm_t perm);
@@ -30,6 +30,7 @@ int set_file_protect(const std::string &path, file_perm_t perm);
 // process protect
 typedef int process_perm_id_t;
 typedef int32_t process_perm_t;
+
 #define PROCESS_PROTECT_ENABLE 1
 #define PROCESS_PROTECT_REPORT 2
 

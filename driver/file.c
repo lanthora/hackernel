@@ -21,12 +21,63 @@ DEFINE_HOOK(rename);
 DEFINE_HOOK(renameat);
 DEFINE_HOOK(renameat2);
 
+static int file_protect_report_to_userspace(char *filename, file_perm_t perm)
+{
+	int error = 0;
+	struct sk_buff *skb = NULL;
+	void *head = NULL;
+	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+
+	if ((!skb)) {
+		LOG("genlmsg_new failed");
+		error = -ENOMEM;
+		goto errout;
+	}
+
+	head = genlmsg_put(skb, portid, 0, &genl_family, 0,
+			   HACKERNEL_C_FILE_PROTECT);
+	if (!head) {
+		LOG("genlmsg_put failed");
+		error = -ENOMEM;
+		goto errout;
+	}
+	error = nla_put_u8(skb, HACKERNEL_A_TYPE, FILE_PROTECT_REPORT);
+	if (error) {
+		LOG("nla_put_u8 failed");
+		goto errout;
+	}
+
+	error = nla_put_s32(skb, HACKERNEL_A_PERM, perm);
+	if (error) {
+		LOG("nla_put_s32 failed");
+		goto errout;
+	}
+
+	error = nla_put_string(skb, HACKERNEL_A_NAME, filename);
+	if (error) {
+		LOG("nla_put_string failed");
+		goto errout;
+	}
+	genlmsg_end(skb, head);
+
+	error = genlmsg_unicast(&init_net, skb, portid);
+	if (error) {
+		LOG("genlmsg_unicast failed");
+		portid = 0;
+	}
+	return 0;
+errout:
+	nlmsg_free(skb);
+	return error;
+}
+
 static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 			   mode_t mode)
 {
 	int error = 0;
 	char *path = NULL;
 	char *parent_path = NULL;
+	char *report_path = NULL;
 	file_perm_t perm;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
@@ -39,12 +90,14 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 
 	if ((flags & O_RDONLY) && (perm & READ_PROTECT_MASK)) {
 		error = -EPERM;
-		goto out;
+		perm = READ_PROTECT_MASK;
+		goto report;
 	}
 
 	if ((flags & O_WRONLY) && (perm & WRITE_PROTECT_MASK)) {
 		error = -EPERM;
-		goto out;
+		perm = WRITE_PROTECT_MASK;
+		goto report;
 	}
 
 	// 父目录有写保护，禁止创建文件
@@ -55,8 +108,13 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 	perm = file_perm_get_path(parent_path);
 	if (perm & WRITE_PROTECT_MASK) {
 		error = -EPERM;
-		goto out;
+		perm = WRITE_PROTECT_MASK;
+		goto report;
 	}
+	goto out;
+report:
+	report_path = parent_path ? parent_path : path;
+	file_protect_report_to_userspace(report_path, perm);
 
 out:
 	kfree(path);
@@ -72,15 +130,18 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 
 	path = get_absolute_path_alloc(dirfd, pathname);
 	if (!path) {
-		error = -EINVAL;
 		goto out;
 	}
 
 	perm = file_perm_get_path(path);
 	if (perm & UNLINK_PROTECT_MASK) {
 		error = -EPERM;
-		goto out;
+		perm = UNLINK_PROTECT_MASK;
+		goto report;
 	}
+	goto out;
+report:
+	file_protect_report_to_userspace(path, perm);
 
 out:
 	kfree(path);
@@ -93,6 +154,7 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	int error = 0;
 	char *src;
 	char *dst;
+	char *report_path;
 	file_perm_t perm;
 
 	src = get_absolute_path_alloc(srcfd, srcpath);
@@ -103,7 +165,9 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	perm = file_perm_get_path(src);
 	if (perm & RENAME_PROTECT_MASK) {
 		error = -EPERM;
-		goto out;
+		report_path = src;
+		perm = RENAME_PROTECT_MASK;
+		goto report;
 	}
 
 	dst = get_absolute_path_alloc(dstfd, dstpath);
@@ -115,8 +179,14 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	perm = file_perm_get_path(dst);
 	if (perm & RENAME_PROTECT_MASK) {
 		error = -EPERM;
-		goto out;
+		report_path = dst;
+		perm = RENAME_PROTECT_MASK;
+		goto report;
 	}
+	goto out;
+
+report:
+	file_protect_report_to_userspace(report_path, perm);
 
 out:
 	kfree(src);
@@ -278,6 +348,12 @@ response:
 				 HACKERNEL_C_FILE_PROTECT);
 	if (unlikely(!head)) {
 		LOG("genlmsg_put_reply failed");
+		goto errout;
+	}
+
+	error = nla_put_s32(reply, HACKERNEL_A_TYPE, type);
+	if (unlikely(error)) {
+		LOG("nla_put_s32 failed");
 		goto errout;
 	}
 

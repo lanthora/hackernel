@@ -14,7 +14,7 @@ DEFINE_HOOK(execveat);
 static DECLARE_WAIT_QUEUE_HEAD(wq_process_perm);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
 
-static int report_to_userspace(process_perm_id_t id, char *cmd)
+static int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 {
 	int error = 0;
 	struct sk_buff *skb = NULL;
@@ -53,7 +53,6 @@ static int report_to_userspace(process_perm_id_t id, char *cmd)
 	}
 	genlmsg_end(skb, head);
 
-	// 发送失败需要释放内存吗?
 	error = genlmsg_unicast(&init_net, skb, portid);
 	if (error) {
 		LOG("genlmsg_unicast failed");
@@ -86,9 +85,9 @@ static process_perm_t process_protect_status(char *cmd)
 		goto out;
 	}
 
-	error = report_to_userspace(id, cmd);
+	error = process_protect_report_to_userspace(id, cmd);
 	if (error) {
-		LOG("report_to_userspace failed");
+		LOG("process_protect_report_to_userspace failed");
 		goto out;
 	}
 	// 进入等待队列

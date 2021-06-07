@@ -41,7 +41,8 @@
 		"stop_token": "c",
 		"cmath": "c",
 		"perm.h": "c",
-		"tuple": "c"
+		"tuple": "c",
+		"thread": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

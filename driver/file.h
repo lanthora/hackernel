@@ -16,7 +16,7 @@ DEFINE_HOOK_HEADER(renameat2);
 #define FILE_PROTECT_ENABLE 1
 #define FILE_PROTECT_DISABLE 2
 #define FILE_PROTECT_SET 3
-#define FILE_PROTECT_NOTIFY 4
+#define FILE_PROTECT_REPORT 4
 
 extern int file_protect_handler(struct sk_buff *skb, struct genl_info *info);
 

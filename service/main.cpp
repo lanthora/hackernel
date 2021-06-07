@@ -29,7 +29,6 @@ static void test() {
         LOG("enable_process_protect failed");
         return;
     }
-
     error = enable_file_protect();
     if (error) {
         LOG("enable_file_protect failed");

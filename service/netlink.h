@@ -32,11 +32,6 @@ enum {
 };
 #define HACKERNEL_C_MAX (__HACKERNEL_C_MAX - 1)
 
-#define FILE_PROTECT_ENABLE 1
-#define FILE_PROTECT_DISABLE 2
-#define FILE_PROTECT_SET 3
-#define FILE_PROTECT_NOTIFY 4
-
 int netlink_server_init(void);
 int netlink_server_start(void);
 int netlink_server_stop(void);
