@@ -25,6 +25,10 @@ int enable_process_protect(void)
 	if (error) {
 		LOG("replace_execve failed");
 	}
+	error = replace_execveat();
+	if (error) {
+		LOG("replace_execveat failed");
+	}
 	return error;
 }
 
@@ -34,6 +38,10 @@ int disable_process_protect(void)
 	error = restore_execve();
 	if (error) {
 		LOG("restore_execve failed");
+	}
+	error = restore_execveat();
+	if (error) {
+		LOG("restore_execveat failed");
 	}
 	return error;
 }

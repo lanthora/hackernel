@@ -9,6 +9,7 @@
 #include <linux/slab.h>
 
 DEFINE_HOOK(execve);
+DEFINE_HOOK(execveat);
 
 static DECLARE_WAIT_QUEUE_HEAD(wq_process_perm);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
@@ -102,15 +103,15 @@ out:
 	return retval;
 }
 
-static int sys_execve_hook(char __user *pathname, char __user *__user *argv,
-			   char __user *__user *envp)
+static int sys_execveat_hook(int dirfd, char __user *pathname,
+			     char __user *__user *argv,
+			     char __user *__user *envp, int flag)
 {
 	char *cmd = NULL;
 	int error = 0;
 	process_perm_t perm = PROCESS_INVAILD;
 
 	if (!portid) {
-		;
 		goto out;
 	}
 
@@ -144,10 +145,24 @@ asmlinkage u64 sys_execve_wrapper(struct pt_regs *regs)
 	char **argv = (char **)regs->si;
 	char **envp = (char **)regs->dx;
 
-	if (sys_execve_hook(pathname, argv, envp)) {
+	if (sys_execveat_hook(AT_FDCWD, pathname, argv, envp, 0)) {
 		return -EPERM;
 	}
 	return __x64_sys_execve(regs);
+}
+
+asmlinkage u64 sys_execveat_wrapper(struct pt_regs *regs)
+{
+	int dirfd = (int)regs->di;
+	char *pathname = (char *)regs->si;
+	char **argv = (char **)regs->dx;
+	char **envp = (char **)regs->dx;
+	int flags = (int)regs->r10;
+
+	if (sys_execveat_hook(dirfd, pathname, argv, envp, flags)) {
+		return -EPERM;
+	}
+	return __x64_sys_execveat(regs);
 }
 
 int process_protect_handler(struct sk_buff *skb, struct genl_info *info)

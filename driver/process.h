@@ -6,6 +6,7 @@
 #include <net/netlink.h>
 
 DEFINE_HOOK_HEADER(execve);
+DEFINE_HOOK_HEADER(execveat);
 
 #define PROCESS_PROTECT_ENABLE 1
 #define PROCESS_PROTECT_REPORT 2
