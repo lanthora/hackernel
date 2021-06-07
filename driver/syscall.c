@@ -49,9 +49,21 @@ int enable_file_protect(void)
 	if (error) {
 		LOG("replace_openat failed");
 	}
+	error = replace_unlink();
+	if (error) {
+		LOG("replace_unlink failed");
+	}
 	error = replace_unlinkat();
 	if (error) {
 		LOG("replace_unlinkat failed");
+	}
+	error = replace_rename();
+	if (error) {
+		LOG("replace_rename failed");
+	}
+	error = replace_renameat();
+	if (error) {
+		LOG("replace_renameat failed");
 	}
 	error = replace_renameat2();
 	if (error) {
@@ -69,7 +81,16 @@ int disable_file_protect(void)
 	error = restore_openat();
 	if (error) {
 	}
+	error = restore_unlink();
+	if (error) {
+	}
 	error = restore_unlinkat();
+	if (error) {
+	}
+	error = restore_rename();
+	if (error) {
+	}
+	error = restore_renameat();
 	if (error) {
 	}
 	error = restore_renameat2();

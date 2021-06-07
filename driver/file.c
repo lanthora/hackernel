@@ -15,33 +15,11 @@
 
 DEFINE_HOOK(open);
 DEFINE_HOOK(openat);
+DEFINE_HOOK(unlink);
 DEFINE_HOOK(unlinkat);
+DEFINE_HOOK(rename);
+DEFINE_HOOK(renameat);
 DEFINE_HOOK(renameat2);
-
-// 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
-static int sys_open_hook(char __user *pathname, int flags, mode_t mode)
-{
-	int error = 0;
-	char *path;
-	unsigned long fsid, ino;
-	file_perm_t perm;
-
-	path = kzalloc(PATH_MAX, GFP_KERNEL);
-	if (!path) {
-		goto out;
-	}
-	error = strncpy_from_user(path, pathname, PATH_MAX);
-	if (error) {
-		goto out;
-	}
-	fsid = get_fsid(path);
-	ino = get_ino(path);
-	perm = file_perm_get(fsid, ino);
-
-out:
-	kfree(path);
-	return error;
-}
 
 static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 			   mode_t mode)
@@ -152,7 +130,7 @@ asmlinkage u64 sys_open_wrapper(struct pt_regs *regs)
 	int flags = (int)regs->si;
 	mode_t mode = (mode_t)regs->dx;
 
-	if (sys_open_hook(pathname, flags, mode)) {
+	if (sys_openat_hook(AT_FDCWD, pathname, flags, mode)) {
 	}
 	return __x64_sys_open(regs);
 }
@@ -170,6 +148,16 @@ asmlinkage u64 sys_openat_wrapper(struct pt_regs *regs)
 	return __x64_sys_openat(regs);
 }
 
+asmlinkage u64 sys_unlink_wrapper(struct pt_regs *regs)
+{
+	char *pathname = (char *)regs->di;
+
+	if (sys_unlinkat_hook(AT_FDCWD, pathname, 0)) {
+		return -EPERM;
+	}
+	return __x64_sys_unlink(regs);
+}
+
 asmlinkage u64 sys_unlinkat_wrapper(struct pt_regs *regs)
 {
 	int dirfd = (int)regs->di;
@@ -180,6 +168,30 @@ asmlinkage u64 sys_unlinkat_wrapper(struct pt_regs *regs)
 		return -EPERM;
 	}
 	return __x64_sys_unlinkat(regs);
+}
+
+asmlinkage u64 sys_rename_wrapper(struct pt_regs *regs)
+{
+	char *srcpath = (char *)regs->di;
+	char *dstpath = (char *)regs->si;
+
+	if (sys_renameat2_hook(AT_FDCWD, srcpath, AT_FDCWD, dstpath, 0)) {
+		return -EPERM;
+	}
+	return __x64_sys_rename(regs);
+}
+
+asmlinkage u64 sys_renameat_wrapper(struct pt_regs *regs)
+{
+	int srcfd = (int)regs->di;
+	char *srcpath = (char *)regs->si;
+	int dstfd = (int)regs->dx;
+	char *dstpath = (char *)regs->r10;
+
+	if (sys_renameat2_hook(srcfd, srcpath, dstfd, dstpath, 0)) {
+		return -EPERM;
+	}
+	return __x64_sys_renameat(regs);
 }
 
 asmlinkage u64 sys_renameat2_wrapper(struct pt_regs *regs)
