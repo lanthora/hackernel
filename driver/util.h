@@ -35,4 +35,7 @@ unsigned long get_ino(const char *name);
 #define LOG(fmt, arg...)
 #endif
 
+// 用特殊ascii码间隔不同参数,0x1F是单元分隔符
+#define ASCII_US 0x1F
+
 #endif

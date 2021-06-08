@@ -6,14 +6,14 @@
 
 int handshake_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
     int code = nla_get_s32(genl_info->attrs[HACKERNEL_A_CODE]);
-    LOG("handshake code=[%d]", code);
+    LOG("handshake response code=[%d]", code);
     return 0;
 }
 
 int process_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
     u_int8_t type;
     if (!genl_info->attrs[HACKERNEL_A_TYPE]) {
-        LOG("genl_info->attrs[HACKERNEL_A_TYPE] is null");
+        LOG("invaild args, missing HACKERNEL_A_TYPE");
         return 0;
     }
     type = nla_get_u8(genl_info->attrs[HACKERNEL_A_TYPE]);
@@ -21,7 +21,7 @@ int process_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_c
     case PROCESS_PROTECT_ENABLE: {
         int code;
         code = nla_get_s32(genl_info->attrs[HACKERNEL_A_CODE]);
-        LOG("nla_get_s32 code=[%d]", code);
+        LOG("process ctl enable response code=[%d]", code);
         break;
     }
     case PROCESS_PROTECT_REPORT: {
@@ -31,7 +31,7 @@ int process_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_c
 
         id = nla_get_s32(genl_info->attrs[HACKERNEL_A_EXID]);
         name = nla_get_string(genl_info->attrs[HACKERNEL_A_NAME]);
-        LOG("execve: name=[%s]", name);
+        LOG("process: name=[%s]", name);
         error = reply_process_perm(id, check_precess_perm(name));
         if (error) {
             LOG("reply_process_perm failed");
@@ -66,7 +66,7 @@ int file_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd,
         name = nla_get_string(genl_info->attrs[HACKERNEL_A_NAME]);
         perm = nla_get_s32(genl_info->attrs[HACKERNEL_A_PERM]);
 
-        LOG("open: name=[%s] perm=[%d]", name, perm);
+        LOG("file: name=[%s] perm=[%d]", name, perm);
         break;
     }
     default: {

@@ -91,7 +91,7 @@ int parse_argv(const char __user *const __user *argv, char *params, long size)
 
 		cursor += len;
 		if (cursor > params) {
-			*(cursor - 1) = ' ';
+			*(cursor - 1) = ASCII_US;
 		}
 	}
 	if (cursor > params) {
