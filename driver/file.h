@@ -18,6 +18,8 @@ DEFINE_HOOK_HEADER(renameat2);
 #define FILE_PROTECT_SET 3
 #define FILE_PROTECT_REPORT 4
 
+#define READ_WRITE_MASK 3
+
 extern int file_protect_handler(struct sk_buff *skb, struct genl_info *info);
 
 #endif

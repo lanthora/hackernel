@@ -81,152 +81,155 @@ errout:
 	return error;
 }
 
-static int invalid_perm(file_perm_t perm)
+static int read_protect_check(char *path)
 {
-	return perm < 0;
+	const file_perm_t perm = READ_PROTECT_MASK;
+	int is_forbidden = file_perm_get_path(path) & perm;
+	if (is_forbidden)
+		file_protect_report_to_userspace(path, perm);
+
+	return is_forbidden;
+}
+
+static int write_protect_check(char *path)
+{
+	const file_perm_t perm = WRITE_PROTECT_MASK;
+	int is_forbidden = file_perm_get_path(path) & perm;
+	if (is_forbidden)
+		file_protect_report_to_userspace(path, perm);
+
+	return is_forbidden;
+}
+
+static int read_write_protect_check(char *path)
+{
+	const file_perm_t perm = (READ_PROTECT_MASK | WRITE_PROTECT_MASK);
+	int is_forbidden = file_perm_get_path(path) & perm;
+	if (is_forbidden)
+		file_protect_report_to_userspace(path, perm);
+
+	return is_forbidden;
+}
+
+static int unlink_protect_check(char *path)
+{
+	const file_perm_t perm = UNLINK_PROTECT_MASK;
+	int is_forbidden = file_perm_get_path(path) & perm;
+	if (is_forbidden)
+		file_protect_report_to_userspace(path, perm);
+
+	return is_forbidden;
+}
+
+static int rename_protect_check(char *path)
+{
+	const file_perm_t perm = RENAME_PROTECT_MASK;
+	int is_forbidden = file_perm_get_path(path) & perm;
+	if (is_forbidden)
+		file_protect_report_to_userspace(path, perm);
+
+	return is_forbidden;
+}
+
+static int parent_write_protect_check(char *path)
+{
+	int is_forbidden;
+	char *parent_path = get_parent_path_alloc(path);
+	is_forbidden = write_protect_check(parent_path);
+	kfree(parent_path);
+	return is_forbidden;
 }
 
 static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 			   mode_t mode)
 {
-	int error = 0;
+	int is_forbidden = 0;
 	char *path = NULL;
-	char *parent_path = NULL;
-	char *report_path = NULL;
-	file_perm_t perm = INVAILD_PERM;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
-	if (!path) {
-		LOG("get_absolute_path_alloc failed");
+	if (!path)
 		goto out;
-	}
-	report_path = path;
-	perm = file_perm_get_path(path);
 
-	if (invalid_perm(perm)) {
-		goto out;
+	switch (flags & READ_WRITE_MASK) {
+	case O_RDONLY: {
+		is_forbidden = read_protect_check(path);
+		break;
 	}
-
-	if ((perm & READ_PROTECT_MASK) && (flags & O_RDONLY)) {
-		error = -EPERM;
-		perm = READ_PROTECT_MASK;
-		goto report;
+	case O_WRONLY: {
+		is_forbidden = write_protect_check(path);
+		break;
 	}
-
-	if ((perm & WRITE_PROTECT_MASK) && (flags & O_WRONLY)) {
-		error = -EPERM;
-		perm = WRITE_PROTECT_MASK;
-		goto report;
+	case O_RDWR: {
+		is_forbidden = read_write_protect_check(path);
+		break;
+	}
 	}
 
-	// 父目录有写保护，禁止创建文件
-	if (!(flags & O_CREAT)) {
-		goto out;
+	if (!is_forbidden || (flags & O_CREAT)) {
+		is_forbidden = parent_write_protect_check(path);
 	}
-	parent_path = get_parent_path_alloc(path);
-	report_path = parent_path;
-	perm = file_perm_get_path(parent_path);
-	if (perm & WRITE_PROTECT_MASK) {
-		error = -EPERM;
-		perm = WRITE_PROTECT_MASK;
-		goto report;
-	}
-	goto out;
-report:
-	file_protect_report_to_userspace(report_path, perm);
 
 out:
 	kfree(path);
-	kfree(parent_path);
-	return error;
+	return is_forbidden;
 }
 
 static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 {
-	int error = 0;
-	char *path;
-	char *report_path;
-	file_perm_t perm;
+	int is_forbidden = 0;
+	char *path = NULL;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
-	if (!path) {
-		LOG("get_absolute_path_alloc failed");
+	if (!path)
 		goto out;
-	}
-	report_path = path;
-	perm = file_perm_get_path(path);
 
-	if (invalid_perm(perm)) {
+	is_forbidden = unlink_protect_check(path);
+	if (is_forbidden)
 		goto out;
-	}
 
-	if (perm & UNLINK_PROTECT_MASK) {
-		error = -EPERM;
-		perm = UNLINK_PROTECT_MASK;
-		goto report;
-	}
-	goto out;
-report:
-	file_protect_report_to_userspace(path, perm);
-
+	is_forbidden = parent_write_protect_check(path);
+	if (is_forbidden)
+		goto out;
 out:
 	kfree(path);
-	return error;
+	return is_forbidden;
 }
 
 static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 			      char __user *dstpath, int flags)
 {
-	int error = 0;
-	char *src;
-	char *dst;
-	char *report_path = NULL;
-	file_perm_t perm;
+	int is_forbidden = 0;
+	char *src = NULL;
+	char *dst = NULL;
 
 	src = get_absolute_path_alloc(srcfd, srcpath);
-	if (!src) {
-		LOG("get_absolute_path_alloc failed");
+	if (!src)
 		goto out;
-	}
-	report_path = src;
-	perm = file_perm_get_path(src);
 
-	if (invalid_perm(perm)) {
+	is_forbidden = rename_protect_check(src);
+	if (is_forbidden)
 		goto out;
-	}
-	if (perm & RENAME_PROTECT_MASK) {
-		error = -EPERM;
-		perm = RENAME_PROTECT_MASK;
-		goto report;
-	}
+
+	is_forbidden = parent_write_protect_check(src);
+	if (is_forbidden)
+		goto out;
 
 	dst = get_absolute_path_alloc(dstfd, dstpath);
-	if (!dst) {
-		LOG("get_absolute_path_alloc failed");
+	if (!dst)
 		goto out;
-	}
-	report_path = dst;
 
-	perm = file_perm_get_path(dst);
-
-	if (invalid_perm(perm)) {
+	is_forbidden = rename_protect_check(dst);
+	if (is_forbidden)
 		goto out;
-	}
 
-	if (perm & RENAME_PROTECT_MASK) {
-		error = -EPERM;
-		perm = RENAME_PROTECT_MASK;
-		goto report;
-	}
-	goto out;
-
-report:
-	file_protect_report_to_userspace(report_path, perm);
+	is_forbidden = parent_write_protect_check(dst);
+	if (is_forbidden)
+		goto out;
 
 out:
 	kfree(src);
 	kfree(dst);
-	return error;
+	return is_forbidden;
 }
 
 asmlinkage u64 sys_open_wrapper(struct pt_regs *regs)
@@ -236,6 +239,7 @@ asmlinkage u64 sys_open_wrapper(struct pt_regs *regs)
 	mode_t mode = (mode_t)regs->dx;
 
 	if (sys_openat_hook(AT_FDCWD, pathname, flags, mode)) {
+		return -EPERM;
 	}
 	return __x64_sys_open(regs);
 }
