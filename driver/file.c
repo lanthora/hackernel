@@ -26,6 +26,11 @@ static int file_protect_report_to_userspace(char *filename, file_perm_t perm)
 	int error = 0;
 	struct sk_buff *skb = NULL;
 	void *head = NULL;
+
+	if (!filename) {
+		LOG("filename is null");
+	}
+
 	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 
 	if ((!skb)) {
@@ -61,14 +66,24 @@ static int file_protect_report_to_userspace(char *filename, file_perm_t perm)
 	genlmsg_end(skb, head);
 
 	error = genlmsg_unicast(&init_net, skb, portid);
+
+	if (error == -EAGAIN) {
+		goto errout;
+	}
+
 	if (error) {
-		LOG("genlmsg_unicast failed");
+		LOG("genlmsg_unicast failed error=[%d]", error);
 		portid = 0;
 	}
 	return 0;
 errout:
 	nlmsg_free(skb);
 	return error;
+}
+
+static int invalid_perm(file_perm_t perm)
+{
+	return perm < 0;
 }
 
 static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
@@ -78,23 +93,27 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 	char *path = NULL;
 	char *parent_path = NULL;
 	char *report_path = NULL;
-	file_perm_t perm;
+	file_perm_t perm = INVAILD_PERM;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
 	if (!path) {
-		error = -EINVAL;
+		LOG("get_absolute_path_alloc failed");
+		goto out;
+	}
+	report_path = path;
+	perm = file_perm_get_path(path);
+
+	if (invalid_perm(perm)) {
 		goto out;
 	}
 
-	perm = file_perm_get_path(path);
-
-	if ((flags & O_RDONLY) && (perm & READ_PROTECT_MASK)) {
+	if ((perm & READ_PROTECT_MASK) && (flags & O_RDONLY)) {
 		error = -EPERM;
 		perm = READ_PROTECT_MASK;
 		goto report;
 	}
 
-	if ((flags & O_WRONLY) && (perm & WRITE_PROTECT_MASK)) {
+	if ((perm & WRITE_PROTECT_MASK) && (flags & O_WRONLY)) {
 		error = -EPERM;
 		perm = WRITE_PROTECT_MASK;
 		goto report;
@@ -105,6 +124,7 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 		goto out;
 	}
 	parent_path = get_parent_path_alloc(path);
+	report_path = parent_path;
 	perm = file_perm_get_path(parent_path);
 	if (perm & WRITE_PROTECT_MASK) {
 		error = -EPERM;
@@ -113,7 +133,6 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 	}
 	goto out;
 report:
-	report_path = parent_path ? parent_path : path;
 	file_protect_report_to_userspace(report_path, perm);
 
 out:
@@ -126,14 +145,21 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 {
 	int error = 0;
 	char *path;
+	char *report_path;
 	file_perm_t perm;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
 	if (!path) {
+		LOG("get_absolute_path_alloc failed");
+		goto out;
+	}
+	report_path = path;
+	perm = file_perm_get_path(path);
+
+	if (invalid_perm(perm)) {
 		goto out;
 	}
 
-	perm = file_perm_get_path(path);
 	if (perm & UNLINK_PROTECT_MASK) {
 		error = -EPERM;
 		perm = UNLINK_PROTECT_MASK;
@@ -154,32 +180,41 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	int error = 0;
 	char *src;
 	char *dst;
-	char *report_path;
+	char *report_path = NULL;
 	file_perm_t perm;
 
 	src = get_absolute_path_alloc(srcfd, srcpath);
 	if (!src) {
-		error = -1;
+		LOG("get_absolute_path_alloc failed");
 		goto out;
 	}
+	report_path = src;
 	perm = file_perm_get_path(src);
+
+	if (invalid_perm(perm)) {
+		goto out;
+	}
 	if (perm & RENAME_PROTECT_MASK) {
 		error = -EPERM;
-		report_path = src;
 		perm = RENAME_PROTECT_MASK;
 		goto report;
 	}
 
 	dst = get_absolute_path_alloc(dstfd, dstpath);
 	if (!dst) {
-		error = -1;
+		LOG("get_absolute_path_alloc failed");
+		goto out;
+	}
+	report_path = dst;
+
+	perm = file_perm_get_path(dst);
+
+	if (invalid_perm(perm)) {
 		goto out;
 	}
 
-	perm = file_perm_get_path(dst);
 	if (perm & RENAME_PROTECT_MASK) {
 		error = -EPERM;
-		report_path = dst;
 		perm = RENAME_PROTECT_MASK;
 		goto report;
 	}

@@ -5,7 +5,7 @@
 
 typedef unsigned long fsid_t;
 typedef unsigned long ino_t;
-typedef u32 file_perm_t;
+typedef s32 file_perm_t;
 
 #define READ_PROTECT_MASK 1
 #define WRITE_PROTECT_MASK 2
@@ -14,6 +14,7 @@ typedef u32 file_perm_t;
 
 #define BAD_FSID 0
 #define BAD_INO 1
+#define INVAILD_PERM INT_MIN
 
 // file_perm_init 分配必要的内存,使用set/get前需要调用
 // file_perm_destory 释放init和set过程中申请的内存

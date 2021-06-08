@@ -279,7 +279,13 @@ file_perm_t file_perm_get_path(const char *path)
 	unsigned long fsid, ino;
 
 	fsid = get_fsid(path);
+	if (fsid == BAD_FSID) {
+		return INVAILD_PERM;
+	}
 	ino = get_ino(path);
+	if (ino == BAD_INO) {
+		return INVAILD_PERM;
+	}
 	return file_perm_get(fsid, ino);
 }
 

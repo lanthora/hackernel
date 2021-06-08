@@ -34,11 +34,6 @@ errout:
 
 process_perm_t check_precess_perm(char *cmd) {
     process_perm_t perm = PROCESS_ACCEPT;
-
-    if (!strncmp(cmd, "rm", 2)) {
-        perm = PROCESS_REJECT;
-    }
-
     return perm;
 }
 
