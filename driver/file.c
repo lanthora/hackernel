@@ -172,11 +172,14 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 	if (is_forbidden)
 		goto out;
 
+	if (!(flags & O_CREAT))
+		goto out;
+
 	if (file_exist(path)) {
 		goto out;
 	}
-	if (flags & O_CREAT)
-		is_forbidden = parent_write_protect_check(path);
+
+	is_forbidden = parent_write_protect_check(path);
 
 out:
 	kfree(path);
