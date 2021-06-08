@@ -77,6 +77,15 @@ int enable_file_protect(void)
 	if (error) {
 		LOG("replace_renameat2 failed");
 	}
+	error = replace_mkdir();
+	if (error) {
+	}
+	error = replace_mkdirat();
+	if (error) {
+	}
+	error = replace_rmdir();
+	if (error) {
+	}
 	return error;
 }
 
@@ -102,6 +111,15 @@ int disable_file_protect(void)
 	if (error) {
 	}
 	error = restore_renameat2();
+	if (error) {
+	}
+	error = restore_mkdir();
+	if (error) {
+	}
+	error = restore_mkdirat();
+	if (error) {
+	}
+	error = restore_rmdir();
 	if (error) {
 	}
 	return error;

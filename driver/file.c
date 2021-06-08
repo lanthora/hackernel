@@ -20,6 +20,9 @@ DEFINE_HOOK(unlinkat);
 DEFINE_HOOK(rename);
 DEFINE_HOOK(renameat);
 DEFINE_HOOK(renameat2);
+DEFINE_HOOK(mkdir);
+DEFINE_HOOK(mkdirat);
+DEFINE_HOOK(rmdir);
 
 static int file_protect_report_to_userspace(char *filename, file_perm_t perm)
 {
@@ -328,6 +331,40 @@ asmlinkage u64 sys_renameat2_wrapper(struct pt_regs *regs)
 	}
 	return __x64_sys_renameat2(regs);
 }
+
+asmlinkage u64 sys_mkdir_wrapper(struct pt_regs *regs)
+{
+	char *pathname = (char *)regs->di;
+	mode_t mode = (mode_t)regs->dx;
+
+	if (sys_openat_hook(AT_FDCWD, pathname, O_CREAT, mode)) {
+		return -EPERM;
+	}
+	return __x64_sys_mkdir(regs);
+}
+
+asmlinkage u64 sys_mkdirat_wrapper(struct pt_regs *regs)
+{
+	int dirfd = (int)regs->di;
+	char *pathname = (char *)regs->si;
+	mode_t mode = (mode_t)regs->r10;
+
+	if (sys_openat_hook(dirfd, pathname, O_CREAT, mode)) {
+		return -EPERM;
+	}
+	return __x64_sys_mkdirat(regs);
+}
+
+asmlinkage u64 sys_rmdir_wrapper(struct pt_regs *regs)
+{
+	char *pathname = (char *)regs->di;
+
+	if (sys_unlinkat_hook(AT_FDCWD, pathname, 0)) {
+		return -EPERM;
+	}
+	return __x64_sys_rmdir(regs);
+}
+
 
 int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 {
