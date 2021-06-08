@@ -140,6 +140,11 @@ static int parent_write_protect_check(char *path)
 	return is_forbidden;
 }
 
+static int file_exist(char *path)
+{
+	return get_ino(path) > BAD_INO;
+}
+
 static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 			   mode_t mode)
 {
@@ -164,10 +169,14 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 		break;
 	}
 	}
+	if (is_forbidden)
+		goto out;
 
-	if (!is_forbidden || (flags & O_CREAT)) {
-		is_forbidden = parent_write_protect_check(path);
+	if (file_exist(path)) {
+		goto out;
 	}
+	if (flags & O_CREAT)
+		is_forbidden = parent_write_protect_check(path);
 
 out:
 	kfree(path);
