@@ -42,7 +42,9 @@
 		"cmath": "c",
 		"perm.h": "c",
 		"tuple": "c",
-		"thread": "c"
+		"thread": "c",
+		"stdarg.h": "c",
+		"uuid.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

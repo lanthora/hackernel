@@ -18,7 +18,7 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname);
 
 // 获取全局路径的父路径,要求路径中不能包含任何相对路径信息
 // 函数内会申请内存,调用方需要释放内存
-char *get_parent_path_alloc(char *path);
+char *get_parent_path_alloc(const char *path);
 
 // 获取文件系统id和文件描述符id,通过这两个id可以唯一确定操作系统中的一个文件
 unsigned long get_fsid(const char *name);

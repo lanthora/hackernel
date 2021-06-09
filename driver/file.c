@@ -10,6 +10,7 @@
 #include <linux/fs.h>
 #include <linux/fs_struct.h>
 #include <linux/gfp.h>
+#include <linux/namei.h>
 #include <linux/sched.h>
 #include <linux/slab.h>
 
@@ -148,6 +149,82 @@ static int file_exist(char *path)
 	return get_ino(path) > BAD_INO;
 }
 
+static int real_path_from_symlink(char *filename, char *real)
+{
+	DEFINE_DELAYED_CALL(done);
+	const char *link;
+	struct path path;
+	int error = 0;
+
+	error = kern_path(filename, LOOKUP_OPEN, &path);
+	if (error)
+		goto errout;
+
+	link = vfs_get_link(path.dentry, &done);
+
+	// 不是符号链接
+	if (IS_ERR(link)) {
+		strcpy(real, filename);
+		goto out;
+	}
+
+	// 相对路径的符号链
+	if (link[0] != '/') {
+		char *parent = get_parent_path_alloc(filename);
+		strcpy(filename, parent);
+		kfree(parent);
+		strcat(filename, "/");
+		strcat(filename, link);
+		goto recursion;
+	}
+
+	// 绝对路径的符号链
+	if (link[0] == '/') {
+		strcpy(filename, link);
+		goto recursion;
+	}
+
+recursion:
+	real_path_from_symlink(filename, real);
+	do_delayed_call(&done);
+out:
+	path_put(&path);
+errout:
+	return error;
+}
+
+static int protect_check_maybe_symlink(const char *path, const int flags)
+{
+	int is_forbidden = 0;
+	char *filename = kmalloc(PATH_MAX, GFP_KERNEL);
+	char *real = kmalloc(PATH_MAX, GFP_KERNEL);
+	if (!filename || !real) {
+		goto out;
+	}
+	strcpy(filename, path);
+
+	real_path_from_symlink(filename, real);
+
+	switch (flags & READ_WRITE_MASK) {
+	case O_RDONLY: {
+		is_forbidden = read_protect_check(real);
+		break;
+	}
+	case O_WRONLY: {
+		is_forbidden = write_protect_check(real);
+		break;
+	}
+	case O_RDWR: {
+		is_forbidden = read_write_protect_check(real);
+		break;
+	}
+	}
+out:
+	kfree(filename);
+	kfree(real);
+	return is_forbidden;
+}
+
 static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 			   mode_t mode)
 {
@@ -158,20 +235,7 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 	if (!path)
 		goto out;
 
-	switch (flags & READ_WRITE_MASK) {
-	case O_RDONLY: {
-		is_forbidden = read_protect_check(path);
-		break;
-	}
-	case O_WRONLY: {
-		is_forbidden = write_protect_check(path);
-		break;
-	}
-	case O_RDWR: {
-		is_forbidden = read_write_protect_check(path);
-		break;
-	}
-	}
+	is_forbidden = protect_check_maybe_symlink(path, flags);
 	if (is_forbidden)
 		goto out;
 
@@ -364,7 +428,6 @@ asmlinkage u64 sys_rmdir_wrapper(struct pt_regs *regs)
 	}
 	return __x64_sys_rmdir(regs);
 }
-
 
 int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 {

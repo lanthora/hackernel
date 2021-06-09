@@ -292,7 +292,7 @@ errout:
 	return NULL;
 }
 
-char *get_parent_path_alloc(char *path)
+char *get_parent_path_alloc(const char *path)
 {
 	char *parent_path;
 	size_t len;
@@ -307,6 +307,7 @@ char *get_parent_path_alloc(char *path)
 		--len;
 	}
 	parent_path[len] = '\0';
+
 	return parent_path;
 errout:
 	kfree(parent_path);
