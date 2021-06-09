@@ -20,109 +20,58 @@ int init_sys_call_table(u64 sys_call_table)
 
 int enable_process_protect(void)
 {
-	int error;
-	error = replace_execve();
-	if (error) {
-		LOG("replace_execve failed");
-	}
-	error = replace_execveat();
-	if (error) {
-		LOG("replace_execveat failed");
-	}
-	return error;
+	REG_HOOK(execve);
+	REG_HOOK(execveat);
+	return 0;
 }
 
 int disable_process_protect(void)
 {
-	int error;
-	error = restore_execve();
-	if (error) {
-		LOG("restore_execve failed");
-	}
-	error = restore_execveat();
-	if (error) {
-		LOG("restore_execveat failed");
-	}
-	return error;
+	UNREG_HOOK(execve);
+	UNREG_HOOK(execveat);
+	return 0;
 }
 
 int enable_file_protect(void)
 {
-	int error;
-	error = replace_open();
-	if (error) {
-		LOG("replace_open failed");
-	}
-	error = replace_openat();
-	if (error) {
-		LOG("replace_openat failed");
-	}
-	error = replace_unlink();
-	if (error) {
-		LOG("replace_unlink failed");
-	}
-	error = replace_unlinkat();
-	if (error) {
-		LOG("replace_unlinkat failed");
-	}
-	error = replace_rename();
-	if (error) {
-		LOG("replace_rename failed");
-	}
-	error = replace_renameat();
-	if (error) {
-		LOG("replace_renameat failed");
-	}
-	error = replace_renameat2();
-	if (error) {
-		LOG("replace_renameat2 failed");
-	}
-	error = replace_mkdir();
-	if (error) {
-	}
-	error = replace_mkdirat();
-	if (error) {
-	}
-	error = replace_rmdir();
-	if (error) {
-	}
-	return error;
+	REG_HOOK(open);
+	REG_HOOK(openat);
+	REG_HOOK(unlink);
+	REG_HOOK(unlinkat);
+	REG_HOOK(rename);
+	REG_HOOK(renameat);
+	REG_HOOK(renameat2);
+	REG_HOOK(mkdir);
+	REG_HOOK(mkdirat);
+	REG_HOOK(rmdir);
+	REG_HOOK(link);
+	REG_HOOK(linkat);
+	REG_HOOK(symlink);
+	REG_HOOK(symlinkat);
+	REG_HOOK(mknod);
+	REG_HOOK(mknodat);
+	return 0;
 }
 
 int disable_file_protect(void)
 {
-	int error;
-	error = restore_open();
-	if (error) {
-	}
-	error = restore_openat();
-	if (error) {
-	}
-	error = restore_unlink();
-	if (error) {
-	}
-	error = restore_unlinkat();
-	if (error) {
-	}
-	error = restore_rename();
-	if (error) {
-	}
-	error = restore_renameat();
-	if (error) {
-	}
-	error = restore_renameat2();
-	if (error) {
-	}
-	error = restore_mkdir();
-	if (error) {
-	}
-	error = restore_mkdirat();
-	if (error) {
-	}
-	error = restore_rmdir();
-	if (error) {
-	}
-	return error;
+	UNREG_HOOK(open);
+	UNREG_HOOK(openat);
+	UNREG_HOOK(unlink);
+	UNREG_HOOK(unlinkat);
+	UNREG_HOOK(rename);
+	UNREG_HOOK(renameat);
+	UNREG_HOOK(renameat2);
+	UNREG_HOOK(mkdir);
+	UNREG_HOOK(mkdirat);
+	UNREG_HOOK(rmdir);
+	UNREG_HOOK(link);
+	UNREG_HOOK(linkat);
+	UNREG_HOOK(symlink);
+	UNREG_HOOK(symlinkat);
+	UNREG_HOOK(mknod);
+	UNREG_HOOK(mknodat);
+	return 0;
 }
 
 static inline void write_cr0_forced(unsigned long val)

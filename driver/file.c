@@ -24,6 +24,12 @@ DEFINE_HOOK(renameat2);
 DEFINE_HOOK(mkdir);
 DEFINE_HOOK(mkdirat);
 DEFINE_HOOK(rmdir);
+DEFINE_HOOK(link);
+DEFINE_HOOK(linkat);
+DEFINE_HOOK(symlink);
+DEFINE_HOOK(symlinkat);
+DEFINE_HOOK(mknod);
+DEFINE_HOOK(mknodat);
 
 static int file_protect_report_to_userspace(char *filename, file_perm_t perm)
 {
@@ -427,6 +433,69 @@ asmlinkage u64 sys_rmdir_wrapper(struct pt_regs *regs)
 		return -EPERM;
 	}
 	return __x64_sys_rmdir(regs);
+}
+
+asmlinkage u64 sys_link_wrapper(struct pt_regs *regs)
+{
+	char *dstpath = (char *)regs->si;
+
+	if (sys_openat_hook(AT_FDCWD, dstpath, O_CREAT, 0)) {
+		return -EPERM;
+	}
+	return __x64_sys_link(regs);
+}
+
+asmlinkage u64 sys_linkat_wrapper(struct pt_regs *regs)
+{
+	int dstfd = (int)regs->dx;
+	char *dstpath = (char *)regs->r10;
+
+	if (sys_openat_hook(dstfd, dstpath, O_CREAT, 0)) {
+		return -EPERM;
+	}
+	return __x64_sys_linkat(regs);
+}
+
+asmlinkage u64 sys_symlink_wrapper(struct pt_regs *regs)
+{
+	char *dstpath = (char *)regs->si;
+
+	if (sys_openat_hook(AT_FDCWD, dstpath, O_CREAT, 0)) {
+		return -EPERM;
+	}
+	return __x64_sys_symlink(regs);
+}
+
+asmlinkage u64 sys_symlinkat_wrapper(struct pt_regs *regs)
+{
+	int dstfd = (int)regs->si;
+	char *dstpath = (char *)regs->dx;
+
+	if (sys_openat_hook(dstfd, dstpath, O_CREAT, 0)) {
+		return -EPERM;
+	}
+	return __x64_sys_symlinkat(regs);
+}
+
+asmlinkage u64 sys_mknod_wrapper(struct pt_regs *regs)
+{
+	char *pathname = (char *)regs->di;
+
+	if (sys_openat_hook(AT_FDCWD, pathname, O_CREAT, 0)) {
+		return -EPERM;
+	}
+	return __x64_sys_mknod(regs);
+}
+
+asmlinkage u64 sys_mknodat_wrapper(struct pt_regs *regs)
+{
+	int dirfd = (int)regs->di;
+	char *pathname = (char *)regs->si;
+
+	if (sys_openat_hook(dirfd, pathname, O_CREAT, 0)) {
+		return -EPERM;
+	}
+	return __x64_sys_mknodat(regs);
 }
 
 int file_protect_handler(struct sk_buff *skb, struct genl_info *info)

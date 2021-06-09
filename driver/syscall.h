@@ -1,6 +1,7 @@
 #ifndef HACKERNEL_SYSCALL_H
 #define HACKERNEL_SYSCALL_H
 
+#include "util.h"
 #include <linux/kernel.h>
 
 typedef asmlinkage u64 (*sys_call_ptr_t)(struct pt_regs *);
@@ -69,6 +70,28 @@ void enable_write_protection(void);
 		__x64_sys_##name = NULL;                                       \
 		return 0;                                                      \
 	}
+#endif
+
+#ifndef STR
+#define STR(x) #x
+#endif
+
+#ifndef REG_HOOK
+#define REG_HOOK(name)                                                         \
+	do {                                                                   \
+		if (replace_##name()) {                                        \
+			LOG("replace_" STR(name) " failed");                   \
+		}                                                              \
+	} while (0)
+#endif
+
+#ifndef UNREG_HOOK
+#define UNREG_HOOK(name)                                                       \
+	do {                                                                   \
+		if (restore_##name()) {                                        \
+			LOG("restore_" STR(name) " failed");                   \
+		}                                                              \
+	} while (0)
 #endif
 
 #endif
