@@ -20,6 +20,7 @@ int init_sys_call_table(u64 sys_call_table)
 
 int enable_process_protect(void)
 {
+	process_perm_init();
 	REG_HOOK(execve);
 	REG_HOOK(execveat);
 	return 0;
@@ -29,11 +30,13 @@ int disable_process_protect(void)
 {
 	UNREG_HOOK(execve);
 	UNREG_HOOK(execveat);
+	process_perm_destory();
 	return 0;
 }
 
 int enable_file_protect(void)
 {
+	file_perm_init();
 	REG_HOOK(open);
 	REG_HOOK(openat);
 	REG_HOOK(unlink);
@@ -71,6 +74,7 @@ int disable_file_protect(void)
 	UNREG_HOOK(symlinkat);
 	UNREG_HOOK(mknod);
 	UNREG_HOOK(mknodat);
+	file_perm_destory();
 	return 0;
 }
 

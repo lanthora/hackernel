@@ -113,7 +113,7 @@ static int file_perm_tree_destory(struct rb_root *root)
 static int file_perm_list_init(void)
 {
 	if (file_perm_list_head) {
-		return -EBUSY;
+		return -EPERM;
 	}
 	file_perm_list_head =
 		kzalloc(sizeof(struct file_perm_list), GFP_KERNEL);
@@ -208,8 +208,10 @@ int file_perm_init(void)
 int file_perm_destory(void)
 {
 	fperm_list_destory();
-	kfree(file_perm_lock);
-	file_perm_lock = NULL;
+	if (file_perm_lock) {
+		kfree(file_perm_lock);
+		file_perm_lock = NULL;
+	}
 	return 0;
 }
 
@@ -332,6 +334,9 @@ int process_perm_init(void)
 	int idx;
 	const size_t size = sizeof(process_perm_head_t) * PROCESS_PERM_SIZE;
 	// hlist初始化方式就是将内存中的变量设置为NULL,kzalloc可以达到相同的效果
+	if (process_perm_hlist) {
+		return -EPERM;
+	}
 	process_perm_hlist = kmalloc(size, GFP_KERNEL);
 	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx) {
 		process_perm_head_init(&process_perm_hlist[idx]);
@@ -354,7 +359,9 @@ static void process_perm_hlist_node_destory(process_perm_head_t *perm_head)
 int process_perm_destory(void)
 {
 	size_t idx;
-
+	if (!process_perm_hlist) {
+		return -EPERM;
+	}
 	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx) {
 		process_perm_hlist_node_destory(&process_perm_hlist[idx]);
 	}

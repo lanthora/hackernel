@@ -111,6 +111,22 @@ static int startup() {
     return 0;
 }
 
+static int crontab(){
+    int error;
+    error = set_file_protect("/var/spool/cron/root", WRITE_PROTECT_MASK | RENAME_PROTECT_MASK | UNLINK_PROTECT_MASK);
+    if (error) {
+        LOG("set_file_protect failed");
+        return error;
+    }
+
+    error = set_file_protect("/var/spool/cron", RENAME_PROTECT_MASK | UNLINK_PROTECT_MASK);
+    if (error) {
+        LOG("set_file_protect failed");
+        return error;
+    }
+    return 0;
+}
+
 static int test() {
     int error = 0;
 
@@ -132,6 +148,10 @@ static int test() {
     error = startup();
     if (error) {
         return error;
+    }
+    error = crontab();
+    if (error) {
+    	return error;
     }
 
     return 0;

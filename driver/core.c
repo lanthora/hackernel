@@ -11,8 +11,6 @@ MODULE_DESCRIPTION("kernel helper");
 
 static int init(void)
 {
-	file_perm_init();
-	process_perm_init();
 	netlink_kernel_start();
 	return 0;
 }
@@ -20,10 +18,8 @@ static int init(void)
 static void cleanup(void)
 {
 	netlink_kernel_stop();
-	process_perm_destory();
 	disable_process_protect();
 	disable_file_protect();
-	file_perm_destory();
 	return;
 }
 
