@@ -275,6 +275,10 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 	is_forbidden = parent_write_protect_check(path);
 	if (is_forbidden)
 		goto out;
+
+	if (file_perm_get_path(path))
+		file_perm_set_path(path, INVAILD_PERM);
+
 out:
 	kfree(path);
 	return is_forbidden;
@@ -303,13 +307,16 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	if (!dst)
 		goto out;
 
-	is_forbidden = rename_protect_check(dst);
+	is_forbidden = unlink_protect_check(dst);
 	if (is_forbidden)
 		goto out;
 
 	is_forbidden = parent_write_protect_check(dst);
 	if (is_forbidden)
 		goto out;
+
+	if (file_perm_get_path(dst))
+		file_perm_set_path(dst, INVAILD_PERM);
 
 out:
 	kfree(src);
