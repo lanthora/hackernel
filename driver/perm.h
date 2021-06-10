@@ -41,15 +41,15 @@ int process_perm_init(void);
 int process_perm_destory(void);
 
 // 添加序列号后进程休眠
-int precess_perm_insert(process_perm_id_t seq);
+int process_perm_insert(process_perm_id_t id);
 
 // 唤醒前更新
-int precess_perm_update(process_perm_id_t id, process_perm_t status);
+int process_perm_update(process_perm_id_t id, process_perm_t status);
 
 // 等待队列退出等待条件检查时,PROCESS_WATT 继续等待,否则退出等待
-process_perm_t precess_perm_search(process_perm_id_t id);
+process_perm_t process_perm_search(process_perm_id_t id);
 
 // 退出等待后,移除对应序列号中的数据
-int precess_perm_delele(process_perm_id_t id);
+int process_perm_delele(process_perm_id_t id);
 
 #endif

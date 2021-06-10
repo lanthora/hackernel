@@ -66,7 +66,7 @@ errout:
 
 static int condition_process_perm(process_perm_id_t id)
 {
-	return precess_perm_search(id);
+	return process_perm_search(id);
 }
 
 // 将execve的命令发送到用户态,用户态返回这条命令的执行权限
@@ -79,9 +79,9 @@ static process_perm_t process_protect_status(char *cmd)
 
 	id = atomic_inc_return(&atomic_process_id);
 
-	error = precess_perm_insert(id);
+	error = process_perm_insert(id);
 	if (error) {
-		LOG("precess_perm_insert failed");
+		LOG("process_perm_insert failed");
 		goto out;
 	}
 
@@ -95,10 +95,10 @@ static process_perm_t process_protect_status(char *cmd)
 			   timeout);
 
 	// 从等待队列出来了
-	retval = precess_perm_search(id);
+	retval = process_perm_search(id);
 
 out:
-	precess_perm_delele(id);
+	process_perm_delele(id);
 	return retval;
 }
 
@@ -192,7 +192,7 @@ int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		process_perm_t perm;
 		id = nla_get_s32(info->attrs[HACKERNEL_A_EXID]);
 		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
-		precess_perm_update(id, perm);
+		process_perm_update(id, perm);
 		wake_up(&wq_process_perm);
 		goto out;
 	}

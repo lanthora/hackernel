@@ -3,6 +3,7 @@
 #include <linux/list.h>
 #include <linux/rbtree.h>
 #include <linux/slab.h>
+#include <linux/types.h>
 
 struct file_perm_node {
 	struct rb_node node;
@@ -109,7 +110,7 @@ static int file_perm_tree_destory(struct rb_root *root)
 	return 0;
 }
 
-static int fperm_list_init(void)
+static int file_perm_list_init(void)
 {
 	if (file_perm_list_head) {
 		return -EBUSY;
@@ -124,7 +125,7 @@ static int fperm_list_init(void)
 }
 
 // 查找fsid对应的权限红黑树,如果不存在就初始化红黑树
-static struct rb_root *fperm_list_search(fsid_t fsid)
+static struct rb_root *file_perm_list_search(fsid_t fsid)
 {
 	struct file_perm_list *data = NULL;
 
@@ -191,7 +192,7 @@ static int fperm_list_destory(void)
 int file_perm_init(void)
 {
 	int error;
-	error = fperm_list_init();
+	error = file_perm_list_init();
 	if (error) {
 		return error;
 	}
@@ -220,7 +221,7 @@ file_perm_t file_perm_get(const fsid_t fsid, ino_t ino)
 
 	read_lock(file_perm_lock);
 
-	root = fperm_list_search(fsid);
+	root = file_perm_list_search(fsid);
 	if (!root) {
 		goto out;
 	}
@@ -247,7 +248,7 @@ int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm)
 
 	write_lock(file_perm_lock);
 
-	root = fperm_list_search(fsid);
+	root = file_perm_list_search(fsid);
 	if (!root) {
 		retval = -EAGAIN;
 		goto out;
@@ -298,190 +299,139 @@ int file_perm_set_path(const char *path, file_perm_t perm)
 	return file_perm_set(fsid, ino, perm);
 }
 
+// 由于id是逐一增加的,取余可以平均分配地址空间,由于散列函数的特殊实现,哈希表大小需要是2的整数次幂
+#define PROCESS_PERM_MASK 0xFF
+#define PROCESS_PERM_SIZE (PROCESS_PERM_MASK + 1) // 256
+#define PROCESS_PERM_HASH(id) (id & (PROCESS_PERM_MASK)) // 散列函数
+
 struct process_perm_node {
-	struct rb_node node;
+	struct hlist_node node;
 	process_perm_id_t id;
 	process_perm_t perm;
 };
-static struct rb_root *process_perm_rb_root = NULL;
-static rwlock_t *process_perm_lock = NULL;
+
+typedef struct process_perm_node process_perm_node_t;
+
+struct process_perm_head {
+	struct hlist_head head;
+	rwlock_t lock;
+};
+
+typedef struct process_perm_head process_perm_head_t;
+
+static void process_perm_head_init(process_perm_head_t *perm_head)
+{
+	INIT_HLIST_HEAD(&perm_head->head);
+	rwlock_init(&perm_head->lock);
+}
+
+process_perm_head_t *process_perm_hlist;
 
 int process_perm_init(void)
 {
-	process_perm_rb_root = kzalloc(sizeof(struct rb_root), GFP_KERNEL);
-	if (!process_perm_rb_root) {
-		LOG("process_perm_rb_root init failed");
-		return -ENOMEM;
+	int idx;
+	const size_t size = sizeof(process_perm_head_t) * PROCESS_PERM_SIZE;
+	// hlist初始化方式就是将内存中的变量设置为NULL,kzalloc可以达到相同的效果
+	process_perm_hlist = kmalloc(size, GFP_KERNEL);
+	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx) {
+		process_perm_head_init(&process_perm_hlist[idx]);
 	}
-	process_perm_lock = kmalloc(sizeof(rwlock_t), GFP_KERNEL);
-	if (!process_perm_lock) {
-		LOG("process_perm_lock init failed");
-		return -ENOMEM;
-	}
-	rwlock_init(process_perm_lock);
 	return 0;
+}
+
+static void process_perm_hlist_node_destory(process_perm_head_t *perm_head)
+{
+	struct process_perm_node *pos;
+	struct hlist_node *n;
+	write_lock(&perm_head->lock);
+	hlist_for_each_entry_safe (pos, n, &perm_head->head, node) {
+		hlist_del(&pos->node);
+		kfree(pos);
+	}
+	write_unlock(&perm_head->lock);
 }
 
 int process_perm_destory(void)
 {
-	if (!process_perm_rb_root) {
-		LOG("process_perm_rb_root is null");
-		return -EINVAL;
-	}
-	kfree(process_perm_rb_root);
-	process_perm_rb_root = NULL;
+	size_t idx;
 
-	kfree(process_perm_lock);
-	process_perm_lock = NULL;
+	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx) {
+		process_perm_hlist_node_destory(&process_perm_hlist[idx]);
+	}
+	kfree(process_perm_hlist);
+	process_perm_hlist = NULL;
 	return 0;
 }
 
-static int process_perm_id_cmp(int ns, int nt)
+int process_perm_insert(process_perm_id_t id)
 {
-	if (ns < nt) {
-		return -1;
-	}
-	if (ns > nt) {
-		return 1;
-	}
+	const size_t size = sizeof(process_perm_node_t);
+	const size_t idx = PROCESS_PERM_HASH(id);
+	process_perm_head_t *perm_head = &process_perm_hlist[idx];
+	process_perm_node_t *new = kmalloc(size, GFP_KERNEL);
+
+	new->id = id;
+	new->perm = PROCESS_WATT;
+
+	write_lock(&perm_head->lock);
+	hlist_add_head(&new->node, &perm_head->head);
+	write_unlock(&perm_head->lock);
 	return 0;
 }
 
-int precess_perm_insert(process_perm_id_t id)
+int process_perm_update(process_perm_id_t id, process_perm_t perm)
 {
-	int error = 0;
-	struct process_perm_node *data;
-	struct rb_node **new = &(process_perm_rb_root->rb_node), *parent = NULL;
+	struct process_perm_node *pos;
+	const size_t idx = PROCESS_PERM_HASH(id);
+	process_perm_head_t *perm_head = &process_perm_hlist[idx];
 
-	write_lock(process_perm_lock);
+	write_lock(&perm_head->lock);
+	hlist_for_each_entry (pos, &perm_head->head, node) {
+		if (pos->id != id)
+			continue;
 
-	while (*new) {
-		struct process_perm_node *this;
-		int result;
-
-		this = container_of(*new, struct process_perm_node, node);
-		result = process_perm_id_cmp(id, this->id);
-		parent = *new;
-
-		if (result < 0) {
-			new = &((*new)->rb_left);
-		} else if (result > 0) {
-			new = &((*new)->rb_right);
-		} else {
-			error = -EEXIST;
-			goto errout;
-		}
+		pos->perm = perm;
+		break;
 	}
-
-	data = kmalloc(sizeof(struct process_perm_node), GFP_KERNEL);
-	if (!data) {
-		error = -ENOMEM;
-		goto errout;
-	}
-
-	data->id = id;
-	data->perm = PROCESS_WATT;
-
-	rb_link_node(&data->node, parent, new);
-	rb_insert_color(&data->node, process_perm_rb_root);
-errout:
-	write_unlock(process_perm_lock);
-	return error;
+	write_unlock(&perm_head->lock);
+	return 0;
 }
 
-int precess_perm_update(process_perm_id_t id, process_perm_t status)
+process_perm_t process_perm_search(process_perm_id_t id)
 {
-	int error = 0;
-	struct process_perm_node *data;
-	struct rb_node *node = process_perm_rb_root->rb_node;
-
-	write_lock(process_perm_lock);
-
-	while (node) {
-		int result;
-
-		data = container_of(node, struct process_perm_node, node);
-		result = process_perm_id_cmp(id, data->id);
-
-		if (result < 0) {
-			node = node->rb_left;
-		} else if (result > 0) {
-			node = node->rb_right;
-		} else {
-			goto found;
-		}
-	}
-
-	// 没找到,返回错误码
-	error = -ENOENT;
-	goto errout;
-
-found:
-	// 找到了,修改状态,没有调整key,红黑树不需要调整
-	data->perm = status;
-
-errout:
-	write_unlock(process_perm_lock);
-	return error;
-}
-
-process_perm_t precess_perm_search(int id)
-{
+	struct process_perm_node *pos;
+	const size_t idx = PROCESS_PERM_HASH(id);
+	process_perm_head_t *perm_head = &process_perm_hlist[idx];
 	process_perm_t perm = PROCESS_INVAILD;
-	struct rb_node *node = process_perm_rb_root->rb_node;
 
-	read_lock(process_perm_lock);
+	read_lock(&perm_head->lock);
+	hlist_for_each_entry (pos, &perm_head->head, node) {
+		if (pos->id != id)
+			continue;
 
-	while (node) {
-		struct process_perm_node *data;
-		int result;
-
-		data = container_of(node, struct process_perm_node, node);
-		result = process_perm_id_cmp(id, data->id);
-
-		if (result < 0) {
-			node = node->rb_left;
-		} else if (result > 0) {
-			node = node->rb_right;
-		} else {
-			perm = data->perm;
-			goto out;
-		}
+		perm = pos->perm;
+		break;
 	}
-
-out:
-	read_unlock(process_perm_lock);
+	read_unlock(&perm_head->lock);
 	return perm;
 }
 
-int precess_perm_delele(int id)
+int process_perm_delele(process_perm_id_t id)
 {
-	int error = 0;
-	struct rb_node *node = process_perm_rb_root->rb_node;
-	struct process_perm_node *data;
+	struct process_perm_node *victim;
+	struct hlist_node *n;
+	const size_t idx = PROCESS_PERM_HASH(id);
+	process_perm_head_t *perm_head = &process_perm_hlist[idx];
 
-	write_lock(process_perm_lock);
+	write_lock(&perm_head->lock);
+	hlist_for_each_entry_safe (victim, n, &perm_head->head, node) {
+		if (victim->id != id)
+			continue;
 
-	while (node) {
-		int result;
-
-		data = container_of(node, struct process_perm_node, node);
-		result = process_perm_id_cmp(id, data->id);
-
-		if (result < 0) {
-			node = node->rb_left;
-		} else if (result > 0) {
-			node = node->rb_right;
-		} else {
-			goto found;
-		}
+		hlist_del(&victim->node);
+		kfree(victim);
+		break;
 	}
-	error = ENOENT;
-	goto out;
-found:
-	rb_erase(&data->node, process_perm_rb_root);
-	kfree(data);
-out:
-	write_unlock(process_perm_lock);
-	return error;
+	write_unlock(&perm_head->lock);
+	return 0;
 }
