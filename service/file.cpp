@@ -1,7 +1,7 @@
 #include "command.h"
 #include "util.h"
 
-int enable_file_protect() {
+static int update_file_protect_status(uint8_t status) {
     int error = 0;
     struct nl_msg *msg;
     int size;
@@ -13,7 +13,7 @@ int enable_file_protect() {
     }
 
     genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_FILE_PROTECT, HACKERNEL_FAMLY_VERSION);
-    error = nla_put_u8(msg, HACKERNEL_A_TYPE, FILE_PROTECT_ENABLE);
+    error = nla_put_u8(msg, HACKERNEL_A_TYPE, status);
     if (error) {
         LOG("nla_put_u8 failed");
         goto errout;
@@ -30,6 +30,10 @@ errout:
     nlmsg_free(msg);
     return error;
 }
+
+int enable_file_protect() { return update_file_protect_status(FILE_PROTECT_ENABLE); }
+
+int disable_file_protect() { return update_file_protect_status(FILE_PROTECT_DISABLE); }
 
 int set_file_protect(const std::string &path, file_perm_t perm) {
     int error = 0;
@@ -69,6 +73,3 @@ errout:
     nlmsg_free(msg);
     return error;
 }
-
-
-

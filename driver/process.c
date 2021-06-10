@@ -183,10 +183,6 @@ int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 
 	type = nla_get_u8(info->attrs[HACKERNEL_A_TYPE]);
 	switch (type) {
-	case PROCESS_PROTECT_ENABLE: {
-		code = enable_process_protect();
-		goto response;
-	}
 	case PROCESS_PROTECT_REPORT: {
 		process_perm_id_t id;
 		process_perm_t perm;
@@ -195,6 +191,15 @@ int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		process_perm_update(id, perm);
 		wake_up(&wq_process_perm);
 		goto out;
+	}
+	case PROCESS_PROTECT_ENABLE: {
+		code = enable_process_protect();
+		goto response;
+	}
+
+	case PROCESS_PROTECT_DISABLE: {
+		code = disable_process_protect();
+		goto response;
 	}
 	default: {
 		LOG("Unknown process protect command");

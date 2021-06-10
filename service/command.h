@@ -6,11 +6,14 @@
 #include <netlink/msg.h>
 #include <string>
 
-// handshake
+/**
+ * handshake
+ */
 int handshake();
-// handshake end
 
-// file protect
+/**
+ * file protect
+ */
 typedef int32_t file_perm_t;
 
 #define READ_PROTECT_MASK 1
@@ -18,21 +21,32 @@ typedef int32_t file_perm_t;
 #define UNLINK_PROTECT_MASK 4
 #define RENAME_PROTECT_MASK 8
 
-#define FILE_PROTECT_ENABLE 1
-#define FILE_PROTECT_DISABLE 2
-#define FILE_PROTECT_SET 3
-#define FILE_PROTECT_REPORT 4
+enum
+{
+    FILE_PROTECT_UNSPEC,
+    FILE_PROTECT_REPORT,
+    FILE_PROTECT_ENABLE,
+    FILE_PROTECT_DISABLE,
+    FILE_PROTECT_SET
+};
 
 int enable_file_protect();
+int disable_file_protect();
 int set_file_protect(const std::string &path, file_perm_t perm);
-// file protect end
 
-// process protect
+/**
+ * process protect
+ */
 typedef int process_perm_id_t;
 typedef int32_t process_perm_t;
 
-#define PROCESS_PROTECT_ENABLE 1
-#define PROCESS_PROTECT_REPORT 2
+enum
+{
+    PROCESS_PROTECT_UNSPEC,
+    PROCESS_PROTECT_REPORT,
+    PROCESS_PROTECT_ENABLE,
+    PROCESS_PROTECT_DISABLE
+};
 
 #define PROCESS_INVAILD -1
 #define PROCESS_WATT 0
@@ -40,8 +54,8 @@ typedef int32_t process_perm_t;
 #define PROCESS_REJECT 2
 
 int enable_process_protect();
+int disable_process_protect();
 process_perm_t check_precess_perm(char *cmd);
 int reply_process_perm(process_perm_id_t id, process_perm_t perm);
-// process protect end
 
 #endif

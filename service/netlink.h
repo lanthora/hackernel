@@ -11,7 +11,8 @@ extern "C" {
 
 #define HACKERNEL_FAMLY_VERSION 1
 
-enum {
+enum
+{
     HACKERNEL_A_UNSPEC,
     HACKERNEL_A_CODE,
     HACKERNEL_A_TYPE,
@@ -23,7 +24,8 @@ enum {
 };
 #define HACKERNEL_A_MAX (__HACKERNEL_A_MAX - 1)
 
-enum {
+enum
+{
     HACKERNEL_C_UNSPEC,
     HACKERNEL_C_HANDSHAKE,
     HACKERNEL_C_PROCESS_PROTECT,

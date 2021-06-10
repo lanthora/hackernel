@@ -1,7 +1,7 @@
 #include "command.h"
 #include "util.h"
 
-int enable_process_protect() {
+int update_process_protect_status(uint8_t status) {
     int error = 0;
     struct nl_msg *msg = NULL;
     int size;
@@ -15,7 +15,7 @@ int enable_process_protect() {
 
     genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_PROCESS_PROTECT, HACKERNEL_FAMLY_VERSION);
 
-    error = nla_put_u8(msg, HACKERNEL_A_TYPE, PROCESS_PROTECT_ENABLE);
+    error = nla_put_u8(msg, HACKERNEL_A_TYPE, status);
     if (error) {
         LOG("nla_put_u8 failed");
         goto errout;
@@ -31,6 +31,9 @@ errout:
     nlmsg_free(msg);
     return error;
 }
+
+int enable_process_protect() { return update_process_protect_status(PROCESS_PROTECT_ENABLE); }
+int disable_process_protect() { return update_process_protect_status(PROCESS_PROTECT_DISABLE); }
 
 process_perm_t check_precess_perm(char *cmd) {
     process_perm_t perm = PROCESS_ACCEPT;

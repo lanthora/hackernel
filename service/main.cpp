@@ -29,13 +29,13 @@ static int enable() {
         LOG("enable_process_protect failed");
         return error;
     }
-#if 0
+
     error = enable_file_protect();
     if (error) {
         LOG("enable_file_protect failed");
         return error;
     }
-#endif
+
     return 0;
 }
 
@@ -118,7 +118,7 @@ static int test() {
     if (error) {
         return error;
     }
-#if 0
+
     error = test_file();
     if (error) {
         return error;
@@ -133,12 +133,14 @@ static int test() {
     if (error) {
         return error;
     }
-#endif
+
     return 0;
 }
 
 void sig_handler(int sig) {
     LOG("received signal, exit now");
+    disable_file_protect();
+    disable_process_protect();
     netlink_server_stop();
 }
 

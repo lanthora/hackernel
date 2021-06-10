@@ -22,12 +22,15 @@ DEFINE_HOOK_HEADER(symlinkat);
 DEFINE_HOOK_HEADER(mknod);
 DEFINE_HOOK_HEADER(mknodat);
 
-#define FILE_PROTECT_ENABLE 1
-#define FILE_PROTECT_DISABLE 2
-#define FILE_PROTECT_SET 3
-#define FILE_PROTECT_REPORT 4
-
 #define READ_WRITE_MASK 3
+
+enum {
+	FILE_PROTECT_UNSPEC,
+	FILE_PROTECT_REPORT,
+	FILE_PROTECT_ENABLE,
+	FILE_PROTECT_DISABLE,
+	FILE_PROTECT_SET
+};
 
 extern int file_protect_handler(struct sk_buff *skb, struct genl_info *info);
 
