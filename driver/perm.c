@@ -215,11 +215,15 @@ int file_perm_destory(void)
 	return 0;
 }
 
-file_perm_t file_perm_get(const fsid_t fsid, ino_t ino)
+file_perm_t file_perm_get(const fsid_t fsid, const ino_t ino)
 {
 	struct rb_root *root;
 	struct file_perm_node *node;
 	file_perm_t retval = 0;
+
+	if (fsid == BAD_FSID || ino == BAD_INO) {
+		return INVAILD_PERM;
+	}
 
 	read_lock(file_perm_lock);
 
@@ -279,16 +283,9 @@ out:
 
 file_perm_t file_perm_get_path(const char *path)
 {
-	unsigned long fsid, ino;
+	const unsigned long fsid = get_fsid(path);
+	const unsigned long ino = get_ino(path);
 
-	fsid = get_fsid(path);
-	if (fsid == BAD_FSID) {
-		return INVAILD_PERM;
-	}
-	ino = get_ino(path);
-	if (ino == BAD_INO) {
-		return INVAILD_PERM;
-	}
 	return file_perm_get(fsid, ino);
 }
 
@@ -370,7 +367,7 @@ int process_perm_destory(void)
 	return 0;
 }
 
-int process_perm_insert(process_perm_id_t id)
+int process_perm_insert(const process_perm_id_t id)
 {
 	const size_t size = sizeof(process_perm_node_t);
 	const size_t idx = PROCESS_PERM_HASH(id);
@@ -386,7 +383,7 @@ int process_perm_insert(process_perm_id_t id)
 	return 0;
 }
 
-int process_perm_update(process_perm_id_t id, process_perm_t perm)
+int process_perm_update(const process_perm_id_t id, const process_perm_t perm)
 {
 	struct process_perm_node *pos;
 	const size_t idx = PROCESS_PERM_HASH(id);
@@ -404,7 +401,7 @@ int process_perm_update(process_perm_id_t id, process_perm_t perm)
 	return 0;
 }
 
-process_perm_t process_perm_search(process_perm_id_t id)
+process_perm_t process_perm_search(const process_perm_id_t id)
 {
 	struct process_perm_node *pos;
 	const size_t idx = PROCESS_PERM_HASH(id);
@@ -423,7 +420,7 @@ process_perm_t process_perm_search(process_perm_id_t id)
 	return perm;
 }
 
-int process_perm_delele(process_perm_id_t id)
+int process_perm_delele(const process_perm_id_t id)
 {
 	struct process_perm_node *victim;
 	struct hlist_node *n;

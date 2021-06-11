@@ -23,12 +23,12 @@ int file_perm_destory(void);
 
 // 根据文件系统id(fsid_t)和i节点号(ino_t),获取和设置保护模式
 // 未设置任何保护模式时,获取到的权限(file_perm_t)为0
-file_perm_t file_perm_get(const fsid_t fsid, ino_t ino);
-int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm);
+file_perm_t file_perm_get(const fsid_t fsid, const ino_t ino);
+int file_perm_set(const fsid_t fsid, const ino_t ino, const file_perm_t perm);
 
 // 这两个函数需要根据path查红黑树,会影响速度,能不用就不用
 file_perm_t file_perm_get_path(const char *path);
-int file_perm_set_path(const char *path, file_perm_t perm);
+int file_perm_set_path(const char *path, const file_perm_t perm);
 
 #define PROCESS_INVAILD -1
 #define PROCESS_WATT 0
@@ -42,15 +42,16 @@ int process_perm_init(void);
 int process_perm_destory(void);
 
 // 添加序列号后进程休眠
-int process_perm_insert(process_perm_id_t id);
+int process_perm_insert(const process_perm_id_t id);
 
 // 唤醒前更新
-int process_perm_update(process_perm_id_t id, process_perm_t status);
+int process_perm_update(const process_perm_id_t id,
+			const process_perm_t status);
 
 // 等待队列退出等待条件检查时,PROCESS_WATT 继续等待,否则退出等待
-process_perm_t process_perm_search(process_perm_id_t id);
+process_perm_t process_perm_search(const process_perm_id_t id);
 
 // 退出等待后,移除对应序列号中的数据
-int process_perm_delele(process_perm_id_t id);
+int process_perm_delele(const process_perm_id_t id);
 
 #endif
