@@ -43,11 +43,9 @@ void enable_write_protection(void);
 			return -EPERM;                                         \
 		}                                                              \
                                                                                \
-		if (__x64_sys_##name == g_sys_call_table[__NR_##name]) {       \
-			return -EPERM;                                         \
+		if (!__x64_sys_##name) {                                       \
+			__x64_sys_##name = g_sys_call_table[__NR_##name];      \
 		}                                                              \
-                                                                               \
-		__x64_sys_##name = g_sys_call_table[__NR_##name];              \
                                                                                \
 		disable_write_protection();                                    \
 		g_sys_call_table[__NR_##name] = &sys_##name##_wrapper;         \
