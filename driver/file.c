@@ -31,7 +31,7 @@ DEFINE_HOOK(symlinkat);
 DEFINE_HOOK(mknod);
 DEFINE_HOOK(mknodat);
 
-struct file_perm_what {
+struct file_perm_data {
 	char *path;
 	fsid_t fsid;
 	ino_t ino;
@@ -39,23 +39,23 @@ struct file_perm_what {
 	file_perm_t deny_perm;
 };
 
-static int file_perm_what(char *path, struct file_perm_what *what)
+static int file_perm_data_fill(char *path, struct file_perm_data *data)
 {
-	what->path = path;
-	what->fsid = get_fsid(path);
-	what->ino = get_ino(path);
-	what->this_perm = file_perm_get(what->fsid, what->ino);
-	what->deny_perm = INVAILD_PERM;
+	data->path = path;
+	data->fsid = get_fsid(path);
+	data->ino = get_ino(path);
+	data->this_perm = file_perm_get(data->fsid, data->ino);
+	data->deny_perm = INVAILD_PERM;
 	return 0;
 }
 
-static int file_protect_report_to_userspace(struct file_perm_what *what)
+static int file_protect_report_to_userspace(struct file_perm_data *data)
 {
 	int error = 0;
 	struct sk_buff *skb = NULL;
 	void *head = NULL;
-	const char *filename = what->path;
-	const file_perm_t perm = what->deny_perm;
+	const char *filename = data->path;
+	const file_perm_t perm = data->deny_perm;
 
 	if (!filename) {
 		LOG("filename is null");
@@ -111,79 +111,77 @@ errout:
 	return error;
 }
 
-static int read_protect_check(struct file_perm_what *what)
+static int read_protect_check(struct file_perm_data *data)
 {
 	const file_perm_t perm = READ_PROTECT_MASK;
-	int is_forbidden = what->this_perm & perm;
+	int is_forbidden = data->this_perm & perm;
 	if (is_forbidden) {
-		what->deny_perm = perm;
-		file_protect_report_to_userspace(what);
+		data->deny_perm = perm;
+		file_protect_report_to_userspace(data);
 	}
 
 	return is_forbidden;
 }
 
-static int write_protect_check(struct file_perm_what *what)
+static int write_protect_check(struct file_perm_data *data)
 {
 	const file_perm_t perm = WRITE_PROTECT_MASK;
-	int is_forbidden = what->this_perm & perm;
+	int is_forbidden = data->this_perm & perm;
 	if (is_forbidden) {
-		what->deny_perm = perm;
-		file_protect_report_to_userspace(what);
+		data->deny_perm = perm;
+		file_protect_report_to_userspace(data);
 	}
 	return is_forbidden;
 }
 
-static int read_write_protect_check(struct file_perm_what *what)
+static int read_write_protect_check(struct file_perm_data *data)
 {
 	const file_perm_t perm = (READ_PROTECT_MASK | WRITE_PROTECT_MASK);
-	int is_forbidden = what->this_perm & perm;
+	int is_forbidden = data->this_perm & perm;
 	if (is_forbidden) {
-		what->deny_perm = perm;
-		file_protect_report_to_userspace(what);
+		data->deny_perm = perm;
+		file_protect_report_to_userspace(data);
 	}
 	return is_forbidden;
 }
 
-static int unlink_protect_check(struct file_perm_what *what)
+static int unlink_protect_check(struct file_perm_data *data)
 {
 	const file_perm_t perm = UNLINK_PROTECT_MASK;
-	int is_forbidden = what->this_perm & perm;
+	int is_forbidden = data->this_perm & perm;
 	if (is_forbidden) {
-		what->deny_perm = perm;
-		file_protect_report_to_userspace(what);
+		data->deny_perm = perm;
+		file_protect_report_to_userspace(data);
 	}
 	return is_forbidden;
 }
 
-static int rename_protect_check(struct file_perm_what *what)
+static int rename_protect_check(struct file_perm_data *data)
 {
 	const file_perm_t perm = RENAME_PROTECT_MASK;
-	int is_forbidden = what->this_perm & perm;
+	int is_forbidden = data->this_perm & perm;
 	if (is_forbidden) {
-		what->deny_perm = perm;
-		file_protect_report_to_userspace(what);
+		data->deny_perm = perm;
+		file_protect_report_to_userspace(data);
 	}
 	return is_forbidden;
 }
 
-static int parent_write_protect_check(struct file_perm_what *what)
+static int parent_write_protect_check(struct file_perm_data *data)
 {
 	int is_forbidden;
-	char *path = what->path;
-	struct file_perm_what parent_what;
-	char *parent_path = get_parent_path_alloc(path);
+	struct file_perm_data parent;
+	char *path = get_parent_path_alloc(data->path);
+	file_perm_data_fill(path, &parent);
+	is_forbidden = write_protect_check(&parent);
 
-	file_perm_what(parent_path, &parent_what);
-
-	is_forbidden = write_protect_check(&parent_what);
-	kfree(parent_path);
+	kfree(path);
 	return is_forbidden;
 }
 
-static int file_exist(struct file_perm_what *what)
+static int file_exist(struct file_perm_data *data)
 {
-	return what->ino > BAD_INO;
+	return data->ino > BAD_INO;
 }
 
 static int real_path_from_symlink(char *filename, char *real)
@@ -226,26 +224,28 @@ recursion:
 	do_delayed_call(&done);
 out:
 	path_put(&path);
+	return 0;
 errout:
+	strcpy(real, filename);
 	return error;
 }
 
-static int protect_check_with_flags(struct file_perm_what *what,
+static int protect_check_with_flags(struct file_perm_data *data,
 				    const int flags)
 {
 	int is_forbidden = 0;
 
 	switch (flags & READ_WRITE_MASK) {
 	case O_RDONLY:
-		is_forbidden = read_protect_check(what);
+		is_forbidden = read_protect_check(data);
 		break;
 
 	case O_WRONLY:
-		is_forbidden = write_protect_check(what);
+		is_forbidden = write_protect_check(data);
 		break;
 
 	case O_RDWR:
-		is_forbidden = read_write_protect_check(what);
+		is_forbidden = read_write_protect_check(data);
 		break;
 	}
 
@@ -258,7 +258,7 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 	int is_forbidden = 0;
 	char *path = NULL;
 	char *real = NULL;
-	struct file_perm_what what;
+	struct file_perm_data data;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
 	real = kmalloc(PATH_MAX, GFP_KERNEL);
@@ -266,19 +266,20 @@ static int sys_openat_hook(int dirfd, char __user *pathname, int flags,
 		goto out;
 
 	real_path_from_symlink(path, real);
-	file_perm_what(real, &what);
-	is_forbidden = protect_check_with_flags(&what, flags);
+
+	file_perm_data_fill(real, &data);
+	is_forbidden = protect_check_with_flags(&data, flags);
 	if (is_forbidden)
 		goto out;
 
 	if (!(flags & O_CREAT))
 		goto out;
 
-	if (file_exist(&what)) {
+	if (file_exist(&data)) {
 		goto out;
 	}
 
-	is_forbidden = parent_write_protect_check(&what);
+	is_forbidden = parent_write_protect_check(&data);
 
 out:
 	kfree(path);
@@ -290,23 +291,23 @@ static int sys_unlinkat_hook(int dirfd, char __user *pathname, int flags)
 {
 	int is_forbidden = 0;
 	char *path = NULL;
-	struct file_perm_what what;
+	struct file_perm_data data;
 
 	path = get_absolute_path_alloc(dirfd, pathname);
 	if (!path)
 		goto out;
 
-	file_perm_what(path, &what);
-	is_forbidden = unlink_protect_check(&what);
+	file_perm_data_fill(path, &data);
+	is_forbidden = unlink_protect_check(&data);
 	if (is_forbidden)
 		goto out;
 
-	is_forbidden = parent_write_protect_check(&what);
+	is_forbidden = parent_write_protect_check(&data);
 	if (is_forbidden)
 		goto out;
 
-	if (what.this_perm)
-		file_perm_set(what.fsid, what.ino, INVAILD_PERM);
+	if (data.this_perm)
+		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
 
 out:
 	kfree(path);
@@ -319,17 +320,17 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	int is_forbidden = 0;
 	char *src = NULL;
 	char *dst = NULL;
-	struct file_perm_what what;
+	struct file_perm_data data;
 
 	src = get_absolute_path_alloc(srcfd, srcpath);
 	if (!src)
 		goto out;
-	file_perm_what(src, &what);
-	is_forbidden = rename_protect_check(&what);
+	file_perm_data_fill(src, &data);
+	is_forbidden = rename_protect_check(&data);
 	if (is_forbidden)
 		goto out;
 
-	is_forbidden = parent_write_protect_check(&what);
+	is_forbidden = parent_write_protect_check(&data);
 	if (is_forbidden)
 		goto out;
 
@@ -337,17 +338,17 @@ static int sys_renameat2_hook(int srcfd, char __user *srcpath, int dstfd,
 	if (!dst)
 		goto out;
 
-	file_perm_what(dst, &what);
-	is_forbidden = unlink_protect_check(&what);
+	file_perm_data_fill(dst, &data);
+	is_forbidden = unlink_protect_check(&data);
 	if (is_forbidden)
 		goto out;
 
-	is_forbidden = parent_write_protect_check(&what);
+	is_forbidden = parent_write_protect_check(&data);
 	if (is_forbidden)
 		goto out;
 
-	if (what.this_perm)
-		file_perm_set(what.fsid, what.ino, INVAILD_PERM);
+	if (data.this_perm)
+		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
 
 out:
 	kfree(src);
