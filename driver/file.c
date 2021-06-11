@@ -186,48 +186,24 @@ static int file_exist(struct file_perm_data *data)
 
 static int real_path_from_symlink(char *filename, char *real)
 {
-	DEFINE_DELAYED_CALL(done);
-	const char *link;
+	char *ptr;
 	struct path path;
 	int error = 0;
+	int failed = 1;
 
-	error = kern_path(filename, LOOKUP_OPEN, &path);
-	if (error)
-		goto errout;
-
-	link = vfs_get_link(path.dentry, &done);
-
-	// 不是符号链接
-	if (IS_ERR(link)) {
+	error = kern_path(filename, LOOKUP_FOLLOW, &path);
+	if (!error) {
+		ptr = d_path(&path, real, PATH_MAX);
+		if (!IS_ERR(ptr)) {
+			strcpy(real, ptr);
+			failed = 0;
+		}
+		path_put(&path);
+	}
+	if (failed)
 		strcpy(real, filename);
-		goto out;
-	}
 
-	// 相对路径的符号链
-	if (link[0] != '/') {
-		char *parent = get_parent_path_alloc(filename);
-		strcpy(filename, parent);
-		kfree(parent);
-		strcat(filename, "/");
-		strcat(filename, link);
-		goto recursion;
-	}
-
-	// 绝对路径的符号链
-	if (link[0] == '/') {
-		strcpy(filename, link);
-		goto recursion;
-	}
-
-recursion:
-	real_path_from_symlink(filename, real);
-	do_delayed_call(&done);
-out:
-	path_put(&path);
 	return 0;
-errout:
-	strcpy(real, filename);
-	return error;
 }
 
 static int protect_check_with_flags(struct file_perm_data *data,
