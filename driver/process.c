@@ -102,7 +102,7 @@ out:
 	return retval;
 }
 
-static int sys_execveat_hook(int dirfd, char __user *pathname,
+static int sys_execveat_helper(int dirfd, char __user *pathname,
 			     char __user *__user *argv,
 			     char __user *__user *envp, int flag)
 {
@@ -138,19 +138,19 @@ out:
 	return error;
 }
 
-asmlinkage u64 sys_execve_wrapper(struct pt_regs *regs)
+asmlinkage u64 sys_execve_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)regs->di;
 	char **argv = (char **)regs->si;
 	char **envp = (char **)regs->dx;
 
-	if (sys_execveat_hook(AT_FDCWD, pathname, argv, envp, 0)) {
+	if (sys_execveat_helper(AT_FDCWD, pathname, argv, envp, 0)) {
 		return -EPERM;
 	}
 	return __x64_sys_execve(regs);
 }
 
-asmlinkage u64 sys_execveat_wrapper(struct pt_regs *regs)
+asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)regs->di;
 	char *pathname = (char *)regs->si;
@@ -158,7 +158,7 @@ asmlinkage u64 sys_execveat_wrapper(struct pt_regs *regs)
 	char **envp = (char **)regs->dx;
 	int flags = (int)regs->r10;
 
-	if (sys_execveat_hook(dirfd, pathname, argv, envp, flags)) {
+	if (sys_execveat_helper(dirfd, pathname, argv, envp, flags)) {
 		return -EPERM;
 	}
 	return __x64_sys_execveat(regs);
