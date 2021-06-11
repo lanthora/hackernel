@@ -26,6 +26,7 @@ int file_perm_destory(void);
 file_perm_t file_perm_get(const fsid_t fsid, ino_t ino);
 int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm);
 
+// 这两个函数需要根据path查红黑树,会影响速度,能不用就不用
 file_perm_t file_perm_get_path(const char *path);
 int file_perm_set_path(const char *path, file_perm_t perm);
 
