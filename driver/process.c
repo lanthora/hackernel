@@ -19,6 +19,9 @@ static int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 	int error = 0;
 	struct sk_buff *skb = NULL;
 	void *head = NULL;
+	int errcnt;
+	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
+
 	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 
 	if ((!skb)) {
@@ -54,10 +57,25 @@ static int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 	genlmsg_end(skb, head);
 
 	error = genlmsg_unicast(&init_net, skb, portid);
-	if (error) {
-		LOG("genlmsg_unicast failed");
-		portid = 0;
+	if (!error) {
+		errcnt = atomic_read(&atomic_errcnt);
+		if (unlikely(errcnt)) {
+			LOG("atomic_errcnt=[%u]", errcnt);
+			atomic_set(&atomic_errcnt, 0);
+		}
+		goto out;
 	}
+
+	atomic_inc(&atomic_errcnt);
+
+	if (error == -EAGAIN) {
+		goto out;
+	}
+
+	portid = 0;
+	LOG("genlmsg_unicast failed error=[%d]", error);
+
+out:
 	return 0;
 errout:
 	nlmsg_free(skb);
@@ -103,8 +121,8 @@ out:
 }
 
 static int sys_execveat_helper(int dirfd, char __user *pathname,
-			     char __user *__user *argv,
-			     char __user *__user *envp, int flag)
+			       char __user *__user *argv,
+			       char __user *__user *envp, int flag)
 {
 	char *cmd = NULL;
 	int error = 0;

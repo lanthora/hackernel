@@ -56,6 +56,8 @@ static int file_protect_report_to_userspace(struct file_perm_data *data)
 	void *head = NULL;
 	const char *filename = data->path;
 	const file_perm_t perm = data->deny_perm;
+	int errcnt;
+	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
 
 	if (!filename) {
 		LOG("filename is null");
@@ -96,15 +98,25 @@ static int file_protect_report_to_userspace(struct file_perm_data *data)
 	genlmsg_end(skb, head);
 
 	error = genlmsg_unicast(&init_net, skb, portid);
+	if (!error) {
+		errcnt = atomic_read(&atomic_errcnt);
+		if (unlikely(errcnt)) {
+			LOG("atomic_errcnt=[%u]", errcnt);
+			atomic_set(&atomic_errcnt, 0);
+		}
+		goto out;
+	}
+
+	atomic_inc(&atomic_errcnt);
 
 	if (error == -EAGAIN) {
-		goto errout;
+		goto out;
 	}
 
-	if (error) {
-		LOG("genlmsg_unicast failed error=[%d]", error);
-		portid = 0;
-	}
+	portid = 0;
+	LOG("genlmsg_unicast failed error=[%d]", error);
+
+out:
 	return 0;
 errout:
 	nlmsg_free(skb);
