@@ -268,7 +268,6 @@ static int sys_open_helper(int dirfd, char __user *pathname, int flags,
 	is_forbidden = parent_write_protect_check(data);
 
 out:
-	file_protect_report_to_userspace(data);
 	kfree(path);
 	kfree(real);
 	return is_forbidden;
