@@ -99,10 +99,9 @@ static int file_protect_report_to_userspace(struct file_perm_data *data)
 
 	error = genlmsg_unicast(&init_net, skb, portid);
 	if (!error) {
-		errcnt = atomic_read(&atomic_errcnt);
+		errcnt = atomic_xchg(&atomic_errcnt, 0);
 		if (unlikely(errcnt)) {
-			LOG("atomic_errcnt=[%u]", errcnt);
-			atomic_set(&atomic_errcnt, 0);
+			LOG("errcnt=[%u]", errcnt);
 		}
 		goto out;
 	}

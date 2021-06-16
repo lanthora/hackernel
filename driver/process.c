@@ -58,10 +58,9 @@ static int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 
 	error = genlmsg_unicast(&init_net, skb, portid);
 	if (!error) {
-		errcnt = atomic_read(&atomic_errcnt);
+		errcnt = atomic_xchg(&atomic_errcnt, 0);
 		if (unlikely(errcnt)) {
-			LOG("atomic_errcnt=[%u]", errcnt);
-			atomic_set(&atomic_errcnt, 0);
+			LOG("errcnt=[%u]", errcnt);
 		}
 		goto out;
 	}
