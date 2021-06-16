@@ -72,8 +72,9 @@ int netlink_server_init() {
         goto errout;
     }
 
-    // 缓冲区大小设置为1MB
-    error = nl_socket_set_buffer_size(nlsock, 1024 * 1024, 1024 * 1024);
+    // 缓冲区大小设置为4MB
+    const int buff_size = 4 * 1024 * 1024;
+    error = nl_socket_set_buffer_size(nlsock, buff_size, buff_size);
     if (error) {
         LOG("nl_socket_set_buffer_size failed");
         goto errout;
