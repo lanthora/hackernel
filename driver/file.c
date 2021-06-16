@@ -229,7 +229,7 @@ static int protect_check_with_flags(struct file_perm_data *data,
 }
 
 static int sys_open_helper(int dirfd, char __user *pathname, int flags,
-			 struct file_perm_data *data)
+			   struct file_perm_data *data)
 {
 	int is_forbidden = 0;
 	char *path = NULL;
@@ -257,13 +257,14 @@ static int sys_open_helper(int dirfd, char __user *pathname, int flags,
 	is_forbidden = parent_write_protect_check(data);
 
 out:
+	file_protect_report_to_userspace(data);
 	kfree(path);
 	kfree(real);
 	return is_forbidden;
 }
 
 static int sys_unlink_helper(int dirfd, char __user *pathname,
-			   struct file_perm_data *data)
+			     struct file_perm_data *data)
 {
 	int is_forbidden = 0;
 	char *path = NULL;
@@ -287,7 +288,7 @@ out:
 }
 
 static int sys_rename_helper(int srcfd, char __user *srcpath, int dstfd,
-			   char __user *dstpath, struct file_perm_data *data)
+			     char __user *dstpath, struct file_perm_data *data)
 {
 	int is_forbidden = 0;
 	char *src = NULL;

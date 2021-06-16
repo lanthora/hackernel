@@ -65,9 +65,17 @@ int netlink_server_init() {
         LOG("Netlink Socket memory alloc failed");
         goto errout;
     }
+
     error = genl_connect(nlsock);
     if (error) {
         LOG("Generic Netlink connect failed");
+        goto errout;
+    }
+
+    // 缓冲区大小设置为1MB
+    error = nl_socket_set_buffer_size(nlsock, 1024 * 1024, 1024 * 1024);
+    if (error) {
+        LOG("nl_socket_set_buffer_size failed");
         goto errout;
     }
 
