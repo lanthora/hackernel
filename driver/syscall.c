@@ -80,8 +80,7 @@ int disable_file_protect(void)
 
 static inline void write_cr0_forced(unsigned long val)
 {
-	unsigned long __force_order;
-	asm volatile("mov %0, %%cr0" : "+r"(val), "+m"(__force_order));
+	asm volatile("mov %0,%%cr0" : : "r"(val) : "memory");
 }
 
 void enable_write_protection(void)

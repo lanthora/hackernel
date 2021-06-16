@@ -44,7 +44,8 @@
 		"tuple": "c",
 		"thread": "c",
 		"stdarg.h": "c",
-		"uuid.h": "c"
+		"uuid.h": "c",
+		"unistd.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
