@@ -16,29 +16,9 @@
 #include <uapi/asm-generic/errno-base.h>
 #include <uapi/linux/binfmts.h>
 
-static int count(char __user *__user *argv, int max)
+static int argv_size_user(char __user *__user *argv, int max)
 {
-	int i = 0;
-	int error = 0;
-	char *p;
-	if (!argv) {
-		goto failed;
-	}
-
-	for (;;) {
-		error = get_user(p, argv + i);
-		if (error) {
-			goto failed;
-		}
-		if (!p) {
-			break;
-		}
-		++i;
-	}
-	return i;
-
-failed:
-	return 0;
+	return strnlen_user((const char*)argv, max);
 }
 
 int parse_pathname(const char __user *pathname, char *path, long size)
@@ -56,7 +36,7 @@ int parse_argv(const char __user *const __user *argv, char *params, long size)
 	int retval = -EFAULT;
 	int argc;
 
-	argc = count((char **)argv, BINPRM_BUF_SIZE);
+	argc = argv_size_user((char **)argv, BINPRM_BUF_SIZE);
 	if (!argc) {
 		goto out;
 	}

@@ -35,7 +35,7 @@ void enable_write_protection(void);
 // 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
 #ifndef DEFINE_HOOK
 #define DEFINE_HOOK(name)                                                      \
-	asmlinkage u64 sys_##name##_hook(struct pt_regs *regs);             \
+	asmlinkage u64 sys_##name##_hook(struct pt_regs *regs);                \
 	static sys_call_ptr_t __x64_sys_##name = NULL;                         \
 	int replace_##name(void)                                               \
 	{                                                                      \
@@ -48,7 +48,7 @@ void enable_write_protection(void);
 		}                                                              \
                                                                                \
 		disable_write_protection();                                    \
-		g_sys_call_table[__NR_##name] = &sys_##name##_hook;         \
+		g_sys_call_table[__NR_##name] = &sys_##name##_hook;            \
 		enable_write_protection();                                     \
 		return 0;                                                      \
 	}                                                                      \
