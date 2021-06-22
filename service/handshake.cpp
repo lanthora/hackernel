@@ -45,7 +45,7 @@ int handshake() {
         goto errout;
     }
     genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
-    error = nla_put_u64(msg, HACKERNEL_A_SCTH, sys_call_table);
+    error = nla_put_u64(msg, HACKERNEL_A_SYS_CALL_TABLE_HEADER, sys_call_table);
     if (error) {
         LOG("nla_put_u64 failed");
         goto errout;

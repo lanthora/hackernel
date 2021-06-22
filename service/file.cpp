@@ -13,7 +13,7 @@ static int update_file_protect_status(uint8_t status) {
     }
 
     genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_FILE_PROTECT, HACKERNEL_FAMLY_VERSION);
-    error = nla_put_u8(msg, HACKERNEL_A_TYPE, status);
+    error = nla_put_u8(msg, HACKERNEL_A_OP_TYPE, status);
     if (error) {
         LOG("nla_put_u8 failed");
         goto errout;
@@ -46,7 +46,7 @@ int set_file_protect(const std::string &path, file_perm_t perm) {
         goto errout;
     }
     genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_FILE_PROTECT, HACKERNEL_FAMLY_VERSION);
-    error = nla_put_u8(msg, HACKERNEL_A_TYPE, FILE_PROTECT_SET);
+    error = nla_put_u8(msg, HACKERNEL_A_OP_TYPE, FILE_PROTECT_SET);
     if (error) {
         LOG("nla_put_u8 failed");
         goto errout;

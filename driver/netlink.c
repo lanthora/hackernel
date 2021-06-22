@@ -12,12 +12,12 @@
 u32 portid = 0;
 
 static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
-	[HACKERNEL_A_CODE] = { .type = NLA_S32 },
-	[HACKERNEL_A_TYPE] = { .type = NLA_U8 },
-	[HACKERNEL_A_SCTH] = { .type = NLA_U64 },
+	[HACKERNEL_A_STATUS_CODE] = { .type = NLA_S32 },
+	[HACKERNEL_A_OP_TYPE] = { .type = NLA_U8 },
+	[HACKERNEL_A_SYS_CALL_TABLE_HEADER] = { .type = NLA_U64 },
 	[HACKERNEL_A_NAME] = { .type = NLA_STRING },
 	[HACKERNEL_A_PERM] = { .type = NLA_S32 },
-	[HACKERNEL_A_EXID] = { .type = NLA_S32 },
+	[HACKERNEL_A_EXECVE_ID] = { .type = NLA_S32 },
 };
 
 static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
@@ -33,13 +33,13 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 		return -EPERM;
 	}
 
-	if (!info->attrs[HACKERNEL_A_SCTH]) {
+	if (!info->attrs[HACKERNEL_A_SYS_CALL_TABLE_HEADER]) {
 		code = -EINVAL;
-		LOG("HACKERNEL_A_SCTH failed");
+		LOG("HACKERNEL_A_SYS_CALL_TABLE_HEADER failed");
 		goto response;
 	}
 
-	syscall_table = nla_get_u64(info->attrs[HACKERNEL_A_SCTH]);
+	syscall_table = nla_get_u64(info->attrs[HACKERNEL_A_SYS_CALL_TABLE_HEADER]);
 	code = init_sys_call_table(syscall_table);
 	portid = info->snd_portid;
 
@@ -57,7 +57,7 @@ response:
 		goto errout;
 	}
 
-	error = nla_put_s32(reply, HACKERNEL_A_CODE, code);
+	error = nla_put_s32(reply, HACKERNEL_A_STATUS_CODE, code);
 	if (unlikely(error)) {
 		LOG("nla_put_s32 failed");
 		goto errout;

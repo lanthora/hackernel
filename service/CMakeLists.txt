@@ -1,14 +1,15 @@
 cmake_minimum_required (VERSION 3.18.4)
 
-project(service)
+set(PROJECT_NAME hackernel)
+project(${PROJECT_NAME})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 aux_source_directory(. DIR_SRCS)
-add_executable(service ${DIR_SRCS})
+add_executable(${PROJECT_NAME} ${DIR_SRCS})
 
-target_link_libraries(service nl-3)
-target_link_libraries(service nl-genl-3)
-target_link_libraries(service pthread)
+target_link_libraries(${PROJECT_NAME} nl-3)
+target_link_libraries(${PROJECT_NAME} nl-genl-3)
+target_link_libraries(${PROJECT_NAME} pthread)
 
-target_include_directories(service PRIVATE "/usr/include/libnl3")
+target_include_directories(${PROJECT_NAME} PRIVATE "/usr/include/libnl3")
 include_directories("/usr/include/libnl3")

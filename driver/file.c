@@ -78,7 +78,7 @@ static int file_protect_report_to_userspace(struct file_perm_data *data)
 		error = -ENOMEM;
 		goto errout;
 	}
-	error = nla_put_u8(skb, HACKERNEL_A_TYPE, FILE_PROTECT_REPORT);
+	error = nla_put_u8(skb, HACKERNEL_A_OP_TYPE, FILE_PROTECT_REPORT);
 	if (error) {
 		LOG("nla_put_u8 failed");
 		goto errout;
@@ -578,12 +578,12 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		return -EPERM;
 	}
 
-	if (!info->attrs[HACKERNEL_A_TYPE]) {
+	if (!info->attrs[HACKERNEL_A_OP_TYPE]) {
 		code = -EINVAL;
 		goto response;
 	}
 
-	type = nla_get_u8(info->attrs[HACKERNEL_A_TYPE]);
+	type = nla_get_u8(info->attrs[HACKERNEL_A_OP_TYPE]);
 	switch (type) {
 	case FILE_PROTECT_ENABLE: {
 		code = enable_file_protect();
@@ -639,13 +639,13 @@ response:
 		goto errout;
 	}
 
-	error = nla_put_s32(reply, HACKERNEL_A_TYPE, type);
+	error = nla_put_s32(reply, HACKERNEL_A_OP_TYPE, type);
 	if (unlikely(error)) {
 		LOG("nla_put_s32 failed");
 		goto errout;
 	}
 
-	error = nla_put_s32(reply, HACKERNEL_A_CODE, code);
+	error = nla_put_s32(reply, HACKERNEL_A_STATUS_CODE, code);
 	if (unlikely(error)) {
 		LOG("nla_put_s32 failed");
 		goto errout;

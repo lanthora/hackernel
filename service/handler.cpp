@@ -5,22 +5,22 @@
 #include <iostream>
 
 int handshake_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
-    int code = nla_get_s32(genl_info->attrs[HACKERNEL_A_CODE]);
+    int code = nla_get_s32(genl_info->attrs[HACKERNEL_A_STATUS_CODE]);
     LOG("handshake response code=[%d]", code);
     return 0;
 }
 
 int process_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
     u_int8_t type;
-    if (!genl_info->attrs[HACKERNEL_A_TYPE]) {
-        LOG("invaild args, missing HACKERNEL_A_TYPE");
+    if (!genl_info->attrs[HACKERNEL_A_OP_TYPE]) {
+        LOG("invaild args, missing HACKERNEL_A_OP_TYPE");
         return 0;
     }
-    type = nla_get_u8(genl_info->attrs[HACKERNEL_A_TYPE]);
+    type = nla_get_u8(genl_info->attrs[HACKERNEL_A_OP_TYPE]);
     switch (type) {
     case PROCESS_PROTECT_ENABLE: {
         int code;
-        code = nla_get_s32(genl_info->attrs[HACKERNEL_A_CODE]);
+        code = nla_get_s32(genl_info->attrs[HACKERNEL_A_STATUS_CODE]);
         LOG("process ctl enable response code=[%d]", code);
         break;
     }
@@ -29,7 +29,7 @@ int process_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_c
         int id;
         char *name;
 
-        id = nla_get_s32(genl_info->attrs[HACKERNEL_A_EXID]);
+        id = nla_get_s32(genl_info->attrs[HACKERNEL_A_EXECVE_ID]);
         name = nla_get_string(genl_info->attrs[HACKERNEL_A_NAME]);
         LOG("process: name=[%s]", name);
         error = reply_process_perm(id, check_precess_perm(name));
@@ -48,14 +48,14 @@ int process_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_c
 int file_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
     u_int8_t type;
 
-    type = nla_get_u8(genl_info->attrs[HACKERNEL_A_TYPE]);
+    type = nla_get_u8(genl_info->attrs[HACKERNEL_A_OP_TYPE]);
     switch (type) {
     case FILE_PROTECT_ENABLE:
     case FILE_PROTECT_DISABLE:
     case FILE_PROTECT_SET: {
         int code;
 
-        code = nla_get_s32(genl_info->attrs[HACKERNEL_A_CODE]);
+        code = nla_get_s32(genl_info->attrs[HACKERNEL_A_STATUS_CODE]);
         LOG("file ctrl response code=[%d]", code);
         break;
     }
