@@ -23,6 +23,7 @@ char *get_parent_path_alloc(const char *path);
 // 获取文件系统id和文件描述符id,通过这两个id可以唯一确定操作系统中的一个文件
 unsigned long get_fsid(const char *name);
 unsigned long get_ino(const char *name);
+int file_id_get(const char *name, unsigned long *fsid, unsigned long *ino);
 
 // 打印错误日志,内核中应该尽可能地不打印日志
 #ifdef DEBUG

@@ -18,7 +18,7 @@
 
 static int argv_size_user(char __user *__user *argv, int max)
 {
-	return strnlen_user((const char*)argv, max);
+	return strnlen_user((const char *)argv, max);
 }
 
 int parse_pathname(const char __user *pathname, char *path, long size)
@@ -292,6 +292,25 @@ char *get_parent_path_alloc(const char *path)
 errout:
 	kfree(parent_path);
 	return NULL;
+}
+
+int file_id_get(const char *name, unsigned long *fsid, unsigned long *ino)
+{
+	int error;
+	struct path path;
+	struct kstatfs kstatfs;
+
+	*fsid = *ino = 0;
+	error = kern_path(name, LOOKUP_OPEN, &path);
+	if (error) {
+		return -ENOENT;
+	}
+
+	path.mnt->mnt_sb->s_op->statfs(path.dentry, &kstatfs);
+	memcpy(fsid, &kstatfs.f_fsid, sizeof(unsigned long));
+	*ino = path.dentry->d_inode->i_ino;
+	path_put(&path);
+	return 0;
 }
 
 unsigned long get_fsid(const char *name)

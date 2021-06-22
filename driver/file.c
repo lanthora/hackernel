@@ -42,8 +42,7 @@ struct file_perm_data {
 static int file_perm_data_fill(char *path, struct file_perm_data *data)
 {
 	data->path = path;
-	data->fsid = get_fsid(path);
-	data->ino = get_ino(path);
+	file_id_get(path, &data->fsid, &data->ino);
 	data->this_perm = file_perm_get(data->fsid, data->ino);
 	data->deny_perm = INVAILD_PERM;
 	return 0;

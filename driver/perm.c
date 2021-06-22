@@ -283,18 +283,15 @@ out:
 
 file_perm_t file_perm_get_path(const char *path)
 {
-	const unsigned long fsid = get_fsid(path);
-	const unsigned long ino = get_ino(path);
-
+	unsigned long fsid, ino;
+	file_id_get(path, &fsid, &ino);
 	return file_perm_get(fsid, ino);
 }
 
 int file_perm_set_path(const char *path, file_perm_t perm)
 {
 	unsigned long fsid, ino;
-
-	fsid = get_fsid(path);
-	ino = get_ino(path);
+	file_id_get(path, &fsid, &ino);
 	return file_perm_set(fsid, ino, perm);
 }
 
