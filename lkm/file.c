@@ -58,9 +58,8 @@ static int file_protect_report_to_userspace(struct file_perm_data *data)
 	int errcnt;
 	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
 
-	if (!filename) {
+	if (!filename)
 		LOG("filename is null");
-	}
 
 	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 
@@ -99,9 +98,9 @@ static int file_protect_report_to_userspace(struct file_perm_data *data)
 	error = genlmsg_unicast(&init_net, skb, portid);
 	if (!error) {
 		errcnt = atomic_xchg(&atomic_errcnt, 0);
-		if (unlikely(errcnt)) {
+		if (unlikely(errcnt))
 			LOG("errcnt=[%u]", errcnt);
-		}
+
 		goto out;
 	}
 
@@ -496,9 +495,9 @@ asmlinkage u64 sys_link_hook(struct pt_regs *regs)
 
 	struct file_perm_data data;
 
-	if (sys_open_helper(AT_FDCWD, dstpath, O_CREAT, &data)) {
+	if (sys_open_helper(AT_FDCWD, dstpath, O_CREAT, &data))
 		return -EPERM;
-	}
+
 	return __x64_sys_link(regs);
 }
 
@@ -509,9 +508,9 @@ asmlinkage u64 sys_linkat_hook(struct pt_regs *regs)
 
 	struct file_perm_data data;
 
-	if (sys_open_helper(dstfd, dstpath, O_CREAT, &data)) {
+	if (sys_open_helper(dstfd, dstpath, O_CREAT, &data))
 		return -EPERM;
-	}
+
 	return __x64_sys_linkat(regs);
 }
 
@@ -521,9 +520,9 @@ asmlinkage u64 sys_symlink_hook(struct pt_regs *regs)
 
 	struct file_perm_data data;
 
-	if (sys_open_helper(AT_FDCWD, dstpath, O_CREAT, &data)) {
+	if (sys_open_helper(AT_FDCWD, dstpath, O_CREAT, &data))
 		return -EPERM;
-	}
+
 	return __x64_sys_symlink(regs);
 }
 
@@ -534,9 +533,9 @@ asmlinkage u64 sys_symlinkat_hook(struct pt_regs *regs)
 
 	struct file_perm_data data;
 
-	if (sys_open_helper(dstfd, dstpath, O_CREAT, &data)) {
+	if (sys_open_helper(dstfd, dstpath, O_CREAT, &data))
 		return -EPERM;
-	}
+
 	return __x64_sys_symlinkat(regs);
 }
 
@@ -546,9 +545,9 @@ asmlinkage u64 sys_mknod_hook(struct pt_regs *regs)
 
 	struct file_perm_data data;
 
-	if (sys_open_helper(AT_FDCWD, pathname, O_CREAT, &data)) {
+	if (sys_open_helper(AT_FDCWD, pathname, O_CREAT, &data))
 		return -EPERM;
-	}
+
 	return __x64_sys_mknod(regs);
 }
 
@@ -573,9 +572,8 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	struct sk_buff *reply = NULL;
 	void *head = NULL;
 
-	if (portid != info->snd_portid) {
+	if (portid != info->snd_portid)
 		return -EPERM;
-	}
 
 	if (!info->attrs[HACKERNEL_A_OP_TYPE]) {
 		code = -EINVAL;
@@ -595,23 +593,23 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	case FILE_PROTECT_SET: {
 		file_perm_t perm;
 		char *path;
+
+		if (!info->attrs[HACKERNEL_A_NAME]) {
+			code = -EINVAL;
+			goto response;
+		}
+
+		if (!info->attrs[HACKERNEL_A_PERM]) {
+			code = -EINVAL;
+			goto response;
+		}
+
 		path = kmalloc(PATH_MAX, GFP_KERNEL);
 		if (!path) {
 			code = -ENOMEM;
 			goto response;
 		}
 
-		if (!info->attrs[HACKERNEL_A_NAME]) {
-			code = -EINVAL;
-			kfree(path);
-			goto response;
-		}
-
-		if (!info->attrs[HACKERNEL_A_PERM]) {
-			code = -EINVAL;
-			kfree(path);
-			goto response;
-		}
 		nla_strscpy(path, info->attrs[HACKERNEL_A_NAME], PATH_MAX);
 		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
 		code = file_perm_set_path(path, perm);
@@ -653,9 +651,9 @@ response:
 	genlmsg_end(reply, head);
 
 	error = genlmsg_reply(reply, info);
-	if (unlikely(error)) {
+	if (unlikely(error))
 		LOG("genlmsg_reply failed");
-	}
+
 	return 0;
 errout:
 	nlmsg_free(reply);

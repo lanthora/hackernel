@@ -59,17 +59,16 @@ static int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 	error = genlmsg_unicast(&init_net, skb, portid);
 	if (!error) {
 		errcnt = atomic_xchg(&atomic_errcnt, 0);
-		if (unlikely(errcnt)) {
+		if (unlikely(errcnt))
 			LOG("errcnt=[%u]", errcnt);
-		}
+
 		goto out;
 	}
 
 	atomic_inc(&atomic_errcnt);
 
-	if (error == -EAGAIN) {
+	if (error == -EAGAIN)
 		goto out;
-	}
 
 	portid = 0;
 	LOG("genlmsg_unicast failed error=[%d]", error);
@@ -127,9 +126,8 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 	int error = 0;
 	process_perm_t perm = PROCESS_INVAILD;
 
-	if (!portid) {
+	if (!portid)
 		goto out;
-	}
 
 	cmd = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
 	if (!cmd) {
@@ -161,9 +159,9 @@ asmlinkage u64 sys_execve_hook(struct pt_regs *regs)
 	char **argv = (char **)regs->si;
 	char **envp = (char **)regs->dx;
 
-	if (sys_execveat_helper(AT_FDCWD, pathname, argv, envp, 0)) {
+	if (sys_execveat_helper(AT_FDCWD, pathname, argv, envp, 0))
 		return -EPERM;
-	}
+
 	return __x64_sys_execve(regs);
 }
 
@@ -175,9 +173,9 @@ asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
 	char **envp = (char **)regs->dx;
 	int flags = (int)regs->r10;
 
-	if (sys_execveat_helper(dirfd, pathname, argv, envp, flags)) {
+	if (sys_execveat_helper(dirfd, pathname, argv, envp, flags))
 		return -EPERM;
-	}
+
 	return __x64_sys_execveat(regs);
 }
 
@@ -189,9 +187,8 @@ int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	void *head = NULL;
 	u8 type;
 
-	if (portid != info->snd_portid) {
+	if (portid != info->snd_portid)
 		return -EPERM;
-	}
 
 	if (!info->attrs[HACKERNEL_A_OP_TYPE]) {
 		code = -EINVAL;
@@ -252,9 +249,9 @@ response:
 	genlmsg_end(reply, head);
 
 	error = genlmsg_reply(reply, info);
-	if (unlikely(error)) {
+	if (unlikely(error))
 		LOG("genlmsg_reply failed");
-	}
+
 out:
 	return 0;
 errout:

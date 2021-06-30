@@ -39,7 +39,8 @@ static int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 		goto response;
 	}
 
-	syscall_table = nla_get_u64(info->attrs[HACKERNEL_A_SYS_CALL_TABLE_HEADER]);
+	syscall_table =
+		nla_get_u64(info->attrs[HACKERNEL_A_SYS_CALL_TABLE_HEADER]);
 	code = init_sys_call_table(syscall_table);
 	portid = info->snd_portid;
 
@@ -68,9 +69,9 @@ response:
 	// reply指向的内存由 genlmsg_reply 释放
 	// 此处调用 nlmsg_free(reply) 会引起内核crash
 	error = genlmsg_reply(reply, info);
-	if (unlikely(error)) {
+	if (unlikely(error))
 		LOG("genlmsg_reply failed");
-	}
+
 	return 0;
 errout:
 	nlmsg_free(reply);
@@ -111,9 +112,8 @@ void netlink_kernel_start(void)
 	int error = 0;
 
 	error = genl_register_family(&genl_family);
-	if (error) {
+	if (error)
 		LOG("genl_register_family failed");
-	}
 }
 
 void netlink_kernel_stop(void)
@@ -121,7 +121,6 @@ void netlink_kernel_stop(void)
 	int error = 0;
 
 	error = genl_unregister_family(&genl_family);
-	if (error) {
+	if (error)
 		LOG("genl_unregister_family failed");
-	}
 }

@@ -23,23 +23,23 @@ static rwlock_t *file_perm_lock;
 static int file_perm_node_cmp(struct file_perm_node *ns,
 			      struct file_perm_node *nt)
 {
-	if (ns->ino < nt->ino) {
+	if (ns->ino < nt->ino)
 		return -1;
-	}
-	if (ns->ino > nt->ino) {
+
+	if (ns->ino > nt->ino)
 		return 1;
-	}
+
 	return 0;
 }
 
 static int ino_cmp(ino_t ns, ino_t nt)
 {
-	if (ns < nt) {
+	if (ns < nt)
 		return -1;
-	}
-	if (ns > nt) {
+
+	if (ns > nt)
 		return 1;
-	}
+
 	return 0;
 }
 
@@ -56,13 +56,12 @@ static int file_perm_tree_insert(struct rb_root *root,
 		result = file_perm_node_cmp(data, this);
 		parent = *new;
 
-		if (result < 0) {
+		if (result < 0)
 			new = &((*new)->rb_left);
-		} else if (result > 0) {
+		else if (result > 0)
 			new = &((*new)->rb_right);
-		} else {
+		else
 			return -1;
-		}
 	}
 
 	rb_link_node(&data->node, parent, new);
@@ -112,14 +111,14 @@ static int file_perm_tree_destory(struct rb_root *root)
 
 static int file_perm_list_init(void)
 {
-	if (file_perm_list_head) {
+	if (file_perm_list_head)
 		return -EPERM;
-	}
+
 	file_perm_list_head =
 		kzalloc(sizeof(struct file_perm_list), GFP_KERNEL);
-	if (!file_perm_list_head) {
+	if (!file_perm_list_head)
 		return -ENOMEM;
-	}
+
 	INIT_LIST_HEAD(&file_perm_list_head->node);
 	return 0;
 }
@@ -129,20 +128,17 @@ static struct rb_root *file_perm_list_search(fsid_t fsid)
 {
 	struct file_perm_list *data = NULL;
 
-	if (!file_perm_list_head) {
+	if (!file_perm_list_head)
 		goto errout;
-	}
 
 	data = list_first_entry_or_null(&file_perm_list_head->node,
 					struct file_perm_list, node);
-	if (data && data->fsid == fsid) {
+	if (data && data->fsid == fsid)
 		return data->root;
-	}
 
 	list_for_each_entry (data, &file_perm_list_head->node, node) {
-		if (data->fsid != fsid) {
+		if (data->fsid != fsid)
 			continue;
-		}
 
 		list_del(&data->node);
 		list_add(&data->node, &file_perm_list_head->node);
@@ -150,23 +146,21 @@ static struct rb_root *file_perm_list_search(fsid_t fsid)
 	}
 
 	data = kzalloc(sizeof(struct file_perm_list), GFP_KERNEL);
-	if (!data) {
+	if (!data)
 		goto errout;
-	}
 
 	data->fsid = fsid;
 	data->root = kzalloc(sizeof(struct rb_root), GFP_KERNEL);
-	if (!data->root) {
+	if (!data->root)
 		goto errout;
-	}
 
 	list_add(&data->node, &file_perm_list_head->node);
 	return data->root;
 
 errout:
-	if (data) {
+	if (data)
 		kfree(data->root);
-	}
+
 	kfree(data);
 	return NULL;
 }
@@ -175,9 +169,8 @@ static int fperm_list_destory(void)
 {
 	struct file_perm_list *data, *n;
 
-	if (!file_perm_list_head) {
+	if (!file_perm_list_head)
 		return -EPERM;
-	}
 
 	list_for_each_entry_safe (data, n, &file_perm_list_head->node, node) {
 		list_del(&data->node);
@@ -193,14 +186,13 @@ int file_perm_init(void)
 {
 	int error;
 	error = file_perm_list_init();
-	if (error) {
+	if (error)
 		return error;
-	}
 
 	file_perm_lock = kmalloc(sizeof(rwlock_t), GFP_KERNEL);
-	if (!file_perm_lock) {
+	if (!file_perm_lock)
 		return -ENOMEM;
-	}
+
 	rwlock_init(file_perm_lock);
 	return 0;
 }
@@ -221,21 +213,18 @@ file_perm_t file_perm_get(const fsid_t fsid, const ino_t ino)
 	struct file_perm_node *node;
 	file_perm_t retval = 0;
 
-	if (fsid == BAD_FSID || ino == BAD_INO) {
+	if (fsid == BAD_FSID || ino == BAD_INO)
 		return INVAILD_PERM;
-	}
 
 	read_lock(file_perm_lock);
 
 	root = file_perm_list_search(fsid);
-	if (!root) {
+	if (!root)
 		goto out;
-	}
 
 	node = file_perm_tree_search(root, ino);
-	if (node) {
+	if (node)
 		retval = node->perm;
-	}
 
 out:
 	read_unlock(file_perm_lock);
@@ -248,9 +237,8 @@ int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm)
 	struct file_perm_node *node;
 	int retval = 0;
 
-	if (fsid == BAD_FSID || ino == BAD_INO) {
+	if (fsid == BAD_FSID || ino == BAD_INO)
 		return -EINVAL;
-	}
 
 	write_lock(file_perm_lock);
 
@@ -328,13 +316,13 @@ int process_perm_init(void)
 	int idx;
 	const size_t size = sizeof(process_perm_head_t) * PROCESS_PERM_SIZE;
 	// hlist初始化方式就是将内存中的变量设置为NULL,kzalloc可以达到相同的效果
-	if (process_perm_hlist) {
+	if (process_perm_hlist)
 		return -EPERM;
-	}
+
 	process_perm_hlist = kmalloc(size, GFP_KERNEL);
-	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx) {
+	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx)
 		process_perm_head_init(&process_perm_hlist[idx]);
-	}
+
 	return 0;
 }
 
@@ -353,12 +341,12 @@ static void process_perm_hlist_node_destory(process_perm_head_t *perm_head)
 int process_perm_destory(void)
 {
 	size_t idx;
-	if (!process_perm_hlist) {
+	if (!process_perm_hlist)
 		return -EPERM;
-	}
-	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx) {
+
+	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx)
 		process_perm_hlist_node_destory(&process_perm_hlist[idx]);
-	}
+
 	kfree(process_perm_hlist);
 	process_perm_hlist = NULL;
 	return 0;

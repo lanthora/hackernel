@@ -37,46 +37,39 @@ int parse_argv(const char __user *const __user *argv, char *params, long size)
 	int argc;
 
 	argc = argv_size_user((char **)argv, BINPRM_BUF_SIZE);
-	if (!argc) {
+	if (!argc)
 		goto out;
-	}
 
 	p = kmalloc(argc * sizeof(void *), GFP_KERNEL);
 
-	if (!p) {
+	if (!p)
 		goto out;
-	}
 
 	lack = copy_from_user(p, argv, argc * sizeof(void *));
-	if (lack) {
+	if (lack)
 		goto out;
-	}
 
 	len = 0, cursor = params;
 	for (idx = 0; idx < argc; ++idx) {
 		remain = size - (cursor - params);
-		if (remain <= 0) {
+		if (remain <= 0)
 			break;
-		}
 
 		len = strnlen_user(p[idx], remain);
-		if (!len) {
+		if (!len)
 			break;
-		}
 
 		lack = copy_from_user(cursor, p[idx], len);
-		if (lack) {
+		if (lack)
 			break;
-		}
 
 		cursor += len;
-		if (cursor > params) {
+		if (cursor > params)
 			*(cursor - 1) = ASCII_US;
-		}
 	}
-	if (cursor > params) {
+	if (cursor > params)
 		*(cursor - 1) = '\0';
-	}
+
 	retval = 0;
 out:
 	kfree(p);
@@ -90,9 +83,9 @@ char *get_exec_path(struct task_struct *task, void *buffer, size_t buffer_size)
 	struct vm_area_struct *vma = NULL;
 	struct path base_path;
 
-	if (NULL == tpath || NULL == task) {
+	if (NULL == tpath || NULL == task)
 		return NULL;
-	}
+
 	memset(tpath, 0, buffer_size);
 
 	task_lock(task);
@@ -136,9 +129,9 @@ static int get_base_path(int dirfd, char *base)
 	char *buffer;
 	char *d_path_base;
 
-	if (!base) {
+	if (!base)
 		return -EINVAL;
-	}
+
 	if (dirfd == AT_FDCWD) {
 		buffer = kzalloc(PATH_MAX, GFP_KERNEL);
 		strncpy(base, get_cw_path(buffer, PATH_MAX), PATH_MAX);
@@ -146,18 +139,17 @@ static int get_base_path(int dirfd, char *base)
 		return 0;
 	}
 	file = fget_raw(dirfd);
-	if (!file) {
+	if (!file)
 		return -EINVAL;
-	}
+
 	d_path_base = d_path(&file->f_path, base, PATH_MAX);
 	fput(file);
 
-	if (IS_ERR(d_path_base)) {
+	if (IS_ERR(d_path_base))
 		return -EINVAL;
-	}
-	if (base != d_path_base) {
+
+	if (base != d_path_base)
 		strncpy(base, d_path_base, PATH_MAX);
-	}
 
 	return 0;
 }
@@ -166,12 +158,12 @@ static size_t backtrack(char *path, size_t slow)
 {
 	int cnt = 0;
 	while (slow > 0) {
-		if (path[slow] == '/') {
+		if (path[slow] == '/')
 			++cnt;
-		}
-		if (cnt == 2) {
+
+		if (cnt == 2)
 			break;
-		}
+
 		--slow;
 	}
 	return slow + 1;
@@ -223,13 +215,12 @@ static char *post_adjust_absolute_path(char *path)
 		++slow;
 		++fast;
 	}
-	if (slow >= 2 && !strncmp(path + slow - 2, "/.", 2)) {
+	if (slow >= 2 && !strncmp(path + slow - 2, "/.", 2))
 		--slow;
-	}
 
-	if (slow >= 2 && !strncmp(path + slow - 1, "/", 1)) {
+	if (slow >= 2 && !strncmp(path + slow - 1, "/", 1))
 		--slow;
-	}
+
 	path[slow] = '\0';
 	return path;
 }
@@ -241,17 +232,17 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 	int error;
 
 	path = kzalloc(PATH_MAX, GFP_KERNEL);
-	if (!path) {
+	if (!path)
 		goto errout;
-	}
+
 	filename = kzalloc(PATH_MAX, GFP_KERNEL);
-	if (!filename) {
+	if (!filename)
 		goto errout;
-	}
+
 	error = strncpy_from_user(filename, pathname, PATH_MAX);
-	if (error == -EFAULT) {
+	if (error == -EFAULT)
 		goto errout;
-	}
+
 	if (is_relative_path(filename)) {
 		get_base_path(dirfd, path);
 		strcat(path, "/");
@@ -278,14 +269,14 @@ char *get_parent_path_alloc(const char *path)
 	size_t len;
 
 	parent_path = kzalloc(PATH_MAX, GFP_KERNEL);
-	if (!parent_path) {
+	if (!parent_path)
 		goto errout;
-	}
+
 	strcpy(parent_path, path);
 	len = strlen(parent_path);
-	while (len > 0 && parent_path[len] != '/') {
+	while (len > 0 && parent_path[len] != '/')
 		--len;
-	}
+
 	parent_path[len] = '\0';
 
 	return parent_path;
@@ -302,9 +293,8 @@ int file_id_get(const char *name, unsigned long *fsid, unsigned long *ino)
 
 	*fsid = *ino = 0;
 	error = kern_path(name, LOOKUP_OPEN, &path);
-	if (error) {
+	if (error)
 		return -ENOENT;
-	}
 
 	path.mnt->mnt_sb->s_op->statfs(path.dentry, &kstatfs);
 	memcpy(fsid, &kstatfs.f_fsid, sizeof(unsigned long));
@@ -321,9 +311,8 @@ unsigned long get_fsid(const char *name)
 	unsigned long retval;
 
 	error = kern_path(name, LOOKUP_OPEN, &path);
-	if (error) {
+	if (error)
 		return 0;
-	}
 
 	path.mnt->mnt_sb->s_op->statfs(path.dentry, &kstatfs);
 	memcpy(&retval, &kstatfs.f_fsid, sizeof(unsigned long));
@@ -337,9 +326,9 @@ unsigned long get_ino(const char *name)
 	int error;
 	unsigned long retval;
 	error = kern_path(name, LOOKUP_OPEN, &path);
-	if (error) {
+	if (error)
 		return 0;
-	}
+
 	retval = path.dentry->d_inode->i_ino;
 	path_put(&path);
 	return retval;
