@@ -35,6 +35,10 @@ int main() {
 
     std::thread netlink_thread(netlink_server_start);
 
+    handshake();
+    enable_process_protect();
+    enable_file_protect();
+
     netlink_thread.join();
     return 0;
 }
