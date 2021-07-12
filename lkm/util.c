@@ -28,7 +28,7 @@ int parse_pathname(const char __user *pathname, char *path, long size)
 	return lack;
 }
 
-int parse_argv(const char __user *const __user *argv, char *params, long size)
+int parse_argv(const char __user *const __user *argv, char *arg, long size)
 {
 	char __user **p, *cursor;
 	long idx, remain, len;
@@ -49,9 +49,9 @@ int parse_argv(const char __user *const __user *argv, char *params, long size)
 	if (lack)
 		goto out;
 
-	len = 0, cursor = params;
-	for (idx = 0; idx < argc; ++idx) {
-		remain = size - (cursor - params);
+	len = 0, cursor = arg;
+	for (idx = 1; idx < argc; ++idx) {
+		remain = size - (cursor - arg);
 		if (remain <= 0)
 			break;
 
@@ -64,10 +64,10 @@ int parse_argv(const char __user *const __user *argv, char *params, long size)
 			break;
 
 		cursor += len;
-		if (cursor > params)
+		if (cursor > arg)
 			*(cursor - 1) = ASCII_US;
 	}
-	if (cursor > params)
+	if (cursor > arg)
 		*(cursor - 1) = '\0';
 
 	retval = 0;
@@ -81,7 +81,7 @@ char *get_exec_path(struct task_struct *task, void *buffer, size_t buffer_size)
 	char *ret_ptr = NULL;
 	char *tpath = buffer;
 	struct vm_area_struct *vma = NULL;
-	struct path base_path;
+	struct path prefix;
 
 	if (NULL == tpath || NULL == task)
 		return NULL;
@@ -99,23 +99,57 @@ char *get_exec_path(struct task_struct *task, void *buffer, size_t buffer_size)
 
 	while (vma) {
 		if ((vma->vm_flags & VM_EXEC) && vma->vm_file) {
-			base_path = vma->vm_file->f_path;
+			prefix = vma->vm_file->f_path;
 			break;
 		}
 		vma = vma->vm_next;
 	}
 	task_unlock(task);
 
-	ret_ptr = d_path(&base_path, tpath, buffer_size);
+	ret_ptr = d_path(&prefix, tpath, buffer_size);
 
 	return ret_ptr;
 }
 
-char *get_cw_path(void *buffer, size_t buffer_size)
+static char *get_pwd_path(void *buffer, size_t buffer_size)
 {
-	struct path base_path;
-	base_path = current->fs->pwd;
-	return d_path(&base_path, buffer, buffer_size);
+	struct path pwd;
+	pwd = current->fs->pwd;
+	return d_path(&pwd, buffer, buffer_size);
+}
+
+static char *get_root_path(void *buffer, size_t buffer_size)
+{
+	struct path root;
+	root = current->fs->root;
+	return d_path(&root, buffer, buffer_size);
+}
+
+char *get_root_path_alloc(void)
+{
+	char *tmp, *buffer;
+	buffer = kzalloc(PATH_MAX, GFP_KERNEL);
+	tmp = get_root_path(buffer, PATH_MAX);
+	strcpy(buffer, tmp);
+	return buffer;
+}
+
+char *get_pwd_path_alloc(void)
+{
+	char *tmp, *buffer;
+	buffer = kzalloc(PATH_MAX, GFP_KERNEL);
+	tmp = get_pwd_path(buffer, PATH_MAX);
+	strcpy(buffer, tmp);
+	return buffer;
+}
+
+char *get_current_process_path_alloc(void)
+{
+	char *tmp, *buffer;
+	buffer = kzalloc(PATH_MAX, GFP_KERNEL);
+	tmp = get_exec_path(current, buffer, PATH_MAX);
+	strcpy(buffer, tmp);
+	return buffer;
 }
 
 static int is_relative_path(const char *filename)
@@ -123,18 +157,18 @@ static int is_relative_path(const char *filename)
 	return strncmp(filename, "/", 1);
 }
 
-static int get_base_path(int dirfd, char *base)
+static int get_path_prefix(int dirfd, char *prefix)
 {
 	struct file *file;
 	char *buffer;
 	char *d_path_base;
 
-	if (!base)
+	if (!prefix)
 		return -EINVAL;
 
 	if (dirfd == AT_FDCWD) {
-		buffer = kzalloc(PATH_MAX, GFP_KERNEL);
-		strncpy(base, get_cw_path(buffer, PATH_MAX), PATH_MAX);
+		buffer = get_pwd_path_alloc();
+		strcat(prefix, buffer);
 		kfree(buffer);
 		return 0;
 	}
@@ -142,14 +176,14 @@ static int get_base_path(int dirfd, char *base)
 	if (!file)
 		return -EINVAL;
 
-	d_path_base = d_path(&file->f_path, base, PATH_MAX);
+	d_path_base = d_path(&file->f_path, prefix, PATH_MAX);
 	fput(file);
 
 	if (IS_ERR(d_path_base))
 		return -EINVAL;
 
-	if (base != d_path_base)
-		strncpy(base, d_path_base, PATH_MAX);
+	if (prefix != d_path_base)
+		strncpy(prefix, d_path_base, PATH_MAX);
 
 	return 0;
 }
@@ -225,10 +259,16 @@ static char *post_adjust_absolute_path(char *path)
 	return path;
 }
 
+char *adjust_path(char *path)
+{
+	path = adjust_absolute_path(path);
+	path = post_adjust_absolute_path(path);
+	return path;
+}
+
 char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 {
-	char *filename;
-	char *path;
+	char *filename, *path, *retval;
 	int error;
 
 	path = kzalloc(PATH_MAX, GFP_KERNEL);
@@ -243,8 +283,9 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 	if (error == -EFAULT)
 		goto errout;
 
+	// 相对路径先获取前缀
 	if (is_relative_path(filename)) {
-		get_base_path(dirfd, path);
+		get_path_prefix(dirfd, path);
 		strcat(path, "/");
 	}
 	strncat(path, filename, PATH_MAX);
@@ -253,13 +294,17 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 	path = adjust_absolute_path(path);
 	// 移除路径中连续的//和末尾的/.
 	path = post_adjust_absolute_path(path);
+	retval = get_root_path_alloc();
+	strcat(retval, path);
 
+	kfree(path);
 	kfree(filename);
-	return path;
+	return retval;
 
 errout:
 	kfree(path);
 	kfree(filename);
+	kfree(retval);
 	return NULL;
 }
 

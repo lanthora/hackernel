@@ -14,7 +14,7 @@ DEFINE_HOOK(execveat);
 static DECLARE_WAIT_QUEUE_HEAD(wq_process_perm);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
 
-static int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
+static int process_protect_report_to_userspace(process_perm_id_t id, char *arg)
 {
 	int error = 0;
 	struct sk_buff *skb = NULL;
@@ -49,7 +49,7 @@ static int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 		goto errout;
 	}
 
-	error = nla_put_string(skb, HACKERNEL_A_NAME, cmd);
+	error = nla_put_string(skb, HACKERNEL_A_NAME, arg);
 	if (error) {
 		LOG("nla_put_string failed");
 		goto errout;
@@ -86,7 +86,7 @@ static int condition_process_perm(process_perm_id_t id)
 }
 
 // 将execve的命令发送到用户态,用户态返回这条命令的执行权限
-static process_perm_t process_protect_status(char *cmd)
+static process_perm_t process_protect_status(char *arg)
 {
 	int error;
 	static process_perm_id_t id;
@@ -101,7 +101,7 @@ static process_perm_t process_protect_status(char *cmd)
 		goto out;
 	}
 
-	error = process_protect_report_to_userspace(id, cmd);
+	error = process_protect_report_to_userspace(id, arg);
 	if (error) {
 		LOG("process_protect_report_to_userspace failed");
 		goto out;
@@ -122,34 +122,48 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 			       char __user *__user *argv,
 			       char __user *__user *envp, int flag)
 {
-	char *cmd = NULL;
+	char *root, *cmd, *arg, *msg;
 	int error = 0;
 	process_perm_t perm = PROCESS_INVAILD;
 
 	if (!portid)
 		goto out;
 
-	cmd = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
-	if (!cmd) {
-		error = 0;
-		goto out;
-	}
-	error = parse_argv((const char *const *)argv, cmd, MAX_ARG_STRLEN);
+	msg = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
+
+	root = get_root_path_alloc();
+	strcat(msg, root);
+	kfree(root);
+
+	cmd = get_absolute_path_alloc(dirfd, pathname);
+	strcat(msg, cmd);
+	kfree(cmd);
+
+	arg = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
+	error = parse_argv((const char *const *)argv, arg, MAX_ARG_STRLEN);
 	if (error) {
 		error = 0;
 		goto out;
 	}
+	if (arg[0]) {
+		strcat(msg, ASCII_US_STR);
+		strcat(msg, arg);
+	}
+
+	kfree(arg);
+
+	msg = adjust_path(msg);
 
 	// 只有明确确定收到的是拒绝的情况下才拒绝
 	// 其他情况要么是放行,要么是程序内部错误,都不应该拦截
-	perm = process_protect_status(cmd);
+	perm = process_protect_status(msg);
 	if (perm == PROCESS_REJECT) {
 		error = -EPERM;
 		goto out;
 	}
 	error = 0;
 out:
-	kfree(cmd);
+	kfree(msg);
 	return error;
 }
 
