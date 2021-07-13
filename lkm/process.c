@@ -122,7 +122,7 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 			       char __user *__user *argv,
 			       char __user *__user *envp, int flag)
 {
-	char *root, *cmd, *arg, *msg;
+	char *cmd, *arg, *msg;
 	int error = 0;
 	process_perm_t perm = PROCESS_INVAILD;
 
@@ -130,10 +130,6 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 		goto out;
 
 	msg = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
-
-	root = get_root_path_alloc();
-	strcat(msg, root);
-	kfree(root);
 
 	cmd = get_absolute_path_alloc(dirfd, pathname);
 	strcat(msg, cmd);

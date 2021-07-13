@@ -2,6 +2,7 @@
 #include <asm/current.h>
 #include <asm/uaccess.h>
 #include <linux/binfmts.h>
+#include <linux/dcache.h>
 #include <linux/fcntl.h>
 #include <linux/fs.h>
 #include <linux/fs_struct.h>
@@ -121,8 +122,18 @@ static char *get_pwd_path(void *buffer, size_t buffer_size)
 static char *get_root_path(void *buffer, size_t buffer_size)
 {
 	struct path root;
+	struct dentry *dentry;
+	char *ptr = buffer + buffer_size - 1;
+	*ptr = 0;
 	root = current->fs->root;
-	return d_path(&root, buffer, buffer_size);
+	dentry = root.dentry;
+	while (!IS_ROOT(dentry)) {
+		ptr -= dentry->d_name.len;
+		memcpy(ptr, dentry->d_name.name, dentry->d_name.len);
+		*(--ptr) = '/';
+		dentry = dentry->d_parent;
+	}
+	return ptr;
 }
 
 char *get_root_path_alloc(void)
