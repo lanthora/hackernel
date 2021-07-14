@@ -115,17 +115,18 @@ char *get_exec_path(struct task_struct *task, void *buffer, size_t buffer_size)
 static char *get_pwd_path(void *buffer, size_t buffer_size)
 {
 	struct path pwd;
-	pwd = current->fs->pwd;
+	get_fs_pwd(current->fs,&pwd);
 	return d_path(&pwd, buffer, buffer_size);
 }
 
+#if defined(CONFIG_CHROOT)
 static char *get_root_path(void *buffer, size_t buffer_size)
 {
 	struct path root;
 	struct dentry *dentry;
 	char *ptr = buffer + buffer_size - 1;
 	*ptr = 0;
-	root = current->fs->root;
+	get_fs_root(current->fs,&root);
 	dentry = root.dentry;
 	while (!IS_ROOT(dentry)) {
 		ptr -= dentry->d_name.len;
@@ -135,6 +136,13 @@ static char *get_root_path(void *buffer, size_t buffer_size)
 	}
 	return ptr;
 }
+#else
+static char *get_root_path(void *buffer, size_t buffer_size)
+{
+	strcpy(buffer, "/");
+	return buffer;
+}
+#endif
 
 char *get_root_path_alloc(void)
 {
@@ -352,7 +360,8 @@ int file_id_get(const char *name, unsigned long *fsid, unsigned long *ino)
 	if (error)
 		return -ENOENT;
 
-	path.mnt->mnt_sb->s_op->statfs(path.dentry, &kstatfs);
+	vfs_statfs(&path,&kstatfs);
+
 	memcpy(fsid, &kstatfs.f_fsid, sizeof(unsigned long));
 	*ino = path.dentry->d_inode->i_ino;
 	path_put(&path);
@@ -370,7 +379,7 @@ unsigned long get_fsid(const char *name)
 	if (error)
 		return 0;
 
-	path.mnt->mnt_sb->s_op->statfs(path.dentry, &kstatfs);
+	vfs_statfs(&path,&kstatfs);
 	memcpy(&retval, &kstatfs.f_fsid, sizeof(unsigned long));
 	path_put(&path);
 	return retval;
