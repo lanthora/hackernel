@@ -5,7 +5,7 @@
 
 #define LOG(fmt, arg...)                                                                                                                   \
     do {                                                                                                                                   \
-        printf("hackernel: %s:%d " fmt "\n", __FILE__, __LINE__, ##arg);                                                                   \
+        printf(fmt "\n", ##arg);                                                                                                           \
         fflush(stdout);                                                                                                                    \
     } while (0)
 
