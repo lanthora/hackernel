@@ -20,6 +20,7 @@ typedef int32_t file_perm_t;
 #define WRITE_PROTECT_MASK 2
 #define UNLINK_PROTECT_MASK 4
 #define RENAME_PROTECT_MASK 8
+#define ALL_PROTECT_MASK 15
 
 enum
 {
