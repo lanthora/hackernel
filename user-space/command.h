@@ -20,7 +20,7 @@ typedef int32_t file_perm_t;
 #define WRITE_PROTECT_MASK 2
 #define UNLINK_PROTECT_MASK 4
 #define RENAME_PROTECT_MASK 8
-#define ALL_PROTECT_MASK 15
+#define ALL_FILE_PROTECT_MASK 15
 
 enum
 {
@@ -59,4 +59,28 @@ int disable_process_protect();
 process_perm_t check_precess_perm(char *cmd);
 int reply_process_perm(process_perm_id_t id, process_perm_t perm);
 
+/**
+ * net protect
+ */
+typedef uint16_t net_port_t;
+typedef int32_t net_perm_t;
+
+#define TCP_IN_MASK 1
+#define TCP_OUT_MASK 2
+#define UDP_IN_MASK 4
+#define UDP_OUT_MASK 8
+#define ALL_NET_PROTECT_MASK 15
+
+enum
+{
+    NET_PROTECT_UNSPEC,
+    NET_PROTECT_REPORT,
+    NET_PROTECT_ENABLE,
+    NET_PROTECT_DISABLE,
+    NET_PROTECT_SET
+};
+
+int enable_net_protect();
+int disable_net_protect();
+int set_net_protect(net_port_t port, net_perm_t perm);
 #endif

@@ -1,3 +1,10 @@
+#include <linux/kernel.h>
+#include <net/genetlink.h>
+#include <net/netlink.h>
+
+typedef u16 net_port_t;
+typedef s32 net_perm_t;
+
 enum {
 	NET_PROTECT_UNSPEC,
 	NET_PROTECT_REPORT,

@@ -18,6 +18,7 @@ static struct nla_policy nla_policy[HACKERNEL_A_MAX + 1] = {
 	[HACKERNEL_A_NAME] = { .type = NLA_STRING },
 	[HACKERNEL_A_PERM] = { .type = NLA_S32 },
 	[HACKERNEL_A_EXECVE_ID] = { .type = NLA_S32 },
+	[HACKERNEL_A_PORT] = { .type = NLA_U16 },
 };
 
 static int handshake_handler(struct sk_buff *skb, struct genl_info *info)

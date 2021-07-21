@@ -48,6 +48,13 @@ static struct genl_cmd hackernel_genl_cmds[] = {
         .c_attr_policy = hackernel_genl_policy,
         .c_msg_parser = &file_protect_handler,
     },
+    {
+        .c_id = HACKERNEL_C_NET_PROTECT,
+        .c_name = "HACKERNEL_C_NET_PROTECT",
+        .c_maxattr = HACKERNEL_A_MAX,
+        .c_attr_policy = hackernel_genl_policy,
+        .c_msg_parser = &net_protect_handler,
+    },
 };
 
 static struct genl_ops hackernel_genl_ops = {

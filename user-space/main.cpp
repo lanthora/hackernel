@@ -19,6 +19,7 @@ void exit_sig_handler(int sig) {
     LOG("received signal, exit now");
     disable_file_protect();
     disable_process_protect();
+    disable_net_protect();
     netlink_server_stop();
 }
 
@@ -38,8 +39,9 @@ int main() {
     handshake();
     enable_process_protect();
     enable_file_protect();
-    set_file_protect("/root/hackernel/build/nothing", ALL_PROTECT_MASK);
-
+    enable_net_protect();
+    set_file_protect("/root/hackernel/build/nothing", ALL_FILE_PROTECT_MASK);
+    set_net_protect(22, TCP_IN_MASK);
     netlink_thread.join();
     return 0;
 }

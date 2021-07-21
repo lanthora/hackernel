@@ -44,7 +44,11 @@
 		"thread": "c",
 		"stdarg.h": "c",
 		"uuid.h": "c",
-		"unistd.h": "c"
+		"unistd.h": "c",
+		"bitmap.h": "c",
+		"ip.h": "c",
+		"types.h": "c",
+		"internet": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
