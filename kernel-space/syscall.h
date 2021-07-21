@@ -15,21 +15,14 @@ int init_sys_call_table(u64 sys_call_table);
 void disable_write_protection(void);
 void enable_write_protection(void);
 
-// 系统调用替换和恢复的函数声明
-#ifndef DEFINE_HOOK_HEADER
-#define DEFINE_HOOK_HEADER(name)                                               \
-	int replace_##name(void);                                              \
-	int restore_##name(void);
-#endif
-
 // 系统调用替换和恢复的实现，使用这个宏必须实现
 // u64 sys_name_hook(struct pt_regs *regs)
 // 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
 #ifndef DEFINE_HOOK
 #define DEFINE_HOOK(name)                                                      \
-	asmlinkage u64 sys_##name##_hook(struct pt_regs *regs);                \
+	static asmlinkage u64 sys_##name##_hook(struct pt_regs *regs);                \
 	static sys_call_ptr_t __x64_sys_##name = NULL;                         \
-	int replace_##name(void)                                               \
+	static int replace_##name(void)                                        \
 	{                                                                      \
 		if (!g_sys_call_table) {                                       \
 			return -EPERM;                                         \
@@ -45,7 +38,7 @@ void enable_write_protection(void);
 		return 0;                                                      \
 	}                                                                      \
                                                                                \
-	int restore_##name(void)                                               \
+	static int restore_##name(void)                                        \
 	{                                                                      \
 		if (!g_sys_call_table) {                                       \
 			return -EPERM;                                         \

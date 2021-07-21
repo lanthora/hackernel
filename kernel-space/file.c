@@ -581,7 +581,7 @@ out:
 	return is_forbidden;
 }
 
-asmlinkage u64 sys_open_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_open_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)regs->di;
 	int flags = (int)regs->si;
@@ -594,7 +594,7 @@ asmlinkage u64 sys_open_hook(struct pt_regs *regs)
 	return __x64_sys_open(regs);
 }
 
-asmlinkage u64 sys_openat_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_openat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)regs->di;
 	char *pathname = (char *)regs->si;
@@ -608,7 +608,7 @@ asmlinkage u64 sys_openat_hook(struct pt_regs *regs)
 	return __x64_sys_openat(regs);
 }
 
-asmlinkage u64 sys_unlink_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_unlink_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)regs->di;
 
@@ -624,7 +624,7 @@ asmlinkage u64 sys_unlink_hook(struct pt_regs *regs)
 	return error;
 }
 
-asmlinkage u64 sys_unlinkat_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_unlinkat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)regs->di;
 	char *pathname = (char *)regs->si;
@@ -641,7 +641,7 @@ asmlinkage u64 sys_unlinkat_hook(struct pt_regs *regs)
 	return error;
 }
 
-asmlinkage u64 sys_rename_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_rename_hook(struct pt_regs *regs)
 {
 	char *srcpath = (char *)regs->di;
 	char *dstpath = (char *)regs->si;
@@ -658,7 +658,7 @@ asmlinkage u64 sys_rename_hook(struct pt_regs *regs)
 	return error;
 }
 
-asmlinkage u64 sys_renameat_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_renameat_hook(struct pt_regs *regs)
 {
 	int srcfd = (int)regs->di;
 	char *srcpath = (char *)regs->si;
@@ -677,7 +677,7 @@ asmlinkage u64 sys_renameat_hook(struct pt_regs *regs)
 	return error;
 }
 
-asmlinkage u64 sys_renameat2_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_renameat2_hook(struct pt_regs *regs)
 {
 	int srcfd = (int)regs->di;
 	char *srcpath = (char *)regs->si;
@@ -696,7 +696,7 @@ asmlinkage u64 sys_renameat2_hook(struct pt_regs *regs)
 	return error;
 }
 
-asmlinkage u64 sys_mkdir_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_mkdir_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)regs->di;
 
@@ -708,7 +708,7 @@ asmlinkage u64 sys_mkdir_hook(struct pt_regs *regs)
 	return __x64_sys_mkdir(regs);
 }
 
-asmlinkage u64 sys_mkdirat_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_mkdirat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)regs->di;
 	char *pathname = (char *)regs->si;
@@ -721,7 +721,7 @@ asmlinkage u64 sys_mkdirat_hook(struct pt_regs *regs)
 	return __x64_sys_mkdirat(regs);
 }
 
-asmlinkage u64 sys_rmdir_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_rmdir_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)regs->di;
 
@@ -737,7 +737,7 @@ asmlinkage u64 sys_rmdir_hook(struct pt_regs *regs)
 	return error;
 }
 
-asmlinkage u64 sys_link_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_link_hook(struct pt_regs *regs)
 {
 	char *dstpath = (char *)regs->si;
 
@@ -749,7 +749,7 @@ asmlinkage u64 sys_link_hook(struct pt_regs *regs)
 	return __x64_sys_link(regs);
 }
 
-asmlinkage u64 sys_linkat_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_linkat_hook(struct pt_regs *regs)
 {
 	int dstfd = (int)regs->dx;
 	char *dstpath = (char *)regs->r10;
@@ -762,7 +762,7 @@ asmlinkage u64 sys_linkat_hook(struct pt_regs *regs)
 	return __x64_sys_linkat(regs);
 }
 
-asmlinkage u64 sys_symlink_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_symlink_hook(struct pt_regs *regs)
 {
 	char *dstpath = (char *)regs->si;
 
@@ -774,7 +774,7 @@ asmlinkage u64 sys_symlink_hook(struct pt_regs *regs)
 	return __x64_sys_symlink(regs);
 }
 
-asmlinkage u64 sys_symlinkat_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_symlinkat_hook(struct pt_regs *regs)
 {
 	int dstfd = (int)regs->si;
 	char *dstpath = (char *)regs->dx;
@@ -787,7 +787,7 @@ asmlinkage u64 sys_symlinkat_hook(struct pt_regs *regs)
 	return __x64_sys_symlinkat(regs);
 }
 
-asmlinkage u64 sys_mknod_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_mknod_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)regs->di;
 
@@ -799,7 +799,7 @@ asmlinkage u64 sys_mknod_hook(struct pt_regs *regs)
 	return __x64_sys_mknod(regs);
 }
 
-asmlinkage u64 sys_mknodat_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_mknodat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)regs->di;
 	char *pathname = (char *)regs->si;

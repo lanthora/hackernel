@@ -308,7 +308,7 @@ out:
 	return error;
 }
 
-asmlinkage u64 sys_execve_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_execve_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)regs->di;
 	char **argv = (char **)regs->si;
@@ -320,7 +320,7 @@ asmlinkage u64 sys_execve_hook(struct pt_regs *regs)
 	return __x64_sys_execve(regs);
 }
 
-asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
+static asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)regs->di;
 	char *pathname = (char *)regs->si;

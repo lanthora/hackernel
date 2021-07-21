@@ -5,9 +5,6 @@
 #include <net/genetlink.h>
 #include <net/netlink.h>
 
-DEFINE_HOOK_HEADER(execve);
-DEFINE_HOOK_HEADER(execveat);
-
 #define PROCESS_INVAILD -1
 #define PROCESS_WATT 0
 #define PROCESS_ACCEPT 1
