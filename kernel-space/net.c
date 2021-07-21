@@ -18,6 +18,14 @@ unsigned long *udp_out_drop_bitmap = NULL;
 static struct nf_hook_ops *inet_in_hook_ops = NULL;
 static struct nf_hook_ops *inet_out_hook_ops = NULL;
 
+static int first_tcp_packet(struct tcphdr *tcph)
+{
+	if (!tcph)
+		return 0;
+
+	return tcph->syn && !tcph->ack;
+}
+
 static unsigned int inet_in_hook(void *priv, struct sk_buff *skb,
 				 const struct nf_hook_state *state)
 {
@@ -29,6 +37,8 @@ static unsigned int inet_in_hook(void *priv, struct sk_buff *skb,
 	switch (iph->protocol) {
 	case IPPROTO_TCP:
 		tcph = tcp_hdr(skb);
+		if (!first_tcp_packet(tcph))
+			break;
 		if (test_bit(ntohs(tcph->dest), tcp_in_drop_bitmap))
 			return NF_DROP;
 		break;
@@ -54,6 +64,8 @@ static unsigned int inet_out_hook(void *priv, struct sk_buff *skb,
 	switch (iph->protocol) {
 	case IPPROTO_TCP:
 		tcph = tcp_hdr(skb);
+		if (!first_tcp_packet(tcph))
+			break;
 		if (test_bit(ntohs(tcph->dest), tcp_out_drop_bitmap))
 			return NF_DROP;
 		break;

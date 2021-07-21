@@ -48,7 +48,8 @@
 		"bitmap.h": "c",
 		"ip.h": "c",
 		"types.h": "c",
-		"internet": "c"
+		"internet": "c",
+		"tcp.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
