@@ -28,4 +28,9 @@ enum {
 
 extern int process_protect_handler(struct sk_buff *skb, struct genl_info *info);
 
+// 开关进程保护
+int enable_process_protect(void);
+int disable_process_protect(void);
+
+
 #endif

@@ -16,6 +16,23 @@ DEFINE_HOOK(execveat);
 static DECLARE_WAIT_QUEUE_HEAD(wq_process_perm);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
 
+int enable_process_protect(void)
+{
+	process_perm_init();
+	REG_HOOK(execve);
+	REG_HOOK(execveat);
+	return 0;
+}
+
+int disable_process_protect(void)
+{
+	UNREG_HOOK(execve);
+	UNREG_HOOK(execveat);
+	process_perm_destory();
+	return 0;
+}
+
+
 // 由于id是逐一增加的,取余可以平均分配地址空间,由于散列函数的特殊实现,哈希表大小需要是2的整数次幂
 #define PROCESS_PERM_MASK 0xFF
 #define PROCESS_PERM_SIZE (PROCESS_PERM_MASK + 1) // 256

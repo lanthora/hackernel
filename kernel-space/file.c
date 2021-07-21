@@ -56,6 +56,50 @@ struct file_perm_list {
 static struct file_perm_list *file_perm_list_head;
 static rwlock_t *file_perm_lock;
 
+int enable_file_protect(void)
+{
+	file_perm_init();
+	REG_HOOK(open);
+	REG_HOOK(openat);
+	REG_HOOK(unlink);
+	REG_HOOK(unlinkat);
+	REG_HOOK(rename);
+	REG_HOOK(renameat);
+	REG_HOOK(renameat2);
+	REG_HOOK(mkdir);
+	REG_HOOK(mkdirat);
+	REG_HOOK(rmdir);
+	REG_HOOK(link);
+	REG_HOOK(linkat);
+	REG_HOOK(symlink);
+	REG_HOOK(symlinkat);
+	REG_HOOK(mknod);
+	REG_HOOK(mknodat);
+	return 0;
+}
+
+int disable_file_protect(void)
+{
+	UNREG_HOOK(open);
+	UNREG_HOOK(openat);
+	UNREG_HOOK(unlink);
+	UNREG_HOOK(unlinkat);
+	UNREG_HOOK(rename);
+	UNREG_HOOK(renameat);
+	UNREG_HOOK(renameat2);
+	UNREG_HOOK(mkdir);
+	UNREG_HOOK(mkdirat);
+	UNREG_HOOK(rmdir);
+	UNREG_HOOK(link);
+	UNREG_HOOK(linkat);
+	UNREG_HOOK(symlink);
+	UNREG_HOOK(symlinkat);
+	UNREG_HOOK(mknod);
+	UNREG_HOOK(mknodat);
+	file_perm_destory();
+	return 0;
+}
+
 static int file_perm_node_cmp(struct file_perm_node *ns,
 			      struct file_perm_node *nt)
 {

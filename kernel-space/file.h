@@ -53,4 +53,7 @@ enum {
 
 extern int file_protect_handler(struct sk_buff *skb, struct genl_info *info);
 
+// 开关文件保护
+int enable_file_protect(void);
+int disable_file_protect(void);
 #endif

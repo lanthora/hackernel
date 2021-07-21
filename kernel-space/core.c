@@ -1,4 +1,6 @@
+#include "file.h"
 #include "netlink.h"
+#include "process.h"
 #include "syscall.h"
 #include "util.h"
 #include <linux/init.h>
