@@ -40,7 +40,6 @@
 		"ostream": "c",
 		"stop_token": "c",
 		"cmath": "c",
-		"perm.h": "c",
 		"tuple": "c",
 		"thread": "c",
 		"stdarg.h": "c",

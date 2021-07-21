@@ -2,6 +2,7 @@
 #define HACKERNEL_FILE_H
 
 #include "syscall.h"
+#include <linux/kernel.h>
 #include <net/genetlink.h>
 #include <net/netlink.h>
 
@@ -23,6 +24,24 @@ DEFINE_HOOK_HEADER(mknod);
 DEFINE_HOOK_HEADER(mknodat);
 
 #define READ_WRITE_MASK 3
+
+typedef unsigned long fsid_t;
+typedef unsigned long ino_t;
+typedef s32 file_perm_t;
+
+#define READ_PROTECT_MASK 1
+#define WRITE_PROTECT_MASK 2
+#define UNLINK_PROTECT_MASK 4
+#define RENAME_PROTECT_MASK 8
+
+#define BAD_FSID 0
+#define BAD_INO 1
+#define INVAILD_PERM 0
+
+// file_perm_init 分配必要的内存,使用set/get前需要调用
+// file_perm_destory 释放init和set过程中申请的内存
+int file_perm_init(void);
+int file_perm_destory(void);
 
 enum {
 	FILE_PROTECT_UNSPEC,

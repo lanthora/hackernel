@@ -1,5 +1,4 @@
 #include "netlink.h"
-#include "perm.h"
 #include "syscall.h"
 #include "util.h"
 #include <linux/init.h>
