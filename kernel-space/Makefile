@@ -1,6 +1,6 @@
 ifneq ($(KERNELRELEASE),)
 obj-m :=hackernel.o
-hackernel-objs :=core.o netlink.o syscall.o util.o process.o file.o
+hackernel-objs :=core.o netlink.o syscall.o util.o process.o file.o net.o
 ccflags-y += $(HACKERNEL_MODULE_CFLAGS)
 else
 KDIR :=/lib/modules/$(shell uname -r)/build

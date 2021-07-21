@@ -1,5 +1,6 @@
 #include "netlink.h"
 #include "file.h"
+#include "net.h"
 #include "process.h"
 #include "syscall.h"
 #include "util.h"
@@ -92,6 +93,11 @@ static struct genl_small_ops genl_small_ops[] = {
 		.cmd = HACKERNEL_C_FILE_PROTECT,
 		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
 		.doit = file_protect_handler,
+	},
+	{
+		.cmd = HACKERNEL_C_NET_PROTECT,
+		.validate = GENL_DONT_VALIDATE_STRICT | GENL_DONT_VALIDATE_DUMP,
+		.doit = net_protect_handler,
 	},
 };
 

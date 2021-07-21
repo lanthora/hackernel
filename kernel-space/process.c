@@ -16,23 +16,6 @@ DEFINE_HOOK(execveat);
 static DECLARE_WAIT_QUEUE_HEAD(wq_process_perm);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
 
-int enable_process_protect(void)
-{
-	process_perm_init();
-	REG_HOOK(execve);
-	REG_HOOK(execveat);
-	return 0;
-}
-
-int disable_process_protect(void)
-{
-	UNREG_HOOK(execve);
-	UNREG_HOOK(execveat);
-	process_perm_destory();
-	return 0;
-}
-
-
 // 由于id是逐一增加的,取余可以平均分配地址空间,由于散列函数的特殊实现,哈希表大小需要是2的整数次幂
 #define PROCESS_PERM_MASK 0xFF
 #define PROCESS_PERM_SIZE (PROCESS_PERM_MASK + 1) // 256
@@ -61,7 +44,7 @@ static void process_perm_head_init(process_perm_head_t *perm_head)
 
 process_perm_head_t *process_perm_hlist;
 
-int process_perm_init(void)
+static int process_perm_init(void)
 {
 	int idx;
 	const size_t size = sizeof(process_perm_head_t) * PROCESS_PERM_SIZE;
@@ -88,7 +71,7 @@ static void process_perm_hlist_node_destory(process_perm_head_t *perm_head)
 	write_unlock(&perm_head->lock);
 }
 
-int process_perm_destory(void)
+static int process_perm_destory(void)
 {
 	size_t idx;
 	if (!process_perm_hlist)
@@ -118,7 +101,8 @@ static int process_perm_insert(const process_perm_id_t id)
 	return 0;
 }
 
-static int process_perm_update(const process_perm_id_t id, const process_perm_t perm)
+static int process_perm_update(const process_perm_id_t id,
+			       const process_perm_t perm)
 {
 	struct process_perm_node *pos;
 	const size_t idx = PROCESS_PERM_HASH(id);
@@ -348,6 +332,26 @@ asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
 		return -EPERM;
 
 	return __x64_sys_execveat(regs);
+}
+static int enable_process_protect(void)
+{
+	process_perm_init();
+	REG_HOOK(execve);
+	REG_HOOK(execveat);
+	return 0;
+}
+
+static int disable_process_protect(void)
+{
+	UNREG_HOOK(execve);
+	UNREG_HOOK(execveat);
+	process_perm_destory();
+	return 0;
+}
+
+void exit_process_protect(void)
+{
+	disable_process_protect();
 }
 
 int process_protect_handler(struct sk_buff *skb, struct genl_info *info)

@@ -16,9 +16,6 @@ DEFINE_HOOK_HEADER(execveat);
 typedef s32 process_perm_t;
 typedef int process_perm_id_t;
 
-int process_perm_init(void);
-int process_perm_destory(void);
-
 enum {
 	PROCESS_PROTECT_UNSPEC,
 	PROCESS_PROTECT_REPORT,
@@ -26,11 +23,7 @@ enum {
 	PROCESS_PROTECT_DISABLE
 };
 
-extern int process_protect_handler(struct sk_buff *skb, struct genl_info *info);
-
-// 开关进程保护
-int enable_process_protect(void);
-int disable_process_protect(void);
-
+int process_protect_handler(struct sk_buff *skb, struct genl_info *info);
+void exit_process_protect(void);
 
 #endif

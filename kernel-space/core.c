@@ -1,4 +1,5 @@
 #include "file.h"
+#include "net.h"
 #include "netlink.h"
 #include "process.h"
 #include "syscall.h"
@@ -21,8 +22,9 @@ static int init(void)
 static void cleanup(void)
 {
 	netlink_kernel_stop();
-	disable_process_protect();
-	disable_file_protect();
+	exit_process_protect();
+	exit_file_protect();
+	exit_net_protect();
 	LOG("module_exit");
 	return;
 }
