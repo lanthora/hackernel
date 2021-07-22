@@ -3,6 +3,7 @@
 #include <net/netlink.h>
 
 typedef u16 net_port_t;
+typedef u16 net_port_range_t;
 typedef s32 net_perm_t;
 
 enum {

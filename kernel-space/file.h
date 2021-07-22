@@ -12,10 +12,10 @@ typedef unsigned long fsid_t;
 typedef unsigned long ino_t;
 typedef s32 file_perm_t;
 
-#define READ_PROTECT_MASK 1
-#define WRITE_PROTECT_MASK 2
-#define UNLINK_PROTECT_MASK 4
-#define RENAME_PROTECT_MASK 8
+#define READ_PROTECT_FLAG 1
+#define WRITE_PROTECT_FLAG 2
+#define UNLINK_PROTECT_FLAG 4
+#define RENAME_PROTECT_FLAG 8
 
 #define BAD_FSID 0
 #define BAD_INO 1

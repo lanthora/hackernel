@@ -370,7 +370,7 @@ errout:
 
 static int read_protect_check(struct file_perm_data *data)
 {
-	const file_perm_t perm = READ_PROTECT_MASK;
+	const file_perm_t perm = READ_PROTECT_FLAG;
 	int is_forbidden = data->this_perm & perm;
 	if (is_forbidden) {
 		data->deny_perm = perm;
@@ -382,7 +382,7 @@ static int read_protect_check(struct file_perm_data *data)
 
 static int write_protect_check(struct file_perm_data *data)
 {
-	const file_perm_t perm = WRITE_PROTECT_MASK;
+	const file_perm_t perm = WRITE_PROTECT_FLAG;
 	int is_forbidden = data->this_perm & perm;
 	if (is_forbidden) {
 		data->deny_perm = perm;
@@ -393,7 +393,7 @@ static int write_protect_check(struct file_perm_data *data)
 
 static int read_write_protect_check(struct file_perm_data *data)
 {
-	const file_perm_t perm = (READ_PROTECT_MASK | WRITE_PROTECT_MASK);
+	const file_perm_t perm = (READ_PROTECT_FLAG | WRITE_PROTECT_FLAG);
 	int is_forbidden = data->this_perm & perm;
 	if (is_forbidden) {
 		data->deny_perm = perm;
@@ -404,7 +404,7 @@ static int read_write_protect_check(struct file_perm_data *data)
 
 static int unlink_protect_check(struct file_perm_data *data)
 {
-	const file_perm_t perm = UNLINK_PROTECT_MASK;
+	const file_perm_t perm = UNLINK_PROTECT_FLAG;
 	int is_forbidden = data->this_perm & perm;
 	if (is_forbidden) {
 		data->deny_perm = perm;
@@ -415,7 +415,7 @@ static int unlink_protect_check(struct file_perm_data *data)
 
 static int rename_protect_check(struct file_perm_data *data)
 {
-	const file_perm_t perm = RENAME_PROTECT_MASK;
+	const file_perm_t perm = RENAME_PROTECT_FLAG;
 	int is_forbidden = data->this_perm & perm;
 	if (is_forbidden) {
 		data->deny_perm = perm;

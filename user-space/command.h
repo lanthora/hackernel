@@ -16,11 +16,11 @@ int handshake();
  */
 typedef int32_t file_perm_t;
 
-#define READ_PROTECT_MASK 1
-#define WRITE_PROTECT_MASK 2
-#define UNLINK_PROTECT_MASK 4
-#define RENAME_PROTECT_MASK 8
-#define ALL_FILE_PROTECT_MASK 15
+#define READ_PROTECT_FLAG 1
+#define WRITE_PROTECT_FLAG 2
+#define UNLINK_PROTECT_FLAG 4
+#define RENAME_PROTECT_FLAG 8
+#define ALL_FILE_PROTECT_FLAG 15
 
 enum
 {
@@ -63,13 +63,20 @@ int reply_process_perm(process_perm_id_t id, process_perm_t perm);
  * net protect
  */
 typedef uint16_t net_port_t;
+typedef uint16_t net_port_range_t;
 typedef int32_t net_perm_t;
 
-#define TCP_IN_MASK 1
-#define TCP_OUT_MASK 2
-#define UDP_IN_MASK 4
-#define UDP_OUT_MASK 8
-#define ALL_NET_PROTECT_MASK 15
+#define TCP_IN_FLAG (1 << 0)
+#define TCP_OUT_FLAG (1 << 1)
+#define UDP_IN_FLAG (1 << 2)
+#define UDP_OUT_FLAG (1 << 3)
+#define ALL_NET_PROTECT_FLAG (TCP_IN_FLAG | TCP_OUT_FLAG | UDP_IN_FLAG | UDP_OUT_FLAG)
+
+#define TCP_IN_MASK (1 << 4)
+#define TCP_OUT_MASK (1 << 5)
+#define UDP_IN_MASK (1 << 6)
+#define UDP_OUT_MASK (1 << 7)
+#define ALL_NET_PROTECT_MASK (TCP_IN_MASK | TCP_OUT_MASK | UDP_IN_MASK | UDP_OUT_MASK)
 
 enum
 {
@@ -82,5 +89,8 @@ enum
 
 int enable_net_protect();
 int disable_net_protect();
+
+// 重载
 int set_net_protect(net_port_t port, net_perm_t perm);
+int set_net_protect(net_port_t port, net_port_range_t range, net_perm_t perm);
 #endif

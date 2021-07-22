@@ -180,53 +180,59 @@ void exit_net_protect(void)
 	disable_net_protect();
 }
 
-static inline int net_perm_tcp_in_disabled(net_perm_t perm)
+#define DEF_NET_DISABLED_AND_MASKED(p, d, n)                                   \
+	static inline int net_perm_##p##_##d##_disabled(net_perm_t perm)       \
+	{                                                                      \
+		return perm & (1 << n);                                        \
+	}                                                                      \
+                                                                               \
+	static inline int net_perm_##p##_##d##_masked(net_perm_t perm)         \
+	{                                                                      \
+		return perm & (1 << (n + 4));                                  \
+	}
+
+DEF_NET_DISABLED_AND_MASKED(tcp, in, 0)
+DEF_NET_DISABLED_AND_MASKED(tcp, out, 1)
+DEF_NET_DISABLED_AND_MASKED(udp, in, 2)
+DEF_NET_DISABLED_AND_MASKED(udp, out, 3)
+
+#undef DEF_NET_DISABLED_AND_MASKED
+
+static int port_overflow(net_port_t port, net_port_range_t range)
 {
-	return perm & (1 << 0);
+	if ((1 << 16) - port < range)
+		return -EOVERFLOW;
+	return 0;
 }
 
-static inline int net_perm_tcp_out_disabled(net_perm_t perm)
-{
-	return perm & (1 << 1);
-}
+#define NET_PERM_SET(p, d)                                                     \
+	do {                                                                   \
+		if (net_perm_##p##_##d##_masked(perm)) {                       \
+			if (net_perm_##p##_##d##_disabled(perm))               \
+				bitmap_set(p##_##d##_drop_bitmap, port,        \
+					   range);                             \
+			else                                                   \
+				bitmap_clear(p##_##d##_drop_bitmap, port,      \
+					     range);                           \
+		}                                                              \
+	} while (0)
 
-static inline int net_perm_udp_in_disabled(net_perm_t perm)
-{
-	return perm & (1 << 2);
-}
-
-static inline int net_perm_udp_out_disabled(net_perm_t perm)
-{
-	return perm & (1 << 3);
-}
-
-static int net_perm_set(net_port_t port, net_perm_t perm)
+static int net_perm_set(net_port_t port, net_port_range_t range,
+			net_perm_t perm)
 {
 	if (!tcp_in_drop_bitmap || !tcp_out_drop_bitmap)
 		return -EAGAIN;
+	if (port_overflow(port, range))
+		return -EOVERFLOW;
 
-	if (net_perm_tcp_in_disabled(perm))
-		bitmap_set(tcp_in_drop_bitmap, port, 1);
-	else
-		bitmap_clear(tcp_in_drop_bitmap, port, 1);
-
-	if (net_perm_tcp_out_disabled(perm))
-		bitmap_set(tcp_out_drop_bitmap, port, 1);
-	else
-		bitmap_clear(tcp_out_drop_bitmap, port, 1);
-
-	if (net_perm_udp_in_disabled(perm))
-		bitmap_set(udp_in_drop_bitmap, port, 1);
-	else
-		bitmap_clear(udp_in_drop_bitmap, port, 1);
-
-	if (net_perm_udp_out_disabled(perm))
-		bitmap_set(udp_out_drop_bitmap, port, 1);
-	else
-		bitmap_clear(udp_out_drop_bitmap, port, 1);
-
+	NET_PERM_SET(tcp, in);
+	NET_PERM_SET(tcp, out);
+	NET_PERM_SET(udp, in);
+	NET_PERM_SET(udp, out);
 	return 0;
 }
+
+#undef NET_PERM_SET
 
 int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
 {
@@ -256,9 +262,15 @@ int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	}
 	case NET_PROTECT_SET: {
 		net_port_t port;
+		net_port_range_t range;
 		net_perm_t perm;
 
 		if (!info->attrs[HACKERNEL_A_PORT]) {
+			code = -EINVAL;
+			goto response;
+		}
+
+		if (!info->attrs[HACKERNEL_A_PORT_RANGE]) {
 			code = -EINVAL;
 			goto response;
 		}
@@ -269,8 +281,9 @@ int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		}
 
 		port = nla_get_u16(info->attrs[HACKERNEL_A_PORT]);
+		range = nla_get_u16(info->attrs[HACKERNEL_A_PORT_RANGE]);
 		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
-		code = net_perm_set(port, perm);
+		code = net_perm_set(port, range, perm);
 		break;
 	}
 	default: {

@@ -34,7 +34,9 @@ errout:
 int enable_net_protect() { return update_net_protect_status(NET_PROTECT_ENABLE); }
 int disable_net_protect() { return update_net_protect_status(NET_PROTECT_DISABLE); }
 
-int set_net_protect(net_port_t port, net_perm_t perm) {
+int set_net_protect(net_port_t port, net_perm_t perm) { return set_net_protect(port, 1, perm); }
+
+int set_net_protect(net_port_t port, net_port_range_t range, net_perm_t perm) {
     int error = 0;
     struct nl_msg *msg;
     int size;
@@ -56,6 +58,13 @@ int set_net_protect(net_port_t port, net_perm_t perm) {
         LOG("nla_put_string failed");
         goto errout;
     }
+
+    error = nla_put_u16(msg, HACKERNEL_A_PORT_RANGE, range);
+    if (error) {
+        LOG("nla_put_string failed");
+        goto errout;
+    }
+
     error = nla_put_s32(msg, HACKERNEL_A_PERM, perm);
     if (error) {
         LOG("nla_put_u32 failed");
@@ -71,5 +80,4 @@ int set_net_protect(net_port_t port, net_perm_t perm) {
 errout:
     nlmsg_free(msg);
     return error;
-
 }
