@@ -5,7 +5,7 @@
 
 #define LOG(fmt, arg...)                                                                                                                   \
     do {                                                                                                                                   \
-        printf(fmt "\n", ##arg);                                                                                                           \
+        printf("%s:%d " fmt "\n", __FILE__, __LINE__, ##arg);                                                                              \
         fflush(stdout);                                                                                                                    \
     } while (0)
 

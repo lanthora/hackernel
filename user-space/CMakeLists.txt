@@ -7,6 +7,9 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 aux_source_directory(. DIR_SRCS)
 add_executable(${PROJECT_NAME} ${DIR_SRCS})
 
+set(CMAKE_C_FLAGS "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/=")
+set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS}")
+
 target_link_libraries(${PROJECT_NAME} nl-3)
 target_link_libraries(${PROJECT_NAME} nl-genl-3)
 target_link_libraries(${PROJECT_NAME} pthread)
