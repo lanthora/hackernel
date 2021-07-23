@@ -102,6 +102,9 @@ static struct genl_small_ops genl_small_ops[] = {
 	},
 };
 
+// TODO:
+// 参考 net/ethtool/netlink.c:700 的 ethtool_genl_ops
+// 把现在的small_ops重构为ops
 struct genl_family genl_family = {
 	.hdrsize = 0,
 	.name = HACKERNEL_FAMLY_NAME,
