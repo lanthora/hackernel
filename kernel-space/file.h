@@ -21,14 +21,6 @@ typedef s32 file_perm_t;
 #define BAD_INO 1
 #define INVAILD_PERM 0
 
-enum {
-	FILE_PROTECT_UNSPEC,
-	FILE_PROTECT_REPORT,
-	FILE_PROTECT_ENABLE,
-	FILE_PROTECT_DISABLE,
-	FILE_PROTECT_SET
-};
-
 struct file_perm_data {
 	char *path;
 	fsid_t fsid;

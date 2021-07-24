@@ -13,13 +13,6 @@
 typedef s32 process_perm_t;
 typedef int process_perm_id_t;
 
-enum {
-	PROCESS_PROTECT_UNSPEC,
-	PROCESS_PROTECT_REPORT,
-	PROCESS_PROTECT_ENABLE,
-	PROCESS_PROTECT_DISABLE
-};
-
 struct process_perm_node {
 	struct hlist_node node;
 	process_perm_id_t id;

@@ -7,9 +7,25 @@
 #include <linux/genetlink.h>
 #include <linux/kernel.h>
 
+
+enum {
+	FILE_PROTECT_UNSPEC,
+	FILE_PROTECT_REPORT,
+	FILE_PROTECT_ENABLE,
+	FILE_PROTECT_DISABLE,
+	FILE_PROTECT_SET
+};
 int file_protect_handler(struct sk_buff *skb, struct genl_info *info);
 int file_protect_report_to_userspace(struct file_perm_data *data);
 
+
+enum {
+	PROCESS_PROTECT_UNSPEC,
+	PROCESS_PROTECT_REPORT,
+	PROCESS_PROTECT_ENABLE,
+	PROCESS_PROTECT_DISABLE
+};
 int process_protect_handler(struct sk_buff *skb, struct genl_info *info);
 int process_protect_report_to_userspace(process_perm_id_t id, char *arg);
+
 #endif
