@@ -16,13 +16,29 @@ int famid = 0;
 
 static int status = 0;
 
-static struct nla_policy hackernel_genl_policy[HACKERNEL_A_MAX + 1] = {
-    [HACKERNEL_A_STATUS_CODE] = {.type = NLA_S32},
-    [HACKERNEL_A_OP_TYPE] = {.type = NLA_U8},
-    [HACKERNEL_A_SYS_CALL_TABLE_HEADER] = {.type = NLA_U64},
-    [HACKERNEL_A_NAME] = {.type = NLA_STRING},
-    [HACKERNEL_A_PERM] = {.type = NLA_S32},
-    [HACKERNEL_A_EXECVE_ID] = {.type = NLA_S32},
+static struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1] = {
+    [HANDSHAKE_A_STATUS_CODE] = {.type = NLA_S32},
+    [HANDSHAKE_A_SYS_CALL_TABLE_HEADER] = {.type = NLA_U64},
+};
+
+struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
+    [PROCESS_A_STATUS_CODE] = {.type = NLA_S32}, [PROCESS_A_OP_TYPE] = {.type = NLA_U8}, [PROCESS_A_NAME] = {.type = NLA_STRING},
+    [PROCESS_A_PERM] = {.type = NLA_S32},        [PROCESS_A_ID] = {.type = NLA_S32},
+};
+
+struct nla_policy file_policy[FILE_A_MAX + 1] = {
+    [FILE_A_STATUS_CODE] = {.type = NLA_S32},
+    [FILE_A_OP_TYPE] = {.type = NLA_U8},
+    [FILE_A_NAME] = {.type = NLA_STRING},
+    [FILE_A_PERM] = {.type = NLA_S32},
+};
+
+struct nla_policy net_policy[NET_A_MAX + 1] = {
+    [NET_A_STATUS_CODE] = {.type = NLA_S32},    [NET_A_OP_TYPE] = {.type = NLA_U8},         [NET_A_ID] = {.type = NLA_S32},
+    [NET_A_ADDR_SRC_BEGIN] = {.type = NLA_U32}, [NET_A_ADDR_SRC_END] = {.type = NLA_U32},   [NET_A_ADDR_DST_BEGIN] = {.type = NLA_U32},
+    [NET_A_ADDR_DST_END] = {.type = NLA_U32},   [NET_A_PORT_SRC_BEGIN] = {.type = NLA_U32}, [NET_A_PORT_SRC_END] = {.type = NLA_U32},
+    [NET_A_PORT_DST_BEGIN] = {.type = NLA_U32}, [NET_A_PORT_DST_END] = {.type = NLA_U32},   [NET_A_PROTOCOL_BEGIN] = {.type = NLA_U32},
+    [NET_A_PROTOCOL_END] = {.type = NLA_U32},   [NET_A_RESPONSE] = {.type = NLA_U32},       [NET_A_ENABLED] = {.type = NLA_S32},
 };
 
 // 在这里扩展 HACKERNEL_C_* 对应的 handler
@@ -30,29 +46,29 @@ static struct genl_cmd hackernel_genl_cmds[] = {
     {
         .c_id = HACKERNEL_C_HANDSHAKE,
         .c_name = "HACKERNEL_C_HANDSHAKE",
-        .c_maxattr = HACKERNEL_A_MAX,
-        .c_attr_policy = hackernel_genl_policy,
+        .c_maxattr = HANDSHAKE_A_MAX,
+        .c_attr_policy = handshake_policy,
         .c_msg_parser = &handshake_handler,
     },
     {
         .c_id = HACKERNEL_C_PROCESS_PROTECT,
         .c_name = "HACKERNEL_C_PROCESS_PROTECT",
-        .c_maxattr = HACKERNEL_A_MAX,
-        .c_attr_policy = hackernel_genl_policy,
+        .c_maxattr = PROCESS_A_MAX,
+        .c_attr_policy = process_policy,
         .c_msg_parser = &process_protect_handler,
     },
     {
         .c_id = HACKERNEL_C_FILE_PROTECT,
         .c_name = "HACKERNEL_C_FILE_PROTECT",
-        .c_maxattr = HACKERNEL_A_MAX,
-        .c_attr_policy = hackernel_genl_policy,
+        .c_maxattr = FILE_A_MAX,
+        .c_attr_policy = file_policy,
         .c_msg_parser = &file_protect_handler,
     },
     {
         .c_id = HACKERNEL_C_NET_PROTECT,
         .c_name = "HACKERNEL_C_NET_PROTECT",
-        .c_maxattr = HACKERNEL_A_MAX,
-        .c_attr_policy = hackernel_genl_policy,
+        .c_maxattr = NET_A_MAX,
+        .c_attr_policy = net_policy,
         .c_msg_parser = &net_protect_handler,
     },
 };

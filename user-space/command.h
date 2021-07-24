@@ -90,7 +90,4 @@ enum
 int enable_net_protect();
 int disable_net_protect();
 
-// 重载
-int set_net_protect(net_port_t port, net_perm_t perm);
-int set_net_protect(net_port_t port, net_port_range_t range, net_perm_t perm);
 #endif

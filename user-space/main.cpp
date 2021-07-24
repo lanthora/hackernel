@@ -43,8 +43,6 @@ int main() {
     enable_net_protect();
     set_file_protect("/root/hackernel/build/nothing", ALL_FILE_PROTECT_FLAG);
 
-    // 关闭TCP入站，其他操作放行
-    set_net_protect(0, (std::numeric_limits<net_port_range_t>::max)(), ALL_NET_PROTECT_MASK | TCP_IN_FLAG);
     netlink_thread.join();
     return 0;
 }
