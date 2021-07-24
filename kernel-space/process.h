@@ -20,7 +20,26 @@ enum {
 	PROCESS_PROTECT_DISABLE
 };
 
-int process_protect_handler(struct sk_buff *skb, struct genl_info *info);
+struct process_perm_node {
+	struct hlist_node node;
+	process_perm_id_t id;
+	process_perm_t perm;
+};
+
+typedef struct process_perm_node process_perm_node_t;
+
+struct process_perm_head {
+	struct hlist_head head;
+	rwlock_t lock;
+};
+
+typedef struct process_perm_head process_perm_head_t;
+
+int process_perm_update(const process_perm_id_t id, const process_perm_t perm);
+
+int enable_process_protect(void);
+int disable_process_protect(void);
+
 void exit_process_protect(void);
 
 #endif

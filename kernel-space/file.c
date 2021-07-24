@@ -1,4 +1,5 @@
 #include "file.h"
+#include "comlayer.h"
 #include "netlink.h"
 #include "syscall.h"
 #include "util.h"
@@ -32,26 +33,6 @@ DEFINE_HOOK(symlink);
 DEFINE_HOOK(symlinkat);
 DEFINE_HOOK(mknod);
 DEFINE_HOOK(mknodat);
-
-struct file_perm_data {
-	char *path;
-	fsid_t fsid;
-	ino_t ino;
-	file_perm_t this_perm;
-	file_perm_t deny_perm;
-};
-
-struct file_perm_node {
-	struct rb_node node;
-	ino_t ino;
-	file_perm_t perm;
-};
-
-struct file_perm_list {
-	struct list_head node;
-	struct rb_root *root;
-	fsid_t fsid;
-};
 
 static struct file_perm_list *file_perm_list_head;
 static rwlock_t *file_perm_lock;
@@ -280,7 +261,7 @@ out:
 	return retval;
 }
 
-static int file_perm_set_path(const char *path, file_perm_t perm)
+int file_perm_set_path(const char *path, file_perm_t perm)
 {
 	unsigned long fsid, ino;
 	file_id_get(path, &fsid, &ino);
@@ -294,78 +275,6 @@ static int file_perm_data_fill(char *path, struct file_perm_data *data)
 	data->this_perm = file_perm_get(data->fsid, data->ino);
 	data->deny_perm = INVAILD_PERM;
 	return 0;
-}
-
-static int file_protect_report_to_userspace(struct file_perm_data *data)
-{
-	int error = 0;
-	struct sk_buff *skb = NULL;
-	void *head = NULL;
-	const char *filename = data->path;
-	const file_perm_t perm = data->deny_perm;
-	int errcnt;
-	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
-
-	if (!filename)
-		LOG("filename is null");
-
-	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-
-	if ((!skb)) {
-		LOG("genlmsg_new failed");
-		error = -ENOMEM;
-		goto errout;
-	}
-
-	head = genlmsg_put(skb, portid, 0, &genl_family, 0,
-			   HACKERNEL_C_FILE_PROTECT);
-	if (!head) {
-		LOG("genlmsg_put failed");
-		error = -ENOMEM;
-		goto errout;
-	}
-	error = nla_put_u8(skb, HACKERNEL_A_OP_TYPE, FILE_PROTECT_REPORT);
-	if (error) {
-		LOG("nla_put_u8 failed");
-		goto errout;
-	}
-
-	error = nla_put_s32(skb, HACKERNEL_A_PERM, perm);
-	if (error) {
-		LOG("nla_put_s32 failed");
-		goto errout;
-	}
-
-	error = nla_put_string(skb, HACKERNEL_A_NAME, filename);
-	if (error) {
-		LOG("nla_put_string failed");
-		goto errout;
-	}
-	genlmsg_end(skb, head);
-
-	error = genlmsg_unicast(&init_net, skb, portid);
-	if (!error) {
-		errcnt = atomic_xchg(&atomic_errcnt, 0);
-		if (unlikely(errcnt))
-			LOG("errcnt=[%u]", errcnt);
-
-		goto out;
-	}
-
-	atomic_inc(&atomic_errcnt);
-
-	if (error == -EAGAIN) {
-		goto out;
-	}
-
-	portid = 0;
-	LOG("genlmsg_unicast failed error=[%d]", error);
-
-out:
-	return 0;
-errout:
-	nlmsg_free(skb);
-	return error;
 }
 
 static int read_protect_check(struct file_perm_data *data)
@@ -836,7 +745,7 @@ static int file_perm_destory(void)
 	}
 	return 0;
 }
-static int enable_file_protect(void)
+int enable_file_protect(void)
 {
 	file_perm_init();
 	REG_HOOK(open);
@@ -858,7 +767,7 @@ static int enable_file_protect(void)
 	return 0;
 }
 
-static int disable_file_protect(void)
+int disable_file_protect(void)
 {
 	UNREG_HOOK(open);
 	UNREG_HOOK(openat);
@@ -883,100 +792,4 @@ static int disable_file_protect(void)
 void exit_file_protect(void)
 {
 	disable_file_protect();
-}
-
-int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
-{
-	int error = 0;
-	int code = 0;
-	u8 type;
-	struct sk_buff *reply = NULL;
-	void *head = NULL;
-
-	if (portid != info->snd_portid)
-		return -EPERM;
-
-	if (!info->attrs[HACKERNEL_A_OP_TYPE]) {
-		code = -EINVAL;
-		goto response;
-	}
-
-	type = nla_get_u8(info->attrs[HACKERNEL_A_OP_TYPE]);
-	switch (type) {
-	case FILE_PROTECT_ENABLE: {
-		code = enable_file_protect();
-		goto response;
-	}
-	case FILE_PROTECT_DISABLE: {
-		code = disable_file_protect();
-		goto response;
-	}
-	case FILE_PROTECT_SET: {
-		file_perm_t perm;
-		char *path;
-
-		if (!info->attrs[HACKERNEL_A_NAME]) {
-			code = -EINVAL;
-			goto response;
-		}
-
-		if (!info->attrs[HACKERNEL_A_PERM]) {
-			code = -EINVAL;
-			goto response;
-		}
-
-		path = kmalloc(PATH_MAX, GFP_KERNEL);
-		if (!path) {
-			code = -ENOMEM;
-			goto response;
-		}
-
-		nla_strscpy(path, info->attrs[HACKERNEL_A_NAME], PATH_MAX);
-		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
-		code = file_perm_set_path(path, perm);
-		kfree(path);
-		break;
-	}
-	default: {
-		LOG("Unknown file protect command");
-	}
-	}
-
-response:
-
-	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-	if (unlikely(!reply)) {
-		LOG("genlmsg_new failed");
-		goto errout;
-	}
-
-	head = genlmsg_put_reply(reply, info, &genl_family, 0,
-				 HACKERNEL_C_FILE_PROTECT);
-	if (unlikely(!head)) {
-		LOG("genlmsg_put_reply failed");
-		goto errout;
-	}
-
-	error = nla_put_s32(reply, HACKERNEL_A_OP_TYPE, type);
-	if (unlikely(error)) {
-		LOG("nla_put_s32 failed");
-		goto errout;
-	}
-
-	error = nla_put_s32(reply, HACKERNEL_A_STATUS_CODE, code);
-	if (unlikely(error)) {
-		LOG("nla_put_s32 failed");
-		goto errout;
-	}
-
-	genlmsg_end(reply, head);
-
-	error = genlmsg_reply(reply, info);
-	if (unlikely(error))
-		LOG("genlmsg_reply failed");
-
-	return 0;
-errout:
-	nlmsg_free(reply);
-	return 0;
 }

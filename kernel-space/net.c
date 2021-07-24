@@ -18,8 +18,10 @@ DEFINE_RWLOCK(lock);
 
 // TODO:
 // 策略数据结构内存的分配释放
-static struct net_policy_t *net_policy_alloc()
+static struct net_policy_t *net_policy_alloc(void)
 {
+	struct net_policy_t *policy;
+	return policy;
 }
 
 static void net_policy_free(struct net_policy_t *policy)
@@ -139,12 +141,12 @@ static unsigned int net_policy_hook(void *priv, struct sk_buff *skb,
 	response_t response = NF_ACCEPT;
 	struct net_policy_t *policy = NULL;
 
-	read_lock(lock);
+	read_lock(&lock);
 	list_for_each_entry (policy, &policys, list) {
 		if (net_policy_hit(skb, policy, &response))
 			break;
 	}
-	read_unlock(lock);
+	read_unlock(&lock);
 
 	return response;
 }

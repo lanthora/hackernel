@@ -1,4 +1,5 @@
 #include "process.h"
+#include "comlayer.h"
 #include "netlink.h"
 #include "syscall.h"
 #include "util.h"
@@ -20,21 +21,6 @@ static atomic_t atomic_process_id = ATOMIC_INIT(0);
 #define PROCESS_PERM_MASK 0xFF
 #define PROCESS_PERM_SIZE (PROCESS_PERM_MASK + 1) // 256
 #define PROCESS_PERM_HASH(id) (id & (PROCESS_PERM_MASK)) // 散列函数
-
-struct process_perm_node {
-	struct hlist_node node;
-	process_perm_id_t id;
-	process_perm_t perm;
-};
-
-typedef struct process_perm_node process_perm_node_t;
-
-struct process_perm_head {
-	struct hlist_head head;
-	rwlock_t lock;
-};
-
-typedef struct process_perm_head process_perm_head_t;
 
 static void process_perm_head_init(process_perm_head_t *perm_head)
 {
@@ -101,8 +87,7 @@ static int process_perm_insert(const process_perm_id_t id)
 	return 0;
 }
 
-static int process_perm_update(const process_perm_id_t id,
-			       const process_perm_t perm)
+int process_perm_update(const process_perm_id_t id, const process_perm_t perm)
 {
 	struct process_perm_node *pos;
 	const size_t idx = PROCESS_PERM_HASH(id);
@@ -117,6 +102,9 @@ static int process_perm_update(const process_perm_id_t id,
 		break;
 	}
 	write_unlock(&perm_head->lock);
+
+	wake_up(&wq_process_perm);
+
 	return 0;
 }
 
@@ -157,72 +145,6 @@ static int process_perm_delele(const process_perm_id_t id)
 	}
 	write_unlock(&perm_head->lock);
 	return 0;
-}
-
-static int process_protect_report_to_userspace(process_perm_id_t id, char *arg)
-{
-	int error = 0;
-	struct sk_buff *skb = NULL;
-	void *head = NULL;
-	int errcnt;
-	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
-
-	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-
-	if ((!skb)) {
-		LOG("genlmsg_new failed");
-		error = -ENOMEM;
-		goto errout;
-	}
-
-	head = genlmsg_put(skb, portid, 0, &genl_family, 0,
-			   HACKERNEL_C_PROCESS_PROTECT);
-	if (!head) {
-		LOG("genlmsg_put failed");
-		error = -ENOMEM;
-		goto errout;
-	}
-	error = nla_put_u8(skb, HACKERNEL_A_OP_TYPE, PROCESS_PROTECT_REPORT);
-	if (error) {
-		LOG("nla_put_u8 failed");
-		goto errout;
-	}
-
-	error = nla_put_s32(skb, HACKERNEL_A_EXECVE_ID, id);
-	if (error) {
-		LOG("nla_put_s32 failed");
-		goto errout;
-	}
-
-	error = nla_put_string(skb, HACKERNEL_A_NAME, arg);
-	if (error) {
-		LOG("nla_put_string failed");
-		goto errout;
-	}
-	genlmsg_end(skb, head);
-
-	error = genlmsg_unicast(&init_net, skb, portid);
-	if (!error) {
-		errcnt = atomic_xchg(&atomic_errcnt, 0);
-		if (unlikely(errcnt))
-			LOG("errcnt=[%u]", errcnt);
-
-		goto out;
-	}
-
-	atomic_inc(&atomic_errcnt);
-
-	if (error == -EAGAIN)
-		goto out;
-
-	portid = 0;
-	LOG("genlmsg_unicast failed error=[%d]", error);
-
-out:
-	return 0;
-errout:
-	nlmsg_free(skb);
-	return error;
 }
 
 static int condition_process_perm(process_perm_id_t id)
@@ -333,7 +255,7 @@ static asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
 
 	return __x64_sys_execveat(regs);
 }
-static int enable_process_protect(void)
+int enable_process_protect(void)
 {
 	process_perm_init();
 	REG_HOOK(execve);
@@ -341,7 +263,7 @@ static int enable_process_protect(void)
 	return 0;
 }
 
-static int disable_process_protect(void)
+int disable_process_protect(void)
 {
 	UNREG_HOOK(execve);
 	UNREG_HOOK(execveat);
@@ -352,84 +274,4 @@ static int disable_process_protect(void)
 void exit_process_protect(void)
 {
 	disable_process_protect();
-}
-
-int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
-{
-	int error = 0;
-	int code = 0;
-	struct sk_buff *reply = NULL;
-	void *head = NULL;
-	u8 type;
-
-	if (portid != info->snd_portid)
-		return -EPERM;
-
-	if (!info->attrs[HACKERNEL_A_OP_TYPE]) {
-		code = -EINVAL;
-		goto response;
-	}
-
-	type = nla_get_u8(info->attrs[HACKERNEL_A_OP_TYPE]);
-	switch (type) {
-	case PROCESS_PROTECT_REPORT: {
-		process_perm_id_t id;
-		process_perm_t perm;
-		id = nla_get_s32(info->attrs[HACKERNEL_A_EXECVE_ID]);
-		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
-		process_perm_update(id, perm);
-		wake_up(&wq_process_perm);
-		goto out;
-	}
-	case PROCESS_PROTECT_ENABLE: {
-		code = enable_process_protect();
-		goto response;
-	}
-
-	case PROCESS_PROTECT_DISABLE: {
-		code = disable_process_protect();
-		goto response;
-	}
-	default: {
-		LOG("Unknown process protect command");
-	}
-	}
-
-response:
-	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-	if (unlikely(!reply)) {
-		LOG("genlmsg_new failed");
-		goto errout;
-	}
-
-	head = genlmsg_put_reply(reply, info, &genl_family, 0,
-				 HACKERNEL_C_PROCESS_PROTECT);
-	if (unlikely(!head)) {
-		LOG("genlmsg_put_reply failed");
-		goto errout;
-	}
-
-	error = nla_put_u32(reply, HACKERNEL_A_OP_TYPE, PROCESS_PROTECT_ENABLE);
-	if (unlikely(error)) {
-		LOG("nla_put_s32 failed");
-		goto errout;
-	}
-
-	error = nla_put_s32(reply, HACKERNEL_A_STATUS_CODE, code);
-	if (unlikely(error)) {
-		LOG("nla_put_s32 failed");
-		goto errout;
-	}
-
-	genlmsg_end(reply, head);
-
-	error = genlmsg_reply(reply, info);
-	if (unlikely(error))
-		LOG("genlmsg_reply failed");
-
-out:
-	return 0;
-errout:
-	nlmsg_free(reply);
-	return 0;
 }

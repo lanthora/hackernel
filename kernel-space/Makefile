@@ -1,6 +1,6 @@
 ifneq ($(KERNELRELEASE),)
 obj-m :=hackernel.o
-hackernel-objs :=core.o netlink.o syscall.o util.o process.o file.o net.o
+hackernel-objs :=core.o netlink.o syscall.o util.o comlayer.o process.o file.o net.o
 ccflags-y += $(HACKERNEL_MODULE_CFLAGS)
 ccflags-y += $(call cc-option,-fmacro-prefix-map=$(PWD)/=)
 else

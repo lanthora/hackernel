@@ -29,6 +29,31 @@ enum {
 	FILE_PROTECT_SET
 };
 
-int file_protect_handler(struct sk_buff *skb, struct genl_info *info);
+struct file_perm_data {
+	char *path;
+	fsid_t fsid;
+	ino_t ino;
+	file_perm_t this_perm;
+	file_perm_t deny_perm;
+};
+
+struct file_perm_node {
+	struct rb_node node;
+	ino_t ino;
+	file_perm_t perm;
+};
+
+struct file_perm_list {
+	struct list_head node;
+	struct rb_root *root;
+	fsid_t fsid;
+};
+
+int file_perm_set_path(const char *path, file_perm_t perm);
+
+int enable_file_protect(void);
+int disable_file_protect(void);
+
 void exit_file_protect(void);
+
 #endif
