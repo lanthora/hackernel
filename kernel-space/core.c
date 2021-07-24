@@ -22,9 +22,9 @@ static int init(void)
 static void cleanup(void)
 {
 	netlink_kernel_stop();
-	exit_process_protect();
-	exit_file_protect();
-	exit_net_protect();
+	disable_process_protect();
+	disable_file_protect();
+	disable_net_protect();
 	LOG("module_exit");
 	return;
 }

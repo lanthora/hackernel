@@ -788,8 +788,3 @@ int disable_file_protect(void)
 	file_perm_destory();
 	return 0;
 }
-
-void exit_file_protect(void)
-{
-	disable_file_protect();
-}

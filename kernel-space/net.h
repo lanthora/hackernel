@@ -9,14 +9,6 @@ typedef __u8 protocol_t;
 typedef unsigned int response_t;
 typedef int policy_id_t;
 
-enum {
-	NET_PROTECT_UNSPEC,
-	NET_PROTECT_REPORT,
-	NET_PROTECT_ENABLE,
-	NET_PROTECT_DISABLE,
-	NET_PROTECT_SET
-};
-
 // [begin, end)
 struct net_policy_t {
 	struct list_head list;
@@ -54,5 +46,5 @@ struct net_policy_t {
 	int enabled;
 };
 
-int net_protect_handler(struct sk_buff *skb, struct genl_info *info);
-void exit_net_protect(void);
+int enable_net_protect(void);
+int disable_net_protect(void);

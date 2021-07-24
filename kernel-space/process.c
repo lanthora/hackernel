@@ -270,8 +270,3 @@ int disable_process_protect(void)
 	process_perm_destory();
 	return 0;
 }
-
-void exit_process_protect(void)
-{
-	disable_process_protect();
-}

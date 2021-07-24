@@ -1,4 +1,5 @@
 #include "net.h"
+#include "comlayer.h"
 #include "netlink.h"
 #include "util.h"
 #include <linux/bitmap.h>
@@ -166,24 +167,14 @@ static const struct nf_hook_ops net_policy_ops[] = {
 	},
 };
 
-static int enable_net_protect(void)
+int enable_net_protect(void)
 {
 	nf_register_net_hooks(&init_net, net_policy_ops,
 			      ARRAY_SIZE(net_policy_ops));
 	return 0;
 }
 
-static int disable_net_protect(void)
-{
-	return 0;
-}
-
-void exit_net_protect(void)
-{
-	disable_net_protect();
-}
-
-int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
+int disable_net_protect(void)
 {
 	return 0;
 }

@@ -7,6 +7,7 @@
 #include <linux/genetlink.h>
 #include <linux/kernel.h>
 
+int handshake_handler(struct sk_buff *skb, struct genl_info *info);
 
 enum {
 	FILE_PROTECT_UNSPEC,
@@ -18,7 +19,6 @@ enum {
 int file_protect_handler(struct sk_buff *skb, struct genl_info *info);
 int file_protect_report_to_userspace(struct file_perm_data *data);
 
-
 enum {
 	PROCESS_PROTECT_UNSPEC,
 	PROCESS_PROTECT_REPORT,
@@ -27,5 +27,14 @@ enum {
 };
 int process_protect_handler(struct sk_buff *skb, struct genl_info *info);
 int process_protect_report_to_userspace(process_perm_id_t id, char *arg);
+
+enum {
+	NET_PROTECT_UNSPEC,
+	NET_PROTECT_REPORT,
+	NET_PROTECT_ENABLE,
+	NET_PROTECT_DISABLE,
+	NET_PROTECT_SET
+};
+int net_protect_handler(struct sk_buff *skb, struct genl_info *info);
 
 #endif

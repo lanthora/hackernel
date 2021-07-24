@@ -46,6 +46,4 @@ int file_perm_set_path(const char *path, file_perm_t perm);
 int enable_file_protect(void);
 int disable_file_protect(void);
 
-void exit_file_protect(void);
-
 #endif

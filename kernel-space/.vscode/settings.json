@@ -60,7 +60,8 @@
 		"vector": "c",
 		"io_context": "c",
 		"buffer": "c",
-		"socket": "c"
+		"socket": "c",
+		"netfilter.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
