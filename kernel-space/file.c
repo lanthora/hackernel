@@ -17,6 +17,13 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 
+struct nla_policy file_policy[FILE_A_MAX + 1] = {
+	[FILE_A_STATUS_CODE] = { .type = NLA_S32 },
+	[FILE_A_OP_TYPE] = { .type = NLA_U8 },
+	[FILE_A_NAME] = { .type = NLA_STRING },
+	[FILE_A_PERM] = { .type = NLA_S32 },
+};
+
 DEFINE_HOOK(open);
 DEFINE_HOOK(openat);
 DEFINE_HOOK(unlink);

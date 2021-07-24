@@ -1,5 +1,7 @@
 #include "comlayer.h"
 
+extern struct genl_family genl_family;
+
 int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 {
 	int error = 0;
@@ -13,14 +15,14 @@ int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 		return -EPERM;
 	}
 
-	if (!info->attrs[HACKERNEL_A_SYS_CALL_TABLE_HEADER]) {
+	if (!info->attrs[HANDSHAKE_A_SYS_CALL_TABLE_HEADER]) {
 		code = -EINVAL;
-		LOG("HACKERNEL_A_SYS_CALL_TABLE_HEADER failed");
+		LOG("HANDSHAKE_A_SYS_CALL_TABLE_HEADER failed");
 		goto response;
 	}
 
 	syscall_table =
-		nla_get_u64(info->attrs[HACKERNEL_A_SYS_CALL_TABLE_HEADER]);
+		nla_get_u64(info->attrs[HANDSHAKE_A_SYS_CALL_TABLE_HEADER]);
 	code = init_sys_call_table(syscall_table);
 	portid = info->snd_portid;
 
@@ -38,7 +40,7 @@ response:
 		goto errout;
 	}
 
-	error = nla_put_s32(reply, HACKERNEL_A_STATUS_CODE, code);
+	error = nla_put_s32(reply, HANDSHAKE_A_STATUS_CODE, code);
 	if (unlikely(error)) {
 		LOG("nla_put_s32 failed");
 		goto errout;
@@ -86,19 +88,19 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 		error = -ENOMEM;
 		goto errout;
 	}
-	error = nla_put_u8(skb, HACKERNEL_A_OP_TYPE, FILE_PROTECT_REPORT);
+	error = nla_put_u8(skb, FILE_A_OP_TYPE, FILE_PROTECT_REPORT);
 	if (error) {
 		LOG("nla_put_u8 failed");
 		goto errout;
 	}
 
-	error = nla_put_s32(skb, HACKERNEL_A_PERM, perm);
+	error = nla_put_s32(skb, FILE_A_PERM, perm);
 	if (error) {
 		LOG("nla_put_s32 failed");
 		goto errout;
 	}
 
-	error = nla_put_string(skb, HACKERNEL_A_NAME, filename);
+	error = nla_put_string(skb, FILE_A_NAME, filename);
 	if (error) {
 		LOG("nla_put_string failed");
 		goto errout;
@@ -141,12 +143,12 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	if (portid != info->snd_portid)
 		return -EPERM;
 
-	if (!info->attrs[HACKERNEL_A_OP_TYPE]) {
+	if (!info->attrs[FILE_A_OP_TYPE]) {
 		code = -EINVAL;
 		goto response;
 	}
 
-	type = nla_get_u8(info->attrs[HACKERNEL_A_OP_TYPE]);
+	type = nla_get_u8(info->attrs[FILE_A_OP_TYPE]);
 	switch (type) {
 	case FILE_PROTECT_ENABLE: {
 		code = enable_file_protect();
@@ -160,12 +162,12 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		file_perm_t perm;
 		char *path;
 
-		if (!info->attrs[HACKERNEL_A_NAME]) {
+		if (!info->attrs[FILE_A_NAME]) {
 			code = -EINVAL;
 			goto response;
 		}
 
-		if (!info->attrs[HACKERNEL_A_PERM]) {
+		if (!info->attrs[FILE_A_PERM]) {
 			code = -EINVAL;
 			goto response;
 		}
@@ -176,8 +178,8 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 			goto response;
 		}
 
-		nla_strscpy(path, info->attrs[HACKERNEL_A_NAME], PATH_MAX);
-		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
+		nla_strscpy(path, info->attrs[FILE_A_NAME], PATH_MAX);
+		perm = nla_get_s32(info->attrs[FILE_A_PERM]);
 		code = file_perm_set_path(path, perm);
 		kfree(path);
 		break;
@@ -202,13 +204,13 @@ response:
 		goto errout;
 	}
 
-	error = nla_put_s32(reply, HACKERNEL_A_OP_TYPE, type);
+	error = nla_put_s32(reply, FILE_A_OP_TYPE, type);
 	if (unlikely(error)) {
 		LOG("nla_put_s32 failed");
 		goto errout;
 	}
 
-	error = nla_put_s32(reply, HACKERNEL_A_STATUS_CODE, code);
+	error = nla_put_s32(reply, FILE_A_STATUS_CODE, code);
 	if (unlikely(error)) {
 		LOG("nla_put_s32 failed");
 		goto errout;
@@ -249,19 +251,19 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *arg)
 		error = -ENOMEM;
 		goto errout;
 	}
-	error = nla_put_u8(skb, HACKERNEL_A_OP_TYPE, PROCESS_PROTECT_REPORT);
+	error = nla_put_u8(skb, PROCESS_A_OP_TYPE, PROCESS_PROTECT_REPORT);
 	if (error) {
 		LOG("nla_put_u8 failed");
 		goto errout;
 	}
 
-	error = nla_put_s32(skb, HACKERNEL_A_EXECVE_ID, id);
+	error = nla_put_s32(skb, PROCESS_A_ID, id);
 	if (error) {
 		LOG("nla_put_s32 failed");
 		goto errout;
 	}
 
-	error = nla_put_string(skb, HACKERNEL_A_NAME, arg);
+	error = nla_put_string(skb, PROCESS_A_NAME, arg);
 	if (error) {
 		LOG("nla_put_string failed");
 		goto errout;
@@ -303,18 +305,18 @@ int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	if (portid != info->snd_portid)
 		return -EPERM;
 
-	if (!info->attrs[HACKERNEL_A_OP_TYPE]) {
+	if (!info->attrs[PROCESS_A_OP_TYPE]) {
 		code = -EINVAL;
 		goto response;
 	}
 
-	type = nla_get_u8(info->attrs[HACKERNEL_A_OP_TYPE]);
+	type = nla_get_u8(info->attrs[PROCESS_A_OP_TYPE]);
 	switch (type) {
 	case PROCESS_PROTECT_REPORT: {
 		process_perm_id_t id;
 		process_perm_t perm;
-		id = nla_get_s32(info->attrs[HACKERNEL_A_EXECVE_ID]);
-		perm = nla_get_s32(info->attrs[HACKERNEL_A_PERM]);
+		id = nla_get_s32(info->attrs[PROCESS_A_ID]);
+		perm = nla_get_s32(info->attrs[PROCESS_A_PERM]);
 		process_perm_update(id, perm);
 		goto out;
 	}
@@ -346,13 +348,13 @@ response:
 		goto errout;
 	}
 
-	error = nla_put_u32(reply, HACKERNEL_A_OP_TYPE, PROCESS_PROTECT_ENABLE);
+	error = nla_put_u32(reply, PROCESS_A_OP_TYPE, PROCESS_PROTECT_ENABLE);
 	if (unlikely(error)) {
 		LOG("nla_put_s32 failed");
 		goto errout;
 	}
 
-	error = nla_put_s32(reply, HACKERNEL_A_STATUS_CODE, code);
+	error = nla_put_s32(reply, PROCESS_A_STATUS_CODE, code);
 	if (unlikely(error)) {
 		LOG("nla_put_s32 failed");
 		goto errout;

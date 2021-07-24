@@ -5,6 +5,17 @@
 #include <net/genetlink.h>
 #include <net/netlink.h>
 
+enum {
+	PROCESS_A_UNSPEC,
+	PROCESS_A_STATUS_CODE,
+	PROCESS_A_OP_TYPE,
+	PROCESS_A_NAME,
+	PROCESS_A_PERM,
+	PROCESS_A_ID,
+	__PROCESS_A_MAX,
+};
+#define PROCESS_A_MAX (__PROCESS_A_MAX - 1)
+
 #define PROCESS_INVAILD -1
 #define PROCESS_WATT 0
 #define PROCESS_ACCEPT 1

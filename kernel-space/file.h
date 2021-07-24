@@ -6,6 +6,16 @@
 #include <net/genetlink.h>
 #include <net/netlink.h>
 
+enum {
+	FILE_A_UNSPEC,
+	FILE_A_STATUS_CODE,
+	FILE_A_OP_TYPE,
+	FILE_A_NAME,
+	FILE_A_PERM,
+	__FILE_A_MAX,
+};
+#define FILE_A_MAX (__FILE_A_MAX - 1)
+
 #define READ_WRITE_MASK 3
 
 typedef unsigned long fsid_t;

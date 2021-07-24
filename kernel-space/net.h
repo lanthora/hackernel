@@ -3,6 +3,33 @@
 #include <net/netlink.h>
 #include <uapi/linux/types.h>
 
+enum {
+	NET_A_UNSPEC,
+	NET_A_STATUS_CODE,
+	NET_A_OP_TYPE,
+	NET_A_ID,
+
+	NET_A_ADDR_SRC_BEGIN,
+	NET_A_ADDR_SRC_END,
+	NET_A_ADDR_DST_BEGIN,
+	NET_A_ADDR_DST_END,
+
+	NET_A_PORT_SRC_BEGIN,
+	NET_A_PORT_SRC_END,
+	NET_A_PORT_DST_BEGIN,
+	NET_A_PORT_DST_END,
+
+	NET_A_PROTOCOL_BEGIN,
+	NET_A_PROTOCOL_END,
+
+	NET_A_RESPONSE,
+
+	NET_A_ENABLED,
+
+	__NET_A_MAX,
+};
+#define NET_A_MAX (__NET_A_MAX - 1)
+
 typedef __be32 addr_t;
 typedef __be16 port_t;
 typedef __u8 protocol_t;
