@@ -23,13 +23,13 @@ struct nla_policy net_policy[NET_A_MAX + 1] = {
 	[NET_A_ADDR_DST_BEGIN] = { .type = NLA_U32 },
 	[NET_A_ADDR_DST_END] = { .type = NLA_U32 },
 
-	[NET_A_PORT_SRC_BEGIN] = { .type = NLA_U32 },
-	[NET_A_PORT_SRC_END] = { .type = NLA_U32 },
-	[NET_A_PORT_DST_BEGIN] = { .type = NLA_U32 },
-	[NET_A_PORT_DST_END] = { .type = NLA_U32 },
+	[NET_A_PORT_SRC_BEGIN] = { .type = NLA_U16 },
+	[NET_A_PORT_SRC_END] = { .type = NLA_U16 },
+	[NET_A_PORT_DST_BEGIN] = { .type = NLA_U16 },
+	[NET_A_PORT_DST_END] = { .type = NLA_U16 },
 
-	[NET_A_PROTOCOL_BEGIN] = { .type = NLA_U32 },
-	[NET_A_PROTOCOL_END] = { .type = NLA_U32 },
+	[NET_A_PROTOCOL_BEGIN] = { .type = NLA_U8 },
+	[NET_A_PROTOCOL_END] = { .type = NLA_U8 },
 
 	[NET_A_RESPONSE] = { .type = NLA_U32 },
 	[NET_A_ENABLED] = { .type = NLA_S32 },
@@ -88,6 +88,18 @@ int net_policy_delete(policy_id_t id)
 	return 0;
 }
 
+static int net_policy_clear(void)
+{
+	struct net_policy_t *pos, *n;
+	write_lock(&lock);
+	list_for_each_entry_safe (pos, n, &policys, list) {
+		list_del(&pos->list);
+		net_policy_free(pos);
+	}
+	write_unlock(&lock);
+	return 0;
+}
+
 static int net_policy_protocol_hit(const struct sk_buff *skb,
 				   const struct net_policy_t *policy)
 {
@@ -105,13 +117,13 @@ static int net_policy_addr_hit(const struct sk_buff *skb,
 {
 	struct iphdr *iph;
 	iph = ip_hdr(skb);
-	if (iph->saddr < policy->addr.source.begin)
+	if (iph->saddr < policy->addr.src.begin)
 		return 0;
-	if (iph->saddr >= policy->addr.source.end)
+	if (iph->saddr >= policy->addr.src.end)
 		return 0;
-	if (iph->daddr < policy->addr.dest.begin)
+	if (iph->daddr < policy->addr.dst.begin)
 		return 0;
-	if (iph->daddr >= policy->addr.dest.end)
+	if (iph->daddr >= policy->addr.dst.end)
 		return 0;
 	return 1;
 }
@@ -122,13 +134,13 @@ static int net_policy_tcp_port_hit(const struct sk_buff *skb,
 	struct tcphdr *tcph;
 	tcph = tcp_hdr(skb);
 
-	if (tcph->source < policy->port.source.begin)
+	if (tcph->source < policy->port.src.begin)
 		return 0;
-	if (tcph->source >= policy->port.source.end)
+	if (tcph->source >= policy->port.src.end)
 		return 0;
-	if (tcph->dest < policy->port.dest.begin)
+	if (tcph->dest < policy->port.dst.begin)
 		return 0;
-	if (tcph->dest >= policy->port.dest.end)
+	if (tcph->dest >= policy->port.dst.end)
 		return 0;
 	return 1;
 }
@@ -139,13 +151,13 @@ static int net_policy_udp_port_hit(const struct sk_buff *skb,
 	struct udphdr *udph;
 	udph = udp_hdr(skb);
 
-	if (udph->source < policy->port.source.begin)
+	if (udph->source < policy->port.src.begin)
 		return 0;
-	if (udph->source >= policy->port.source.end)
+	if (udph->source >= policy->port.src.end)
 		return 0;
-	if (udph->dest < policy->port.dest.begin)
+	if (udph->dest < policy->port.dst.begin)
 		return 0;
-	if (udph->dest >= policy->port.dest.end)
+	if (udph->dest >= policy->port.dst.end)
 		return 0;
 	return 1;
 }
@@ -235,5 +247,8 @@ int enable_net_protect(void)
 
 int disable_net_protect(void)
 {
+	net_policy_clear();
+	nf_unregister_net_hooks(&init_net, net_policy_ops,
+				ARRAY_SIZE(net_policy_ops));
 	return 0;
 }

@@ -1,3 +1,6 @@
+#ifndef HACKERNEL_NET_H
+#define HACKERNEL_NET_H
+
 #include <linux/kernel.h>
 #include <net/genetlink.h>
 #include <net/netlink.h>
@@ -52,22 +55,22 @@ struct net_policy_t {
 		struct {
 			addr_t begin;
 			addr_t end;
-		} source;
+		} src;
 		struct {
 			addr_t begin;
 			addr_t end;
-		} dest;
+		} dst;
 	} addr;
 
 	struct {
 		struct {
 			port_t begin;
 			port_t end;
-		} source;
+		} src;
 		struct {
 			port_t begin;
 			port_t end;
-		} dest;
+		} dst;
 	} port;
 
 	struct {
@@ -85,3 +88,5 @@ int net_policy_delete(policy_id_t id);
 
 int enable_net_protect(void);
 int disable_net_protect(void);
+
+#endif

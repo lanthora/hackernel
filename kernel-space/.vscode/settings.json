@@ -61,7 +61,9 @@
 		"io_context": "c",
 		"buffer": "c",
 		"socket": "c",
-		"netfilter.h": "c"
+		"netfilter.h": "c",
+		"future": "c",
+		"system_error": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
