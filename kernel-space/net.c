@@ -16,6 +16,7 @@ struct nla_policy net_policy[NET_A_MAX + 1] = {
 	[NET_A_STATUS_CODE] = { .type = NLA_S32 },
 	[NET_A_OP_TYPE] = { .type = NLA_U8 },
 	[NET_A_ID] = { .type = NLA_S32 },
+	[NET_A_PRIORITY] = { .type = NLA_S8 },
 
 	[NET_A_ADDR_SRC_BEGIN] = { .type = NLA_U32 },
 	[NET_A_ADDR_SRC_END] = { .type = NLA_U32 },
@@ -34,21 +35,57 @@ struct nla_policy net_policy[NET_A_MAX + 1] = {
 	[NET_A_ENABLED] = { .type = NLA_S32 },
 };
 
-// TODO:
-// 实现调整这个链表的一系列方法
 LIST_HEAD(policys);
 DEFINE_RWLOCK(lock);
 
-// TODO:
-// 策略数据结构内存的分配释放
 static struct net_policy_t *net_policy_alloc(void)
 {
 	struct net_policy_t *policy;
+	policy = kmalloc(sizeof(struct net_policy_t), GFP_KERNEL);
 	return policy;
 }
 
 static void net_policy_free(struct net_policy_t *policy)
 {
+	kfree(policy);
+}
+
+int net_policy_insert(struct net_policy_t *policy)
+{
+	struct net_policy_t *new;
+	struct net_policy_t *pos, *n;
+	if (!policy)
+		return -EINVAL;
+
+	new = net_policy_alloc();
+	if (!new)
+		return -ENOMEM;
+
+	memcpy(new, policy, sizeof(struct net_policy_t));
+
+	write_lock(&lock);
+	list_for_each_entry_safe (pos, n, &policys, list) {
+		if (new->priority > pos->priority)
+			continue;
+		break;
+	}
+	list_add_tail(&new->list, &pos->list);
+	write_unlock(&lock);
+	return 0;
+}
+
+int net_policy_delete(policy_id_t id)
+{
+	struct net_policy_t *pos, *n;
+	write_lock(&lock);
+	list_for_each_entry_safe (pos, n, &policys, list) {
+		if (pos->id != id)
+			continue;
+		list_del(&pos->list);
+		net_policy_free(pos);
+	}
+	write_unlock(&lock);
+	return 0;
 }
 
 static int net_policy_protocol_hit(const struct sk_buff *skb,
