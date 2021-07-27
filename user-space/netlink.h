@@ -60,6 +60,7 @@ enum
     NET_A_STATUS_CODE,
     NET_A_OP_TYPE,
     NET_A_ID,
+    NET_A_PRIORITY,
 
     NET_A_ADDR_SRC_BEGIN,
     NET_A_ADDR_SRC_END,

@@ -31,12 +31,10 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *arg);
 
 enum {
 	NET_PROTECT_UNSPEC,
-	
 	NET_PROTECT_ENABLE,
 	NET_PROTECT_DISABLE,
 	NET_PROTECT_INSERT,
 	NET_PROTECT_DELETE,
-	NET_PROTECT_SET
 };
 int net_protect_handler(struct sk_buff *skb, struct genl_info *info);
 

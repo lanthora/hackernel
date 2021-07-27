@@ -76,16 +76,18 @@ int file_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd,
     return 0;
 }
 
+/**
+ * 在这里处理内核返回的命令结果
+ */
 int net_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
     u_int8_t type;
 
     type = nla_get_u8(genl_info->attrs[NET_A_OP_TYPE]);
     switch (type) {
-    // 这三个命令暂时公用一个响应处理函数
     case NET_PROTECT_ENABLE:
     case NET_PROTECT_DISABLE:
-    case NET_PROTECT_SET:
-    case NET_PROTECT_REPORT:
+    case NET_PROTECT_INSERT:
+    case NET_PROTECT_DELETE:
     default:
         LOG("Unknown net protect command type");
     }

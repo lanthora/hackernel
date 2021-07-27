@@ -62,32 +62,65 @@ int reply_process_perm(process_perm_id_t id, process_perm_t perm);
 /**
  * net protect
  */
-typedef uint16_t net_port_t;
-typedef uint16_t net_port_range_t;
-typedef int32_t net_perm_t;
-
-#define TCP_IN_FLAG (1 << 0)
-#define TCP_OUT_FLAG (1 << 1)
-#define UDP_IN_FLAG (1 << 2)
-#define UDP_OUT_FLAG (1 << 3)
-#define ALL_NET_PROTECT_FLAG (TCP_IN_FLAG | TCP_OUT_FLAG | UDP_IN_FLAG | UDP_OUT_FLAG)
-
-#define TCP_IN_MASK (1 << 4)
-#define TCP_OUT_MASK (1 << 5)
-#define UDP_IN_MASK (1 << 6)
-#define UDP_OUT_MASK (1 << 7)
-#define ALL_NET_PROTECT_MASK (TCP_IN_MASK | TCP_OUT_MASK | UDP_IN_MASK | UDP_OUT_MASK)
+typedef uint32_t addr_t;
+typedef uint16_t port_t;
+typedef uint8_t protocol_t;
+typedef uint32_t response_t;
+typedef uint32_t policy_id_t;
+typedef int8_t priority_t;
 
 enum
 {
     NET_PROTECT_UNSPEC,
-    NET_PROTECT_REPORT,
     NET_PROTECT_ENABLE,
     NET_PROTECT_DISABLE,
-    NET_PROTECT_SET
+    NET_PROTECT_INSERT,
+    NET_PROTECT_DELETE,
 };
 
+/**
+ * 优先级(priority)相同的情况下, 后添加的优先命中
+ * 多个net_policy_t可以有相同的id, 根据id可以批量删除
+ */
+struct net_policy_t {
+    policy_id_t id;
+    priority_t priority;
+
+    struct {
+        struct {
+            addr_t begin;
+            addr_t end;
+        } src;
+        struct {
+            addr_t begin;
+            addr_t end;
+        } dst;
+    } addr;
+
+    struct {
+        struct {
+            port_t begin;
+            port_t end;
+        } src;
+        struct {
+            port_t begin;
+            port_t end;
+        } dst;
+    } port;
+
+    struct {
+        protocol_t begin;
+        protocol_t end;
+    } protocol;
+
+    response_t response;
+    int enabled;
+};
+
+int net_policy_insert(const net_policy_t &policy);
+int net_policy_delete(policy_id_t id);
+
 int enable_net_protect();
-int disable_net_protect();
+int disable_net_protect(void);
 
 #endif
