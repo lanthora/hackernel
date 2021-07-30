@@ -42,6 +42,11 @@ int main() {
     enable_file_protect();
     set_file_protect("/root/hackernel/build/nothing", ALL_FILE_PROTECT_FLAG);
     enable_net_protect();
+    net_policy_t policy;
+    policy.addr.src.begin = 0;
+    
+    net_policy_insert(policy);
+
     netlink_thread.join();
     return 0;
 }
