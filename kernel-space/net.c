@@ -106,10 +106,10 @@ static int net_policy_protocol_hit(const struct sk_buff *skb,
 	struct iphdr *iph;
 	iph = ip_hdr(skb);
 	if (iph->protocol < policy->protocol.begin)
-		return 0;
+		return NET_POLICY_MISS;
 	if (iph->protocol >= policy->protocol.end)
-		return 0;
-	return 1;
+		return NET_POLICY_MISS;
+	return NET_POLICY_HIT;
 }
 
 static int net_policy_addr_hit(const struct sk_buff *skb,
@@ -118,14 +118,14 @@ static int net_policy_addr_hit(const struct sk_buff *skb,
 	struct iphdr *iph;
 	iph = ip_hdr(skb);
 	if (iph->saddr < policy->addr.src.begin)
-		return 0;
+		return NET_POLICY_MISS;
 	if (iph->saddr >= policy->addr.src.end)
-		return 0;
+		return NET_POLICY_MISS;
 	if (iph->daddr < policy->addr.dst.begin)
-		return 0;
+		return NET_POLICY_MISS;
 	if (iph->daddr >= policy->addr.dst.end)
-		return 0;
-	return 1;
+		return NET_POLICY_MISS;
+	return NET_POLICY_HIT;
 }
 
 static int net_policy_tcp_port_hit(const struct sk_buff *skb,
@@ -135,14 +135,14 @@ static int net_policy_tcp_port_hit(const struct sk_buff *skb,
 	tcph = tcp_hdr(skb);
 
 	if (tcph->source < policy->port.src.begin)
-		return 0;
+		return NET_POLICY_MISS;
 	if (tcph->source >= policy->port.src.end)
-		return 0;
+		return NET_POLICY_MISS;
 	if (tcph->dest < policy->port.dst.begin)
-		return 0;
+		return NET_POLICY_MISS;
 	if (tcph->dest >= policy->port.dst.end)
-		return 0;
-	return 1;
+		return NET_POLICY_MISS;
+	return NET_POLICY_HIT;
 }
 
 static int net_policy_udp_port_hit(const struct sk_buff *skb,
@@ -152,14 +152,14 @@ static int net_policy_udp_port_hit(const struct sk_buff *skb,
 	udph = udp_hdr(skb);
 
 	if (udph->source < policy->port.src.begin)
-		return 0;
+		return NET_POLICY_MISS;
 	if (udph->source >= policy->port.src.end)
-		return 0;
+		return NET_POLICY_MISS;
 	if (udph->dest < policy->port.dst.begin)
-		return 0;
+		return NET_POLICY_MISS;
 	if (udph->dest >= policy->port.dst.end)
-		return 0;
-	return 1;
+		return NET_POLICY_MISS;
+	return NET_POLICY_HIT;
 }
 
 static int net_policy_port_hit(const struct sk_buff *skb,
@@ -181,9 +181,9 @@ static int net_policy_port_hit(const struct sk_buff *skb,
 		// 不支持的协议认为端口号命中
 		break;
 	}
-	return 1; //hit
+	return NET_POLICY_HIT;
 miss:
-	return 0; //miss
+	return NET_POLICY_MISS;
 }
 
 static int net_policy_hit(const struct sk_buff *skb,
@@ -200,21 +200,25 @@ static int net_policy_hit(const struct sk_buff *skb,
 		goto miss;
 
 	*response = policy->response;
-	return 1; //hit
+	return NET_POLICY_HIT;
 miss:
-	return 0; //miss
+	return NET_POLICY_MISS;
 }
 
 // TODO:
 // 这个地方可能需要上报日志,只有这里能区分
 static response_t net_policy_hook(void *priv, struct sk_buff *skb,
-				    const struct nf_hook_state *state)
+				  const struct nf_hook_state *state)
 {
 	response_t response = NF_ACCEPT;
 	struct net_policy_t *policy = NULL;
 
 	read_lock(&lock);
 	list_for_each_entry (policy, &policys, list) {
+		/** 
+		 * 只有策略命中的时候,才会修改response的值,如果没有策略命中,
+		 * response将保留默认值 NF_ACCEPT,此时会被放行
+		 */
 		if (net_policy_hit(skb, policy, &response))
 			break;
 	}
