@@ -40,9 +40,8 @@ int main() {
     handshake();
     enable_process_protect();
     enable_file_protect();
-    enable_net_protect();
     set_file_protect("/root/hackernel/build/nothing", ALL_FILE_PROTECT_FLAG);
-
+    enable_net_protect();
     netlink_thread.join();
     return 0;
 }
