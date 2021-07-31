@@ -116,14 +116,19 @@ static int net_policy_addr_hit(const struct sk_buff *skb,
 			       const struct net_policy_t *policy)
 {
 	struct iphdr *iph;
+	port_t src, dst;
+
 	iph = ip_hdr(skb);
-	if (iph->saddr < policy->addr.src.begin)
+	src = ntohl(iph->saddr);
+	dst = ntohl(iph->daddr);
+
+	if (src < policy->addr.src.begin)
 		return NET_POLICY_MISS;
-	if (iph->saddr > policy->addr.src.end)
+	if (src > policy->addr.src.end)
 		return NET_POLICY_MISS;
-	if (iph->daddr < policy->addr.dst.begin)
+	if (dst < policy->addr.dst.begin)
 		return NET_POLICY_MISS;
-	if (iph->daddr > policy->addr.dst.end)
+	if (dst > policy->addr.dst.end)
 		return NET_POLICY_MISS;
 	return NET_POLICY_HIT;
 }
@@ -132,15 +137,19 @@ static int net_policy_tcp_port_hit(const struct sk_buff *skb,
 				   const struct net_policy_t *policy)
 {
 	struct tcphdr *tcph;
-	tcph = tcp_hdr(skb);
+	port_t src, dst;
 
-	if (tcph->source < policy->port.src.begin)
+	tcph = tcp_hdr(skb);
+	src = ntohs(tcph->source);
+	dst = ntohs(tcph->dest);
+
+	if (src < policy->port.src.begin)
 		return NET_POLICY_MISS;
-	if (tcph->source > policy->port.src.end)
+	if (src > policy->port.src.end)
 		return NET_POLICY_MISS;
-	if (tcph->dest < policy->port.dst.begin)
+	if (dst < policy->port.dst.begin)
 		return NET_POLICY_MISS;
-	if (tcph->dest > policy->port.dst.end)
+	if (dst > policy->port.dst.end)
 		return NET_POLICY_MISS;
 	return NET_POLICY_HIT;
 }
@@ -149,15 +158,19 @@ static int net_policy_udp_port_hit(const struct sk_buff *skb,
 				   const struct net_policy_t *policy)
 {
 	struct udphdr *udph;
-	udph = udp_hdr(skb);
+	port_t src, dst;
 
-	if (udph->source < policy->port.src.begin)
+	udph = udp_hdr(skb);
+	src = ntohs(udph->source);
+	dst = ntohs(udph->dest);
+
+	if (src < policy->port.src.begin)
 		return NET_POLICY_MISS;
-	if (udph->source > policy->port.src.end)
+	if (src > policy->port.src.end)
 		return NET_POLICY_MISS;
-	if (udph->dest < policy->port.dst.begin)
+	if (dst < policy->port.dst.begin)
 		return NET_POLICY_MISS;
-	if (udph->dest > policy->port.dst.end)
+	if (dst > policy->port.dst.end)
 		return NET_POLICY_MISS;
 	return NET_POLICY_HIT;
 }
@@ -234,25 +247,35 @@ static const struct nf_hook_ops net_policy_ops[] = {
 		.hooknum = NF_INET_LOCAL_IN,
 		.priority = NF_IP_PRI_FIRST,
 	},
+	/*
 	{
 		.hook = net_policy_hook,
 		.pf = PF_INET,
 		.hooknum = NF_INET_LOCAL_OUT,
 		.priority = NF_IP_PRI_FIRST,
 	},
+	*/
 };
 
+static u8 hooked = 0;
 int enable_net_protect(void)
 {
-	nf_register_net_hooks(&init_net, net_policy_ops,
-			      ARRAY_SIZE(net_policy_ops));
+	if (hooked)
+		return -EPERM;
+	if (!nf_register_net_hooks(&init_net, net_policy_ops,
+				   ARRAY_SIZE(net_policy_ops)))
+		hooked = 1;
 	return 0;
 }
 
 int disable_net_protect(void)
 {
+	if (!hooked)
+		return -EPERM;
+
 	net_policy_clear();
 	nf_unregister_net_hooks(&init_net, net_policy_ops,
 				ARRAY_SIZE(net_policy_ops));
+	hooked = 0;
 	return 0;
 }
