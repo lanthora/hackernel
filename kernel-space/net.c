@@ -247,14 +247,12 @@ static const struct nf_hook_ops net_policy_ops[] = {
 		.hooknum = NF_INET_LOCAL_IN,
 		.priority = NF_IP_PRI_FIRST,
 	},
-	/*
 	{
 		.hook = net_policy_hook,
 		.pf = PF_INET,
 		.hooknum = NF_INET_LOCAL_OUT,
 		.priority = NF_IP_PRI_FIRST,
 	},
-	*/
 };
 
 static u8 hooked = 0;

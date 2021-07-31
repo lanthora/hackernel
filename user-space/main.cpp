@@ -51,10 +51,14 @@ int main() {
     policy.addr.dst.end = UINT32_MAX;
     policy.port.src.begin = 0;
     policy.port.src.end = UINT16_MAX;
+
+    // ssh
     policy.port.dst.begin = 22;
     policy.port.dst.end = 22;
-    policy.protocol.begin = 0;
-    policy.protocol.end = UINT8_MAX;
+    // tcp
+    policy.protocol.begin = 6;
+    policy.protocol.end = 6;
+
     policy.id = 0;
     policy.enabled = 1;
     policy.priority = 0;
