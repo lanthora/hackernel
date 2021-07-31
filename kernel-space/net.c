@@ -107,7 +107,7 @@ static int net_policy_protocol_hit(const struct sk_buff *skb,
 	iph = ip_hdr(skb);
 	if (iph->protocol < policy->protocol.begin)
 		return NET_POLICY_MISS;
-	if (iph->protocol >= policy->protocol.end)
+	if (iph->protocol > policy->protocol.end)
 		return NET_POLICY_MISS;
 	return NET_POLICY_HIT;
 }
@@ -119,11 +119,11 @@ static int net_policy_addr_hit(const struct sk_buff *skb,
 	iph = ip_hdr(skb);
 	if (iph->saddr < policy->addr.src.begin)
 		return NET_POLICY_MISS;
-	if (iph->saddr >= policy->addr.src.end)
+	if (iph->saddr > policy->addr.src.end)
 		return NET_POLICY_MISS;
 	if (iph->daddr < policy->addr.dst.begin)
 		return NET_POLICY_MISS;
-	if (iph->daddr >= policy->addr.dst.end)
+	if (iph->daddr > policy->addr.dst.end)
 		return NET_POLICY_MISS;
 	return NET_POLICY_HIT;
 }
@@ -136,11 +136,11 @@ static int net_policy_tcp_port_hit(const struct sk_buff *skb,
 
 	if (tcph->source < policy->port.src.begin)
 		return NET_POLICY_MISS;
-	if (tcph->source >= policy->port.src.end)
+	if (tcph->source > policy->port.src.end)
 		return NET_POLICY_MISS;
 	if (tcph->dest < policy->port.dst.begin)
 		return NET_POLICY_MISS;
-	if (tcph->dest >= policy->port.dst.end)
+	if (tcph->dest > policy->port.dst.end)
 		return NET_POLICY_MISS;
 	return NET_POLICY_HIT;
 }
@@ -153,11 +153,11 @@ static int net_policy_udp_port_hit(const struct sk_buff *skb,
 
 	if (udph->source < policy->port.src.begin)
 		return NET_POLICY_MISS;
-	if (udph->source >= policy->port.src.end)
+	if (udph->source > policy->port.src.end)
 		return NET_POLICY_MISS;
 	if (udph->dest < policy->port.dst.begin)
 		return NET_POLICY_MISS;
-	if (udph->dest >= policy->port.dst.end)
+	if (udph->dest > policy->port.dst.end)
 		return NET_POLICY_MISS;
 	return NET_POLICY_HIT;
 }
