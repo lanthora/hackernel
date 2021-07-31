@@ -39,12 +39,26 @@ int main() {
 
     handshake();
     enable_process_protect();
+
     enable_file_protect();
     set_file_protect("/root/hackernel/build/nothing", ALL_FILE_PROTECT_FLAG);
+
     enable_net_protect();
     net_policy_t policy;
     policy.addr.src.begin = 0;
-    
+    policy.addr.src.end = UINT32_MAX;
+    policy.addr.dst.begin = 0;
+    policy.addr.dst.end = UINT32_MAX;
+    policy.port.src.begin = 0;
+    policy.port.src.end = UINT16_MAX;
+    policy.port.dst.begin = 22;
+    policy.port.dst.end = 22;
+    policy.protocol.begin = 0;
+    policy.protocol.end = UINT8_MAX;
+    policy.id = 0;
+    policy.enabled = 1;
+    policy.priority = 0;
+    policy.response = NET_POLICY_DROP;
     net_policy_insert(policy);
 
     netlink_thread.join();
