@@ -69,6 +69,9 @@ typedef uint32_t response_t;
 typedef uint32_t policy_id_t;
 typedef int8_t priority_t;
 
+#define NET_POLICY_DROP 0
+#define NET_POLICY_ACCEPT 1
+
 enum
 {
     NET_PROTECT_UNSPEC,
@@ -81,6 +84,7 @@ enum
 /**
  * 优先级(priority)相同的情况下, 后添加的优先命中
  * 多个net_policy_t可以有相同的id, 根据id可以批量删除
+ * 所有的数据都为主机序
  */
 struct net_policy_t {
     policy_id_t id;
