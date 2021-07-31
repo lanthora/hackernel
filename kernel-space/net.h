@@ -41,6 +41,9 @@ typedef u32 response_t;
 typedef u32 policy_id_t;
 typedef s8 priority_t;
 
+#define NET_POLICY_DROP NF_DROP // 0
+#define NET_POLICY_ACCEPT NF_ACCEPT // 1
+
 /**
  * 优先级(priority)相同的情况下, 后添加的优先命中
  * 多个net_policy_t可以有相同的id, 根据id可以批量删除
