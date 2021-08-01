@@ -34,9 +34,9 @@ enum {
 };
 #define NET_A_MAX (__NET_A_MAX - 1)
 
-typedef __be32 addr_t;
-typedef __be16 port_t;
-typedef __u8 protocol_t;
+typedef u32 addr_t;
+typedef u16 port_t;
+typedef u8 protocol_t;
 typedef u32 response_t;
 typedef u32 policy_id_t;
 typedef s8 priority_t;

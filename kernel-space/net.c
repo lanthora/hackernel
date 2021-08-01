@@ -116,7 +116,7 @@ static int net_policy_addr_hit(const struct sk_buff *skb,
 			       const struct net_policy_t *policy)
 {
 	struct iphdr *iph;
-	port_t src, dst;
+	addr_t src, dst;
 
 	iph = ip_hdr(skb);
 	src = ntohl(iph->saddr);
