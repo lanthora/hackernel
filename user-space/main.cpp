@@ -3,6 +3,7 @@
 #include "netlink.h"
 #include "syscall.h"
 #include "util.h"
+#include <arpa/inet.h>
 #include <iostream>
 #include <limits>
 #include <linux/genetlink.h>
@@ -45,10 +46,11 @@ int main() {
 
     enable_net_protect();
     net_policy_t policy;
-    policy.addr.src.begin = 0;
-    policy.addr.src.end = UINT32_MAX;
-    policy.addr.dst.begin = 0;
-    policy.addr.dst.end = UINT32_MAX;
+
+    policy.addr.src.begin = ntohl(inet_addr("127.0.0.1"));
+    policy.addr.src.end = ntohl(inet_addr("127.0.0.1"));
+    policy.addr.dst.begin = ntohl(inet_addr("127.0.0.1"));
+    policy.addr.dst.end = ntohl(inet_addr("127.0.0.1"));
     policy.port.src.begin = 0;
     policy.port.src.end = UINT16_MAX;
 
