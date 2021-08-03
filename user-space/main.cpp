@@ -76,9 +76,11 @@ int main() {
     policy.protocol.begin = 0;
     policy.protocol.end = UINT8_MAX;
     policy.response = NET_POLICY_ACCEPT;
-    policy.priority = 1;
+    policy.priority = -1;
+    policy.id = 5;
     net_policy_insert(policy);
-
+    net_policy_delete(5);
+    net_policy_delete(0);
     netlink_thread.join();
     return 0;
 }
