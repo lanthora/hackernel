@@ -67,6 +67,18 @@ int main() {
     policy.response = NET_POLICY_DROP;
     net_policy_insert(policy);
 
+    policy.addr.src.begin = ntohl(inet_addr("0.0.0.0"));
+    policy.addr.src.end = ntohl(inet_addr("255.255.255.255"));
+    policy.addr.dst.begin = ntohl(inet_addr("0.0.0.0"));
+    policy.addr.dst.end = ntohl(inet_addr("255.255.255.255"));
+    policy.port.dst.begin = 0;
+    policy.port.dst.end = UINT16_MAX;
+    policy.protocol.begin = 0;
+    policy.protocol.end = UINT8_MAX;
+    policy.response = NET_POLICY_ACCEPT;
+    policy.priority = 1;
+    net_policy_insert(policy);
+
     netlink_thread.join();
     return 0;
 }
