@@ -8,9 +8,7 @@
 #include <linux/kernel.h>
 #include <linux/module.h>
 
-MODULE_LICENSE("GPL");
-MODULE_AUTHOR("x");
-MODULE_DESCRIPTION("kernel helper");
+MODULE_LICENSE("GPL v2");
 
 static int init(void)
 {
