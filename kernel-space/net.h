@@ -28,7 +28,7 @@ enum {
 
 	NET_A_RESPONSE,
 
-	NET_A_ENABLED,
+	NET_A_FLAGS,
 
 	__NET_A_MAX,
 };
@@ -43,47 +43,57 @@ typedef s8 priority_t;
 
 #define NET_POLICY_DROP NF_DROP // 0
 #define NET_POLICY_ACCEPT NF_ACCEPT // 1
+#define NET_POLICY_HIT 1
+#define NET_POLICY_MISS 0
 
 /**
  * 优先级(priority)相同的情况下, 后添加的优先命中
  * 多个net_policy_t可以有相同的id, 根据id可以批量删除
  */
+
+struct hknp_addr_range_t {
+	addr_t begin;
+	addr_t end;
+};
+
+struct hknp_port_range_t {
+	port_t begin;
+	port_t end;
+};
+
+struct hknp_protocol_range_t {
+	protocol_t begin;
+	protocol_t end;
+};
+
+struct hknp_addr_t {
+	struct hknp_addr_range_t src;
+	struct hknp_addr_range_t dst;
+};
+
+struct hknp_port_t {
+	struct hknp_port_range_t src;
+	struct hknp_port_range_t dst;
+};
+
+struct hknp_flags_t {
+	int inbound : 1;
+	int outbound : 1;
+};
+
 struct net_policy_t {
 	struct list_head list;
-
 	policy_id_t id;
 	priority_t priority;
-
-	struct {
-		struct {
-			addr_t begin;
-			addr_t end;
-		} src;
-		struct {
-			addr_t begin;
-			addr_t end;
-		} dst;
-	} addr;
-
-	struct {
-		struct {
-			port_t begin;
-			port_t end;
-		} src;
-		struct {
-			port_t begin;
-			port_t end;
-		} dst;
-	} port;
-
-	struct {
-		protocol_t begin;
-		protocol_t end;
-	} protocol;
-
+	struct hknp_addr_t addr;
+	struct hknp_port_t port;
+	struct hknp_protocol_range_t protocol;
 	response_t response;
-	int enabled;
+	s32 flags;
 };
+
+#define HKNP_INBOUND(flags) ((flags & 0x01) ? NET_POLICY_HIT : NET_POLICY_MISS)
+#define HKNP_OUTBOUND(flags) ((flags & 0x02) ? NET_POLICY_HIT : NET_POLICY_MISS)
 
 struct hknf_buff {
 	const struct sk_buff *skb;
@@ -96,8 +106,5 @@ int net_policy_delete(policy_id_t id);
 
 int enable_net_protect(void);
 int disable_net_protect(void);
-
-#define NET_POLICY_HIT 1
-#define NET_POLICY_MISS 0
 
 #endif

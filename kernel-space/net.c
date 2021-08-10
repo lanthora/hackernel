@@ -32,7 +32,7 @@ struct nla_policy net_policy[NET_A_MAX + 1] = {
 	[NET_A_PROTOCOL_END] = { .type = NLA_U8 },
 
 	[NET_A_RESPONSE] = { .type = NLA_U32 },
-	[NET_A_ENABLED] = { .type = NLA_S32 },
+	[NET_A_FLAGS] = { .type = NLA_S32 },
 };
 
 LIST_HEAD(policys);
@@ -198,12 +198,23 @@ static int net_policy_port_hit(const struct hknf_buff *buff,
 miss:
 	return NET_POLICY_MISS;
 }
+static int net_policy_bound_hit(const struct hknf_buff *buff,
+			    const struct net_policy_t *policy)
+{
+	switch (buff->state->hook) {
+	case NF_INET_LOCAL_IN:
+		return HKNP_INBOUND(policy->flags);
+	case NF_INET_LOCAL_OUT:
+		return HKNP_OUTBOUND(policy->flags);
+	}
+	return NET_POLICY_MISS;
+}
 
 static int net_policy_hit(const struct hknf_buff *buff,
 			  const struct net_policy_t *policy,
 			  response_t *response)
 {
-	if (!policy->enabled)
+	if (!net_policy_bound_hit(buff, policy))
 		goto miss;
 	if (!net_policy_protocol_hit(buff, policy))
 		goto miss;

@@ -63,7 +63,8 @@
 		"socket": "c",
 		"netfilter.h": "c",
 		"future": "c",
-		"system_error": "c"
+		"system_error": "c",
+		"istream": "cpp"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

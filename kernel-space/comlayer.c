@@ -407,7 +407,7 @@ static int net_protect_info_to_policy(const struct genl_info *info,
 	if (!info->attrs[NET_A_RESPONSE])
 		return -EINVAL;
 
-	if (!info->attrs[NET_A_ENABLED])
+	if (!info->attrs[NET_A_FLAGS])
 		return -EINVAL;
 
 	policy->id = nla_get_s32(info->attrs[NET_A_ID]);
@@ -427,7 +427,7 @@ static int net_protect_info_to_policy(const struct genl_info *info,
 	policy->protocol.end = nla_get_u8(info->attrs[NET_A_PROTOCOL_END]);
 
 	policy->response = nla_get_u32(info->attrs[NET_A_RESPONSE]);
-	policy->enabled = nla_get_s32(info->attrs[NET_A_ENABLED]);
+	policy->flags = nla_get_s32(info->attrs[NET_A_FLAGS]);
 
 	return 0;
 }
