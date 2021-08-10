@@ -41,7 +41,7 @@ int net_policy_insert(const net_policy_t &policy) {
     nla_put_u8(msg, NET_A_PROTOCOL_END, policy.protocol.end);
 
     nla_put_u32(msg, NET_A_RESPONSE, policy.response);
-    nla_put_s32(msg, NET_A_ENABLED, policy.enabled);
+    nla_put_s32(msg, NET_A_FLAGS, policy.flags);
 
     nl_send_auto(nlsock, msg);
 

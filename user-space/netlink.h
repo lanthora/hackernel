@@ -77,7 +77,7 @@ enum
 
     NET_A_RESPONSE,
 
-    NET_A_ENABLED,
+    NET_A_FLAGS,
 
     __NET_A_MAX,
 };

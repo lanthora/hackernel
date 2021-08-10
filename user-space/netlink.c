@@ -39,7 +39,7 @@ struct nla_policy net_policy[NET_A_MAX + 1] = {
     [NET_A_ADDR_DST_BEGIN] = {.type = NLA_U32}, [NET_A_ADDR_DST_END] = {.type = NLA_U32},   [NET_A_PORT_SRC_BEGIN] = {.type = NLA_U16},
     [NET_A_PORT_SRC_END] = {.type = NLA_U16},   [NET_A_PORT_DST_BEGIN] = {.type = NLA_U16}, [NET_A_PORT_DST_END] = {.type = NLA_U16},
     [NET_A_PROTOCOL_BEGIN] = {.type = NLA_U8},  [NET_A_PROTOCOL_END] = {.type = NLA_U8},    [NET_A_RESPONSE] = {.type = NLA_U32},
-    [NET_A_ENABLED] = {.type = NLA_S32},
+    [NET_A_FLAGS] = {.type = NLA_S32},
 };
 
 // 在这里扩展 HACKERNEL_C_* 对应的 handler

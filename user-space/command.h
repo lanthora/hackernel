@@ -118,7 +118,7 @@ struct net_policy_t {
     } protocol;
 
     response_t response;
-    int enabled;
+    int flags;
 };
 
 int net_policy_insert(const net_policy_t &policy);
