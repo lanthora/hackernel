@@ -80,7 +80,7 @@ int main() {
     policy.id = 5;
     net_policy_insert(policy);
     net_policy_delete(5);
-    net_policy_delete(0);
+
     netlink_thread.join();
     return 0;
 }

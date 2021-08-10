@@ -100,11 +100,11 @@ static int net_policy_clear(void)
 	return 0;
 }
 
-static int net_policy_protocol_hit(const struct sk_buff *skb,
+static int net_policy_protocol_hit(const struct hknf_buff *buff,
 				   const struct net_policy_t *policy)
 {
 	struct iphdr *iph;
-	iph = ip_hdr(skb);
+	iph = ip_hdr(buff->skb);
 	if (iph->protocol < policy->protocol.begin)
 		return NET_POLICY_MISS;
 	if (iph->protocol > policy->protocol.end)
@@ -112,13 +112,13 @@ static int net_policy_protocol_hit(const struct sk_buff *skb,
 	return NET_POLICY_HIT;
 }
 
-static int net_policy_addr_hit(const struct sk_buff *skb,
+static int net_policy_addr_hit(const struct hknf_buff *buff,
 			       const struct net_policy_t *policy)
 {
 	struct iphdr *iph;
 	addr_t src, dst;
 
-	iph = ip_hdr(skb);
+	iph = ip_hdr(buff->skb);
 	src = ntohl(iph->saddr);
 	dst = ntohl(iph->daddr);
 
@@ -133,13 +133,13 @@ static int net_policy_addr_hit(const struct sk_buff *skb,
 	return NET_POLICY_HIT;
 }
 
-static int net_policy_tcp_port_hit(const struct sk_buff *skb,
+static int net_policy_tcp_port_hit(const struct hknf_buff *buff,
 				   const struct net_policy_t *policy)
 {
 	struct tcphdr *tcph;
 	port_t src, dst;
 
-	tcph = tcp_hdr(skb);
+	tcph = tcp_hdr(buff->skb);
 	src = ntohs(tcph->source);
 	dst = ntohs(tcph->dest);
 
@@ -154,13 +154,13 @@ static int net_policy_tcp_port_hit(const struct sk_buff *skb,
 	return NET_POLICY_HIT;
 }
 
-static int net_policy_udp_port_hit(const struct sk_buff *skb,
+static int net_policy_udp_port_hit(const struct hknf_buff *buff,
 				   const struct net_policy_t *policy)
 {
 	struct udphdr *udph;
 	port_t src, dst;
 
-	udph = udp_hdr(skb);
+	udph = udp_hdr(buff->skb);
 	src = ntohs(udph->source);
 	dst = ntohs(udph->dest);
 
@@ -175,19 +175,19 @@ static int net_policy_udp_port_hit(const struct sk_buff *skb,
 	return NET_POLICY_HIT;
 }
 
-static int net_policy_port_hit(const struct sk_buff *skb,
+static int net_policy_port_hit(const struct hknf_buff *buff,
 			       const struct net_policy_t *policy)
 {
 	struct iphdr *iph;
 
-	iph = ip_hdr(skb);
+	iph = ip_hdr(buff->skb);
 	switch (iph->protocol) {
 	case IPPROTO_TCP:
-		if (!net_policy_tcp_port_hit(skb, policy))
+		if (!net_policy_tcp_port_hit(buff, policy))
 			goto miss;
 		break;
 	case IPPROTO_UDP:
-		if (!net_policy_udp_port_hit(skb, policy))
+		if (!net_policy_udp_port_hit(buff, policy))
 			goto miss;
 		break;
 	default:
@@ -199,17 +199,17 @@ miss:
 	return NET_POLICY_MISS;
 }
 
-static int net_policy_hit(const struct sk_buff *skb,
+static int net_policy_hit(const struct hknf_buff *buff,
 			  const struct net_policy_t *policy,
 			  response_t *response)
 {
 	if (!policy->enabled)
 		goto miss;
-	if (!net_policy_protocol_hit(skb, policy))
+	if (!net_policy_protocol_hit(buff, policy))
 		goto miss;
-	if (!net_policy_addr_hit(skb, policy))
+	if (!net_policy_addr_hit(buff, policy))
 		goto miss;
-	if (!net_policy_port_hit(skb, policy))
+	if (!net_policy_port_hit(buff, policy))
 		goto miss;
 
 	*response = policy->response;
@@ -225,6 +225,7 @@ static response_t net_policy_hook(void *priv, struct sk_buff *skb,
 {
 	response_t response = NF_ACCEPT;
 	struct net_policy_t *policy = NULL;
+	struct hknf_buff buff = { .skb = skb, .state = state };
 
 	read_lock(&lock);
 	list_for_each_entry (policy, &policys, list) {
@@ -232,7 +233,7 @@ static response_t net_policy_hook(void *priv, struct sk_buff *skb,
 		 * 只有策略命中的时候,才会修改response的值,如果没有策略命中,
 		 * response将保留默认值 NF_ACCEPT,此时会被放行
 		 */
-		if (net_policy_hit(skb, policy, &response))
+		if (net_policy_hit(&buff, policy, &response))
 			break;
 	}
 	read_unlock(&lock);

@@ -85,6 +85,11 @@ struct net_policy_t {
 	int enabled;
 };
 
+struct hknf_buff {
+	const struct sk_buff *skb;
+	const struct nf_hook_state *state;
+};
+
 // 内部会复制policy,需要自行释放入参的内存
 int net_policy_insert(struct net_policy_t *policy);
 int net_policy_delete(policy_id_t id);
