@@ -161,7 +161,7 @@ static int condition_process_perm(process_perm_id_t id)
 }
 
 // 将execve的命令发送到用户态,用户态返回这条命令的执行权限
-static process_perm_t process_protect_status(char *arg)
+static process_perm_t process_protect_status(char *params)
 {
 	int error;
 	static process_perm_id_t id;
@@ -176,7 +176,7 @@ static process_perm_t process_protect_status(char *arg)
 		goto out;
 	}
 
-	error = process_protect_report_to_userspace(id, arg);
+	error = process_protect_report_to_userspace(id, params);
 	if (error) {
 		LOG("process_protect_report_to_userspace failed");
 		goto out;
@@ -193,12 +193,13 @@ out:
 	return retval;
 }
 
+// TODO: 添加对内存申请是否成功的校验
 static int sys_execveat_helper(int dirfd, char __user *pathname,
 			       char __user *__user *argv,
 			       char __user *__user *envp, int flag)
 {
-	char *cmd, *arg, *msg;
-	int error = 0;
+	char *cmd, *params, *msg;
+	int error = 0, len;
 	process_perm_t perm = PROCESS_INVAILD;
 
 	if (!portid)
@@ -210,29 +211,26 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 	strcat(msg, cmd);
 	kfree(cmd);
 
-	arg = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
-	error = parse_argv((const char *const *)argv, arg, MAX_ARG_STRLEN);
-	if (error) {
-		error = 0;
+	params = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
+	len = parse_argv((const char *const *)argv, params, MAX_ARG_STRLEN);
+	if (len < 0)
 		goto out;
-	}
-	if (arg[0]) {
+
+	if (len > 0) {
 		strcat(msg, ASCII_US_STR);
-		strcat(msg, arg);
+		strcat(msg, params);
 	}
 
-	kfree(arg);
+	kfree(params);
 
 	msg = adjust_path(msg);
 
 	// 只有明确确定收到的是拒绝的情况下才拒绝
 	// 其他情况要么是放行,要么是程序内部错误,都不应该拦截
 	perm = process_protect_status(msg);
-	if (perm == PROCESS_REJECT) {
+	if (perm == PROCESS_REJECT)
 		error = -EPERM;
-		goto out;
-	}
-	error = 0;
+
 out:
 	kfree(msg);
 	return error;

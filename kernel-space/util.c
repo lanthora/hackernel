@@ -19,7 +19,20 @@
 
 static int argv_size_user(char __user *__user *argv, int max)
 {
-	return strnlen_user((const char *)argv, max);
+	int argc = 0;
+	char __user *cur;
+	if (!argv)
+		return argc;
+
+	while (true) {
+		if (get_user(cur, argv + argc))
+			break;
+
+		if (!cur)
+			break;
+		++argc;
+	}
+	return argc;
 }
 
 int parse_pathname(const char __user *pathname, char *path, long size)
@@ -71,7 +84,7 @@ int parse_argv(const char __user *const __user *argv, char *params, long size)
 	if (cursor > params)
 		*(cursor - 1) = '\0';
 
-	retval = 0;
+	retval = cursor - params;
 out:
 	kfree(p);
 	return retval;
@@ -115,7 +128,7 @@ char *get_exec_path(struct task_struct *task, void *buffer, size_t buffer_size)
 static char *get_pwd_path(void *buffer, size_t buffer_size)
 {
 	struct path pwd;
-	get_fs_pwd(current->fs,&pwd);
+	get_fs_pwd(current->fs, &pwd);
 	return d_path(&pwd, buffer, buffer_size);
 }
 
@@ -126,7 +139,7 @@ static char *get_root_path(void *buffer, size_t buffer_size)
 	struct dentry *dentry;
 	char *ptr = buffer + buffer_size - 1;
 	*ptr = 0;
-	get_fs_root(current->fs,&root);
+	get_fs_root(current->fs, &root);
 	dentry = root.dentry;
 	while (!IS_ROOT(dentry)) {
 		ptr -= dentry->d_name.len;
@@ -360,7 +373,7 @@ int file_id_get(const char *name, unsigned long *fsid, unsigned long *ino)
 	if (error)
 		return -ENOENT;
 
-	vfs_statfs(&path,&kstatfs);
+	vfs_statfs(&path, &kstatfs);
 
 	memcpy(fsid, &kstatfs.f_fsid, sizeof(unsigned long));
 	*ino = path.dentry->d_inode->i_ino;
@@ -379,7 +392,7 @@ unsigned long get_fsid(const char *name)
 	if (error)
 		return 0;
 
-	vfs_statfs(&path,&kstatfs);
+	vfs_statfs(&path, &kstatfs);
 	memcpy(&retval, &kstatfs.f_fsid, sizeof(unsigned long));
 	path_put(&path);
 	return retval;
