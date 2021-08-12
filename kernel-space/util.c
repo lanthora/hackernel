@@ -29,7 +29,7 @@ int parse_pathname(const char __user *pathname, char *path, long size)
 	return lack;
 }
 
-int parse_argv(const char __user *const __user *argv, char *arg, long size)
+int parse_argv(const char __user *const __user *argv, char *params, long size)
 {
 	char __user **p, *cursor;
 	long idx, remain, len;
@@ -50,9 +50,9 @@ int parse_argv(const char __user *const __user *argv, char *arg, long size)
 	if (lack)
 		goto out;
 
-	len = 0, cursor = arg;
+	len = 0, cursor = params;
 	for (idx = 1; idx < argc; ++idx) {
-		remain = size - (cursor - arg);
+		remain = size - (cursor - params);
 		if (remain <= 0)
 			break;
 
@@ -65,10 +65,10 @@ int parse_argv(const char __user *const __user *argv, char *arg, long size)
 			break;
 
 		cursor += len;
-		if (cursor > arg)
+		if (cursor > params)
 			*(cursor - 1) = ASCII_US;
 	}
-	if (cursor > arg)
+	if (cursor > params)
 		*(cursor - 1) = '\0';
 
 	retval = 0;
