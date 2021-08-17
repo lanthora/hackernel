@@ -8,19 +8,19 @@ typedef asmlinkage u64 (*sys_call_ptr_t)(struct pt_regs *);
 
 extern sys_call_ptr_t *g_sys_call_table;
 
-// 使用外部参数初始化系统调用表
 int init_sys_call_table(u64 sys_call_table);
 
-// 调整系统调用表的写保护状态
 void disable_write_protection(void);
 void enable_write_protection(void);
 
-// 系统调用替换和恢复的实现，使用这个宏必须实现
-// u64 sys_name_hook(struct pt_regs *regs)
-// 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
+/**
+ * 系统调用替换和恢复的实现，使用这个宏必须实现
+ * u64 sys_name_hook(struct pt_regs *regs)
+ * 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
+ */
 #ifndef DEFINE_HOOK
 #define DEFINE_HOOK(name)                                                      \
-	static asmlinkage u64 sys_##name##_hook(struct pt_regs *regs);                \
+	static asmlinkage u64 sys_##name##_hook(struct pt_regs *regs);         \
 	static sys_call_ptr_t __x64_sys_##name = NULL;                         \
 	static int replace_##name(void)                                        \
 	{                                                                      \

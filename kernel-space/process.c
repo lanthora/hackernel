@@ -25,7 +25,6 @@ DEFINE_HOOK(execveat);
 static DECLARE_WAIT_QUEUE_HEAD(wq_process_perm);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
 
-// 由于id是逐一增加的,取余可以平均分配地址空间,由于散列函数的特殊实现,哈希表大小需要是2的整数次幂
 #define PROCESS_PERM_MASK 0xFF
 #define PROCESS_PERM_SIZE (PROCESS_PERM_MASK + 1) // 256
 #define PROCESS_PERM_HASH(id) (id & (PROCESS_PERM_MASK)) // 散列函数
@@ -42,7 +41,6 @@ static int process_perm_init(void)
 {
 	int idx;
 	const size_t size = sizeof(process_perm_head_t) * PROCESS_PERM_SIZE;
-	// hlist初始化方式就是将内存中的变量设置为NULL,kzalloc可以达到相同的效果
 	if (process_perm_hlist)
 		return -EPERM;
 
@@ -160,7 +158,6 @@ static int condition_process_perm(process_perm_id_t id)
 	return process_perm_search(id);
 }
 
-// 将execve的命令发送到用户态,用户态返回这条命令的执行权限
 static process_perm_t process_protect_status(char *params)
 {
 	int error;
@@ -181,11 +178,10 @@ static process_perm_t process_protect_status(char *params)
 		LOG("process_protect_report_to_userspace failed");
 		goto out;
 	}
-	// 进入等待队列
+
 	wait_event_timeout(wq_process_perm, condition_process_perm(id),
 			   timeout);
 
-	// 从等待队列出来了
 	retval = process_perm_search(id);
 
 out:
@@ -225,8 +221,6 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 
 	msg = adjust_path(msg);
 
-	// 只有明确确定收到的是拒绝的情况下才拒绝
-	// 其他情况要么是放行,要么是程序内部错误,都不应该拦截
 	perm = process_protect_status(msg);
 	if (perm == PROCESS_REJECT)
 		error = -EPERM;

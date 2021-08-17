@@ -48,9 +48,6 @@ static struct genl_ops genl_ops[] = {
 	},
 };
 
-// TODO:
-// 参考 net/ethtool/netlink.c:700 的 ethtool_genl_ops
-// 把现在的small_ops重构为ops
 struct genl_family genl_family = {
 	.name = HACKERNEL_FAMLY_NAME,
 	.version = HACKERNEL_FAMLY_VERSION,
