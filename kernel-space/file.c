@@ -3,7 +3,6 @@
 #include "netlink.h"
 #include "syscall.h"
 #include "util.h"
-#include <asm/uaccess.h>
 #include <linux/binfmts.h>
 #include <linux/dcache.h>
 #include <linux/file.h>

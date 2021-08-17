@@ -1,6 +1,6 @@
 #include "util.h"
-#include <asm/current.h>
-#include <asm/uaccess.h>
+//#include <asm/current.h>
+//#include <asm/uaccess.h>
 #include <linux/binfmts.h>
 #include <linux/dcache.h>
 #include <linux/fcntl.h>
@@ -14,7 +14,7 @@
 #include <linux/statfs.h>
 #include <linux/syscalls.h>
 #include <linux/uaccess.h>
-#include <uapi/asm-generic/errno-base.h>
+//#include <uapi/asm-generic/errno-base.h>
 #include <uapi/linux/binfmts.h>
 
 static int argv_size_user(char __user *__user *argv, int max)

@@ -2,7 +2,6 @@
 #include "file.h"
 #include "process.h"
 #include "util.h"
-#include <asm/special_insns.h>
 #include <net/net_namespace.h>
 
 sys_call_ptr_t *g_sys_call_table = NULL;
