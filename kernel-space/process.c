@@ -3,7 +3,6 @@
 #include "netlink.h"
 #include "syscall.h"
 #include "util.h"
-//#include <asm/atomic.h>
 #include <linux/binfmts.h>
 #include <linux/gfp.h>
 #include <linux/list.h>
