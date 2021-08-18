@@ -33,14 +33,11 @@ void disable_write_protection(void)
 #endif
 
 #if defined(CONFIG_ARM)
-#include <asm/set_memory.h>
 void enable_write_protection(void)
 {
-	set_kernel_text_ro();
 }
 
 void disable_write_protection(void)
 {
-	set_kernel_text_rw();
 }
 #endif
