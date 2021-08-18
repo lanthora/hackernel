@@ -238,7 +238,7 @@ static asmlinkage u64 sys_execve_hook(struct pt_regs *regs)
 	if (sys_execveat_helper(AT_FDCWD, pathname, argv, envp, 0))
 		return -EPERM;
 
-	return __x64_sys_execve(regs);
+	return hk_sys_execve(regs);
 }
 
 static asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
@@ -252,7 +252,7 @@ static asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
 	if (sys_execveat_helper(dirfd, pathname, argv, envp, flags))
 		return -EPERM;
 
-	return __x64_sys_execveat(regs);
+	return hk_sys_execveat(regs);
 }
 int enable_process_protect(void)
 {

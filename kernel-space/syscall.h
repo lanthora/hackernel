@@ -22,15 +22,15 @@ void enable_write_protection(void);
 #ifndef DEFINE_HOOK
 #define DEFINE_HOOK(name)                                                      \
 	static asmlinkage u64 sys_##name##_hook(struct pt_regs *regs);         \
-	static sys_call_ptr_t __x64_sys_##name = NULL;                         \
+	static sys_call_ptr_t hk_sys_##name = NULL;                            \
 	static int replace_##name(void)                                        \
 	{                                                                      \
 		if (!g_sys_call_table) {                                       \
 			return -EPERM;                                         \
 		}                                                              \
                                                                                \
-		if (!__x64_sys_##name) {                                       \
-			__x64_sys_##name = g_sys_call_table[__NR_##name];      \
+		if (!hk_sys_##name) {                                          \
+			hk_sys_##name = g_sys_call_table[__NR_##name];         \
 		}                                                              \
                                                                                \
 		disable_write_protection();                                    \
@@ -45,11 +45,11 @@ void enable_write_protection(void);
 			return -EPERM;                                         \
 		}                                                              \
                                                                                \
-		if (!__x64_sys_##name) {                                       \
+		if (!hk_sys_##name) {                                          \
 			return -EPERM;                                         \
 		}                                                              \
 		disable_write_protection();                                    \
-		g_sys_call_table[__NR_##name] = __x64_sys_##name;              \
+		g_sys_call_table[__NR_##name] = hk_sys_##name;                 \
 		enable_write_protection();                                     \
 		return 0;                                                      \
 	}

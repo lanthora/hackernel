@@ -506,7 +506,7 @@ static asmlinkage u64 sys_open_hook(struct pt_regs *regs)
 	if (sys_open_helper(AT_FDCWD, pathname, flags, &data))
 		return -EPERM;
 
-	return __x64_sys_open(regs);
+	return hk_sys_open(regs);
 }
 
 static asmlinkage u64 sys_openat_hook(struct pt_regs *regs)
@@ -520,7 +520,7 @@ static asmlinkage u64 sys_openat_hook(struct pt_regs *regs)
 	if (sys_open_helper(dirfd, pathname, flags, &data))
 		return -EPERM;
 
-	return __x64_sys_openat(regs);
+	return hk_sys_openat(regs);
 }
 
 static asmlinkage u64 sys_unlink_hook(struct pt_regs *regs)
@@ -533,7 +533,7 @@ static asmlinkage u64 sys_unlink_hook(struct pt_regs *regs)
 	if (sys_unlink_helper(AT_FDCWD, pathname, &data))
 		return -EPERM;
 
-	error = __x64_sys_unlink(regs);
+	error = hk_sys_unlink(regs);
 	if (!error && data.this_perm)
 		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
 	return error;
@@ -550,7 +550,7 @@ static asmlinkage u64 sys_unlinkat_hook(struct pt_regs *regs)
 	if (sys_unlink_helper(dirfd, pathname, &data))
 		return -EPERM;
 
-	error = __x64_sys_unlinkat(regs);
+	error = hk_sys_unlinkat(regs);
 	if (!error && data.this_perm)
 		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
 	return error;
@@ -567,7 +567,7 @@ static asmlinkage u64 sys_rename_hook(struct pt_regs *regs)
 	if (sys_rename_helper(AT_FDCWD, srcpath, AT_FDCWD, dstpath, &data))
 		return -EPERM;
 
-	error = __x64_sys_rename(regs);
+	error = hk_sys_rename(regs);
 	if (!error && data.this_perm)
 		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
 	return error;
@@ -586,7 +586,7 @@ static asmlinkage u64 sys_renameat_hook(struct pt_regs *regs)
 	if (sys_rename_helper(srcfd, srcpath, dstfd, dstpath, &data))
 		return -EPERM;
 
-	error = __x64_sys_renameat(regs);
+	error = hk_sys_renameat(regs);
 	if (!error && data.this_perm)
 		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
 	return error;
@@ -605,7 +605,7 @@ static asmlinkage u64 sys_renameat2_hook(struct pt_regs *regs)
 	if (sys_rename_helper(srcfd, srcpath, dstfd, dstpath, &data))
 		return -EPERM;
 
-	error = __x64_sys_renameat2(regs);
+	error = hk_sys_renameat2(regs);
 	if (!error && data.this_perm)
 		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
 	return error;
@@ -620,7 +620,7 @@ static asmlinkage u64 sys_mkdir_hook(struct pt_regs *regs)
 	if (sys_open_helper(AT_FDCWD, pathname, O_CREAT, &data))
 		return -EPERM;
 
-	return __x64_sys_mkdir(regs);
+	return hk_sys_mkdir(regs);
 }
 
 static asmlinkage u64 sys_mkdirat_hook(struct pt_regs *regs)
@@ -633,7 +633,7 @@ static asmlinkage u64 sys_mkdirat_hook(struct pt_regs *regs)
 	if (sys_open_helper(dirfd, pathname, O_CREAT, &data))
 		return -EPERM;
 
-	return __x64_sys_mkdirat(regs);
+	return hk_sys_mkdirat(regs);
 }
 
 static asmlinkage u64 sys_rmdir_hook(struct pt_regs *regs)
@@ -646,7 +646,7 @@ static asmlinkage u64 sys_rmdir_hook(struct pt_regs *regs)
 	if (sys_unlink_helper(AT_FDCWD, pathname, &data))
 		return -EPERM;
 
-	error = __x64_sys_rmdir(regs);
+	error = hk_sys_rmdir(regs);
 	if (!error && data.this_perm)
 		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
 	return error;
@@ -661,7 +661,7 @@ static asmlinkage u64 sys_link_hook(struct pt_regs *regs)
 	if (sys_open_helper(AT_FDCWD, dstpath, O_CREAT, &data))
 		return -EPERM;
 
-	return __x64_sys_link(regs);
+	return hk_sys_link(regs);
 }
 
 static asmlinkage u64 sys_linkat_hook(struct pt_regs *regs)
@@ -674,7 +674,7 @@ static asmlinkage u64 sys_linkat_hook(struct pt_regs *regs)
 	if (sys_open_helper(dstfd, dstpath, O_CREAT, &data))
 		return -EPERM;
 
-	return __x64_sys_linkat(regs);
+	return hk_sys_linkat(regs);
 }
 
 static asmlinkage u64 sys_symlink_hook(struct pt_regs *regs)
@@ -686,7 +686,7 @@ static asmlinkage u64 sys_symlink_hook(struct pt_regs *regs)
 	if (sys_open_helper(AT_FDCWD, dstpath, O_CREAT, &data))
 		return -EPERM;
 
-	return __x64_sys_symlink(regs);
+	return hk_sys_symlink(regs);
 }
 
 static asmlinkage u64 sys_symlinkat_hook(struct pt_regs *regs)
@@ -699,7 +699,7 @@ static asmlinkage u64 sys_symlinkat_hook(struct pt_regs *regs)
 	if (sys_open_helper(dstfd, dstpath, O_CREAT, &data))
 		return -EPERM;
 
-	return __x64_sys_symlinkat(regs);
+	return hk_sys_symlinkat(regs);
 }
 
 static asmlinkage u64 sys_mknod_hook(struct pt_regs *regs)
@@ -711,7 +711,7 @@ static asmlinkage u64 sys_mknod_hook(struct pt_regs *regs)
 	if (sys_open_helper(AT_FDCWD, pathname, O_CREAT, &data))
 		return -EPERM;
 
-	return __x64_sys_mknod(regs);
+	return hk_sys_mknod(regs);
 }
 
 static asmlinkage u64 sys_mknodat_hook(struct pt_regs *regs)
@@ -724,7 +724,7 @@ static asmlinkage u64 sys_mknodat_hook(struct pt_regs *regs)
 	if (sys_open_helper(dirfd, pathname, O_CREAT, &data))
 		return -EPERM;
 
-	return __x64_sys_mknodat(regs);
+	return hk_sys_mknodat(regs);
 }
 
 static int file_perm_init(void)
