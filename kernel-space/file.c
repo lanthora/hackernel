@@ -498,8 +498,8 @@ out:
 
 static asmlinkage u64 sys_open_hook(struct pt_regs *regs)
 {
-	char *pathname = (char *)regs->di;
-	int flags = (int)regs->si;
+	char *pathname = (char *)HKSC_ARGV_ONE;
+	int flags = (int)HKSC_ARGV_TWO;
 
 	struct file_perm_data data;
 
@@ -511,9 +511,9 @@ static asmlinkage u64 sys_open_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_openat_hook(struct pt_regs *regs)
 {
-	int dirfd = (int)regs->di;
-	char *pathname = (char *)regs->si;
-	int flags = (int)regs->dx;
+	int dirfd = (int)HKSC_ARGV_ONE;
+	char *pathname = (char *)HKSC_ARGV_TWO;
+	int flags = (int)HKSC_ARGV_THREE;
 
 	struct file_perm_data data;
 
@@ -525,7 +525,7 @@ static asmlinkage u64 sys_openat_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_unlink_hook(struct pt_regs *regs)
 {
-	char *pathname = (char *)regs->di;
+	char *pathname = (char *)HKSC_ARGV_ONE;
 
 	u64 error;
 	struct file_perm_data data;
@@ -541,8 +541,8 @@ static asmlinkage u64 sys_unlink_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_unlinkat_hook(struct pt_regs *regs)
 {
-	int dirfd = (int)regs->di;
-	char *pathname = (char *)regs->si;
+	int dirfd = (int)HKSC_ARGV_ONE;
+	char *pathname = (char *)HKSC_ARGV_TWO;
 
 	u64 error;
 	struct file_perm_data data;
@@ -558,8 +558,8 @@ static asmlinkage u64 sys_unlinkat_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_rename_hook(struct pt_regs *regs)
 {
-	char *srcpath = (char *)regs->di;
-	char *dstpath = (char *)regs->si;
+	char *srcpath = (char *)HKSC_ARGV_ONE;
+	char *dstpath = (char *)HKSC_ARGV_TWO;
 
 	u64 error;
 	struct file_perm_data data;
@@ -575,10 +575,10 @@ static asmlinkage u64 sys_rename_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_renameat_hook(struct pt_regs *regs)
 {
-	int srcfd = (int)regs->di;
-	char *srcpath = (char *)regs->si;
-	int dstfd = (int)regs->dx;
-	char *dstpath = (char *)regs->r10;
+	int srcfd = (int)HKSC_ARGV_ONE;
+	char *srcpath = (char *)HKSC_ARGV_TWO;
+	int dstfd = (int)HKSC_ARGV_THREE;
+	char *dstpath = (char *)HKSC_ARGV_FOUR;
 
 	u64 error;
 	struct file_perm_data data;
@@ -594,10 +594,10 @@ static asmlinkage u64 sys_renameat_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_renameat2_hook(struct pt_regs *regs)
 {
-	int srcfd = (int)regs->di;
-	char *srcpath = (char *)regs->si;
-	int dstfd = (int)regs->dx;
-	char *dstpath = (char *)regs->r10;
+	int srcfd = (int)HKSC_ARGV_ONE;
+	char *srcpath = (char *)HKSC_ARGV_TWO;
+	int dstfd = (int)HKSC_ARGV_THREE;
+	char *dstpath = (char *)HKSC_ARGV_FOUR;
 
 	u64 error;
 	struct file_perm_data data;
@@ -613,7 +613,7 @@ static asmlinkage u64 sys_renameat2_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_mkdir_hook(struct pt_regs *regs)
 {
-	char *pathname = (char *)regs->di;
+	char *pathname = (char *)HKSC_ARGV_ONE;
 
 	struct file_perm_data data;
 
@@ -625,8 +625,8 @@ static asmlinkage u64 sys_mkdir_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_mkdirat_hook(struct pt_regs *regs)
 {
-	int dirfd = (int)regs->di;
-	char *pathname = (char *)regs->si;
+	int dirfd = (int)HKSC_ARGV_ONE;
+	char *pathname = (char *)HKSC_ARGV_TWO;
 
 	struct file_perm_data data;
 
@@ -638,7 +638,7 @@ static asmlinkage u64 sys_mkdirat_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_rmdir_hook(struct pt_regs *regs)
 {
-	char *pathname = (char *)regs->di;
+	char *pathname = (char *)HKSC_ARGV_ONE;
 
 	u64 error;
 	struct file_perm_data data;
@@ -654,7 +654,7 @@ static asmlinkage u64 sys_rmdir_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_link_hook(struct pt_regs *regs)
 {
-	char *dstpath = (char *)regs->si;
+	char *dstpath = (char *)HKSC_ARGV_TWO;
 
 	struct file_perm_data data;
 
@@ -666,8 +666,8 @@ static asmlinkage u64 sys_link_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_linkat_hook(struct pt_regs *regs)
 {
-	int dstfd = (int)regs->dx;
-	char *dstpath = (char *)regs->r10;
+	int dstfd = (int)HKSC_ARGV_THREE;
+	char *dstpath = (char *)HKSC_ARGV_FOUR;
 
 	struct file_perm_data data;
 
@@ -679,7 +679,7 @@ static asmlinkage u64 sys_linkat_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_symlink_hook(struct pt_regs *regs)
 {
-	char *dstpath = (char *)regs->si;
+	char *dstpath = (char *)HKSC_ARGV_TWO;
 
 	struct file_perm_data data;
 
@@ -691,8 +691,8 @@ static asmlinkage u64 sys_symlink_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_symlinkat_hook(struct pt_regs *regs)
 {
-	int dstfd = (int)regs->si;
-	char *dstpath = (char *)regs->dx;
+	int dstfd = (int)HKSC_ARGV_TWO;
+	char *dstpath = (char *)HKSC_ARGV_THREE;
 
 	struct file_perm_data data;
 
@@ -704,7 +704,7 @@ static asmlinkage u64 sys_symlinkat_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_mknod_hook(struct pt_regs *regs)
 {
-	char *pathname = (char *)regs->di;
+	char *pathname = (char *)HKSC_ARGV_ONE;
 
 	struct file_perm_data data;
 
@@ -716,8 +716,8 @@ static asmlinkage u64 sys_mknod_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_mknodat_hook(struct pt_regs *regs)
 {
-	int dirfd = (int)regs->di;
-	char *pathname = (char *)regs->si;
+	int dirfd = (int)HKSC_ARGV_ONE;
+	char *pathname = (char *)HKSC_ARGV_TWO;
 
 	struct file_perm_data data;
 

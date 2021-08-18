@@ -231,9 +231,9 @@ out:
 
 static asmlinkage u64 sys_execve_hook(struct pt_regs *regs)
 {
-	char *pathname = (char *)regs->di;
-	char **argv = (char **)regs->si;
-	char **envp = (char **)regs->dx;
+	char *pathname = (char *)HKSC_ARGV_ONE;
+	char **argv = (char **)HKSC_ARGV_TWO;
+	char **envp = (char **)HKSC_ARGV_THREE;
 
 	if (sys_execveat_helper(AT_FDCWD, pathname, argv, envp, 0))
 		return -EPERM;
@@ -243,11 +243,11 @@ static asmlinkage u64 sys_execve_hook(struct pt_regs *regs)
 
 static asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
 {
-	int dirfd = (int)regs->di;
-	char *pathname = (char *)regs->si;
-	char **argv = (char **)regs->dx;
-	char **envp = (char **)regs->dx;
-	int flags = (int)regs->r10;
+	int dirfd = (int)HKSC_ARGV_ONE;
+	char *pathname = (char *)HKSC_ARGV_TWO;
+	char **argv = (char **)HKSC_ARGV_THREE;
+	char **envp = (char **)HKSC_ARGV_THREE;
+	int flags = (int)HKSC_ARGV_FOUR;
 
 	if (sys_execveat_helper(dirfd, pathname, argv, envp, flags))
 		return -EPERM;

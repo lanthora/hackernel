@@ -2,6 +2,7 @@
 #define HACKERNEL_SYSCALL_H
 
 #include "util.h"
+#include <generated/autoconf.h>
 #include <linux/kernel.h>
 
 typedef asmlinkage u64 (*sys_call_ptr_t)(struct pt_regs *);
@@ -74,6 +75,22 @@ void enable_write_protection(void);
 			LOG("restore_" STR(name) " failed");                   \
 		}                                                              \
 	} while (0)
+#endif
+
+#if CONFIG_X86
+#define HKSC_ARGV_ONE (regs->di)
+#define HKSC_ARGV_TWO (regs->si)
+#define HKSC_ARGV_THREE (regs->dx)
+#define HKSC_ARGV_FOUR (regs->r10)
+#define HKSC_ARGV_FIVE (regs->r8)
+#endif
+
+#if CONFIG_ARM
+#define HKSC_ARGV_ONE (regs->regs[1])
+#define HKSC_ARGV_TWO (regs->regs[2])
+#define HKSC_ARGV_THREE (regs->regs[3])
+#define HKSC_ARGV_FOUR (regs->regs[4])
+#define HKSC_ARGV_FIVE (regs->regs[5])
 #endif
 
 #endif

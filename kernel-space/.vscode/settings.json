@@ -64,7 +64,8 @@
 		"netfilter.h": "c",
 		"future": "c",
 		"system_error": "c",
-		"istream": "cpp"
+		"istream": "cpp",
+		"set_memory.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
