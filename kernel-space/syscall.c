@@ -15,7 +15,7 @@ int init_sys_call_table(u64 sys_call_table)
 	g_sys_call_table = (sys_call_ptr_t *)sys_call_table;
 	return 0;
 }
-#if CONFIG_X86
+#if defined(CONFIG_X86)
 static inline void write_cr0_forced(unsigned long val)
 {
 	asm volatile("mov %0,%%cr0" : : "r"(val) : "memory");
@@ -32,7 +32,7 @@ void disable_write_protection(void)
 }
 #endif
 
-#if CONFIG_ARM
+#if defined(CONFIG_ARM)
 #include <asm/set_memory.h>
 void enable_write_protection(void)
 {

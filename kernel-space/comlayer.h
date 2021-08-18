@@ -7,6 +7,11 @@
 #include "process.h"
 #include <linux/genetlink.h>
 #include <linux/kernel.h>
+#include <linux/version.h>
+
+#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 11, 0))
+#define nla_strscpy nla_strlcpy
+#endif
 
 int handshake_handler(struct sk_buff *skb, struct genl_info *info);
 

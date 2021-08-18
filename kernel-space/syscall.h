@@ -77,7 +77,7 @@ void enable_write_protection(void);
 	} while (0)
 #endif
 
-#if CONFIG_X86
+#if defined(CONFIG_X86)
 #define HKSC_ARGV_ONE (regs->di)
 #define HKSC_ARGV_TWO (regs->si)
 #define HKSC_ARGV_THREE (regs->dx)
@@ -85,12 +85,12 @@ void enable_write_protection(void);
 #define HKSC_ARGV_FIVE (regs->r8)
 #endif
 
-#if CONFIG_ARM
-#define HKSC_ARGV_ONE (regs->regs[1])
-#define HKSC_ARGV_TWO (regs->regs[2])
-#define HKSC_ARGV_THREE (regs->regs[3])
-#define HKSC_ARGV_FOUR (regs->regs[4])
-#define HKSC_ARGV_FIVE (regs->regs[5])
+#if defined(CONFIG_ARM)
+#define HKSC_ARGV_ONE (regs->uregs[1])
+#define HKSC_ARGV_TWO (regs->uregs[2])
+#define HKSC_ARGV_THREE (regs->uregs[3])
+#define HKSC_ARGV_FOUR (regs->uregs[4])
+#define HKSC_ARGV_FIVE (regs->uregs[5])
 #endif
 
 #endif
