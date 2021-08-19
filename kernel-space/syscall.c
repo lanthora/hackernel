@@ -23,12 +23,12 @@ static inline void write_cr0_forced(unsigned long val)
 
 void enable_write_protection(void)
 {
-	write_cr0_forced(read_cr0() | 0x00010000);
+	write_cr0_forced(read_cr0() | X86_CR0_WP);
 }
 
 void disable_write_protection(void)
 {
-	write_cr0_forced(read_cr0() & ~0x00010000);
+	write_cr0_forced(read_cr0() & ~X86_CR0_WP);
 }
 #endif
 

@@ -69,5 +69,6 @@
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
-	"C_Cpp.clang_format_sortIncludes": true
+	"C_Cpp.clang_format_sortIncludes": true,
+	"C_Cpp.dimInactiveRegions": false
 }
