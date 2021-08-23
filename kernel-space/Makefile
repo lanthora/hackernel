@@ -19,13 +19,21 @@ ccflags-y += -I$(src)/include
 ccflags-y += $(call cc-option,-fmacro-prefix-map=$(PWD)/=)
 
 else
+
 KDIR :=/lib/modules/$(shell uname -r)/build
-release:
+
+release: build strip
+
+build:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
+
+strip:
+	strip hackernel.ko --strip-unneeded
 
 debug:
 	$(MAKE) -C $(KDIR) M=$(PWD) HACKERNEL_MODULE_CFLAGS="-DDEBUG" modules
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
+
 endif 
