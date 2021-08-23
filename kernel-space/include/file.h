@@ -56,4 +56,14 @@ int file_perm_set_path(const char *path, file_perm_t perm);
 int enable_file_protect(void);
 int disable_file_protect(void);
 
+enum {
+	FILE_PROTECT_UNSPEC,
+	FILE_PROTECT_REPORT,
+	FILE_PROTECT_ENABLE,
+	FILE_PROTECT_DISABLE,
+	FILE_PROTECT_SET
+};
+int file_protect_handler(struct sk_buff *skb, struct genl_info *info);
+int file_protect_report_to_userspace(struct file_perm_data *data);
+
 #endif

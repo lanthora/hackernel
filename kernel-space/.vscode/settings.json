@@ -65,7 +65,10 @@
 		"future": "c",
 		"system_error": "c",
 		"istream": "cpp",
-		"set_memory.h": "c"
+		"set_memory.h": "c",
+		"process.h": "c",
+		"net.h": "c",
+		"sched.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

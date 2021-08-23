@@ -107,4 +107,13 @@ int net_policy_delete(policy_id_t id);
 int enable_net_protect(void);
 int disable_net_protect(void);
 
+enum {
+	NET_PROTECT_UNSPEC,
+	NET_PROTECT_ENABLE,
+	NET_PROTECT_DISABLE,
+	NET_PROTECT_INSERT,
+	NET_PROTECT_DELETE,
+};
+int net_protect_handler(struct sk_buff *skb, struct genl_info *info);
+
 #endif

@@ -44,4 +44,15 @@ int process_perm_update(const process_perm_id_t id, const process_perm_t perm);
 int enable_process_protect(void);
 int disable_process_protect(void);
 
+
+enum {
+	PROCESS_PROTECT_UNSPEC,
+	PROCESS_PROTECT_REPORT,
+	PROCESS_PROTECT_ENABLE,
+	PROCESS_PROTECT_DISABLE
+};
+int process_protect_handler(struct sk_buff *skb, struct genl_info *info);
+int process_protect_report_to_userspace(process_perm_id_t id, char *arg);
+
+
 #endif

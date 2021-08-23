@@ -1,8 +1,4 @@
 #include "file.h"
-#include "comlayer.h"
-#include "netlink.h"
-#include "syscall.h"
-#include "util.h"
 #include <linux/binfmts.h>
 #include <linux/dcache.h>
 #include <linux/file.h>

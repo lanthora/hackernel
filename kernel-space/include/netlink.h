@@ -1,7 +1,8 @@
 #ifndef HACKERNEL_NETLINK_KERNEL_SPACE
 #define HACKERNEL_NETLINK_KERNEL_SPACE
 
-#include <linux/kernel.h>
+#include <linux/skbuff.h>
+#include <net/genetlink.h>
 
 #define HACKERNEL_FAMLY_NAME "HACKERNEL"
 #define HACKERNEL_FAMLY_VERSION 1
@@ -28,5 +29,7 @@ void netlink_kernel_start(void);
 void netlink_kernel_stop(void);
 
 extern u32 portid;
+
+int handshake_handler(struct sk_buff *skb, struct genl_info *info);
 
 #endif

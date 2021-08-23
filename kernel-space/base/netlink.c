@@ -1,12 +1,9 @@
 #include "netlink.h"
-#include "comlayer.h"
 #include "file.h"
 #include "net.h"
 #include "process.h"
 #include "syscall.h"
 #include "util.h"
-#include <linux/kernel.h>
-#include <linux/module.h>
 #include <net/genetlink.h>
 #include <net/netlink.h>
 
@@ -73,3 +70,4 @@ void netlink_kernel_stop(void)
 	if (error)
 		LOG("genl_unregister_family failed");
 }
+

@@ -1,6 +1,5 @@
-#include "process.h"
-#include "comlayer.h"
 #include "netlink.h"
+#include "process.h"
 #include "syscall.h"
 #include "util.h"
 #include <linux/binfmts.h>

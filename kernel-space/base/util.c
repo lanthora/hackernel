@@ -1,18 +1,9 @@
 #include "util.h"
 #include <linux/binfmts.h>
-#include <linux/dcache.h>
-#include <linux/fcntl.h>
-#include <linux/fs.h>
 #include <linux/fs_struct.h>
-#include <linux/kernel.h>
-#include <linux/limits.h>
-#include <linux/mm.h>
 #include <linux/namei.h>
-#include <linux/sched.h>
 #include <linux/statfs.h>
 #include <linux/syscalls.h>
-#include <linux/uaccess.h>
-#include <uapi/linux/binfmts.h>
 
 static int argv_size_user(char __user *__user *argv, int max)
 {
@@ -408,3 +399,30 @@ unsigned long get_ino(const char *name)
 	path_put(&path);
 	return retval;
 }
+
+#if defined(CONFIG_X86)
+static inline void write_cr0_forced(unsigned long val)
+{
+	asm volatile("mov %0,%%cr0" : : "r"(val) : "memory");
+}
+
+void enable_write_protection(void)
+{
+	write_cr0_forced(read_cr0() | X86_CR0_WP);
+}
+
+void disable_write_protection(void)
+{
+	write_cr0_forced(read_cr0() & ~X86_CR0_WP);
+}
+#endif
+
+#if defined(CONFIG_ARM)
+void enable_write_protection(void)
+{
+}
+
+void disable_write_protection(void)
+{
+}
+#endif

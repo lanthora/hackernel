@@ -5,7 +5,8 @@
             "includePath": [
                 "/usr/src/linux/include",
                 "/usr/src/linux/arch/x86/include",
-                "/usr/src/linux/arch/x86/include/generated"
+                "/usr/src/linux/arch/x86/include/generated",
+		"${workspaceFolder}/include"
             ],
             "defines": [
                 "__KERNEL__=1",

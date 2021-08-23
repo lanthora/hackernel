@@ -33,4 +33,8 @@ char *adjust_path(char *path);
 /* 用特殊ascii码间隔不同参数,0x1F是单元分隔符 */
 #define ASCII_US 0x1F
 #define ASCII_US_STR "\x1F"
+
+void disable_write_protection(void);
+void enable_write_protection(void);
+
 #endif
