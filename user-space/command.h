@@ -22,31 +22,29 @@ typedef int32_t file_perm_t;
 #define RENAME_PROTECT_FLAG 8
 #define ALL_FILE_PROTECT_FLAG 15
 
-enum
-{
-    FILE_PROTECT_UNSPEC,
-    FILE_PROTECT_REPORT,
-    FILE_PROTECT_ENABLE,
-    FILE_PROTECT_DISABLE,
-    FILE_PROTECT_SET
+enum {
+  FILE_PROTECT_UNSPEC,
+  FILE_PROTECT_REPORT,
+  FILE_PROTECT_ENABLE,
+  FILE_PROTECT_DISABLE,
+  FILE_PROTECT_SET
 };
 
-int enable_file_protect();
-int disable_file_protect();
-int set_file_protect(const std::string &path, file_perm_t perm);
+int enableFileProtect();
+int disableFileProtect();
+int setFileProtect(const std::string &path, file_perm_t perm);
 
 /**
  * process protect
  */
-typedef int process_perm_id_t;
-typedef int32_t process_perm_t;
+typedef int ProcessPermId;
+typedef int32_t ProcessPerm;
 
-enum
-{
-    PROCESS_PROTECT_UNSPEC,
-    PROCESS_PROTECT_REPORT,
-    PROCESS_PROTECT_ENABLE,
-    PROCESS_PROTECT_DISABLE
+enum {
+  PROCESS_PROTECT_UNSPEC,
+  PROCESS_PROTECT_REPORT,
+  PROCESS_PROTECT_ENABLE,
+  PROCESS_PROTECT_DISABLE
 };
 
 #define PROCESS_INVAILD -1
@@ -54,77 +52,76 @@ enum
 #define PROCESS_ACCEPT 1
 #define PROCESS_REJECT 2
 
-int enable_process_protect();
-int disable_process_protect();
-process_perm_t check_precess_perm(char *cmd);
-int reply_process_perm(process_perm_id_t id, process_perm_t perm);
+int enableProcessProtect();
+int disableProcessProtect();
+ProcessPerm checkProcessPerm(char *cmd);
+int replyProcessPerm(ProcessPermId id, ProcessPerm perm);
 
 /**
  * net protect
  */
-typedef uint32_t addr_t;
-typedef uint16_t port_t;
-typedef uint8_t protocol_t;
-typedef uint32_t response_t;
-typedef uint32_t policy_id_t;
-typedef int8_t priority_t;
+typedef uint32_t Addr;
+typedef uint16_t Port;
+typedef uint8_t Protocol;
+typedef uint32_t Response;
+typedef uint32_t PolicyId;
+typedef int8_t Priority;
 
 #define NET_POLICY_DROP 0
 #define NET_POLICY_ACCEPT 1
 
-enum
-{
-    NET_PROTECT_UNSPEC,
-    NET_PROTECT_ENABLE,
-    NET_PROTECT_DISABLE,
-    NET_PROTECT_INSERT,
-    NET_PROTECT_DELETE,
+enum {
+  NET_PROTECT_UNSPEC,
+  NET_PROTECT_ENABLE,
+  NET_PROTECT_DISABLE,
+  NET_PROTECT_INSERT,
+  NET_PROTECT_DELETE,
 };
 
 /**
  * 优先级(priority)相同的情况下, 后添加的优先命中
- * 多个net_policy_t可以有相同的id, 根据id可以批量删除
+ * 多个NetPolicy可以有相同的id, 根据id可以批量删除
  * 所有的数据都为主机序
  */
-struct net_policy_t {
-    policy_id_t id;
-    priority_t priority;
+struct NetPolicy {
+  PolicyId id;
+  Priority priority;
 
+  struct {
     struct {
-        struct {
-            addr_t begin;
-            addr_t end;
-        } src;
-        struct {
-            addr_t begin;
-            addr_t end;
-        } dst;
-    } addr;
-
+      Addr begin;
+      Addr end;
+    } src;
     struct {
-        struct {
-            port_t begin;
-            port_t end;
-        } src;
-        struct {
-            port_t begin;
-            port_t end;
-        } dst;
-    } port;
+      Addr begin;
+      Addr end;
+    } dst;
+  } addr;
 
+  struct {
     struct {
-        protocol_t begin;
-        protocol_t end;
-    } protocol;
+      Port begin;
+      Port end;
+    } src;
+    struct {
+      Port begin;
+      Port end;
+    } dst;
+  } port;
 
-    response_t response;
-    int flags;
+  struct {
+    Protocol begin;
+    Protocol end;
+  } protocol;
+
+  Response response;
+  int flags;
 };
 
-int net_policy_insert(const net_policy_t &policy);
-int net_policy_delete(policy_id_t id);
+int netPolicyInsert(const NetPolicy &policy);
+int netPolicyDelete(PolicyId id);
 
-int enable_net_protect();
-int disable_net_protect(void);
+int enableNetProtect();
+int disableNetProtect(void);
 
 #endif

@@ -17,56 +17,56 @@
 #include <thread>
 #include <unistd.h>
 
-void exit_sig_handler(int sig) {
-    LOG("received signal, exit now");
-    disable_file_protect();
-    disable_process_protect();
-    disable_net_protect();
-    netlink_server_stop();
+void exitSigHandler(int sig) {
+  LOG("received signal, exit now");
+  disableFileProtect();
+  disableProcessProtect();
+  disableNetProtect();
+  netlinkServerStop();
 }
 
 int main() {
-    int error;
+  int Error;
 
-    signal(SIGINT, exit_sig_handler);
-    signal(SIGTERM, exit_sig_handler);
+  signal(SIGINT, exitSigHandler);
+  signal(SIGTERM, exitSigHandler);
 
-    error = netlink_server_init();
-    if (error) {
-        exit(1);
-    }
+  Error = netlinkServerInit();
+  if (Error) {
+    exit(1);
+  }
 
-    std::thread netlink_thread(netlink_server_start);
+  std::thread NetlinkThread(netlinkServerStart);
 
-    handshake();
-    enable_process_protect();
+  handshake();
+  enableProcessProtect();
 
-    enable_file_protect();
-    set_file_protect("/root/hackernel/build/nothing", ALL_FILE_PROTECT_FLAG);
+  enableFileProtect();
+  setFileProtect("/root/hackernel/build/nothing", ALL_FILE_PROTECT_FLAG);
 
-    enable_net_protect();
+  enableNetProtect();
 
-    net_policy_t policy;
-    policy.addr.src.begin = ntohl(inet_addr("127.0.0.1"));
-    policy.addr.src.end = ntohl(inet_addr("127.0.0.1"));
-    policy.addr.dst.begin = ntohl(inet_addr("127.0.0.1"));
-    policy.addr.dst.end = ntohl(inet_addr("127.0.0.1"));
+  NetPolicy policy;
+  policy.addr.src.begin = ntohl(inet_addr("127.0.0.1"));
+  policy.addr.src.end = ntohl(inet_addr("127.0.0.1"));
+  policy.addr.dst.begin = ntohl(inet_addr("127.0.0.1"));
+  policy.addr.dst.end = ntohl(inet_addr("127.0.0.1"));
 
-    // ssh
-    policy.port.src.begin = 0;
-    policy.port.src.end = UINT16_MAX;
-    policy.port.dst.begin = 22;
-    policy.port.dst.end = 22;
-    // tcp
-    policy.protocol.begin = 6;
-    policy.protocol.end = 6;
+  // ssh
+  policy.port.src.begin = 0;
+  policy.port.src.end = UINT16_MAX;
+  policy.port.dst.begin = 22;
+  policy.port.dst.end = 22;
+  // tcp
+  policy.protocol.begin = 6;
+  policy.protocol.end = 6;
 
-    policy.id = 0;
-    policy.flags = 1 | 2;
-    policy.priority = 0;
-    policy.response = NET_POLICY_DROP;
-    net_policy_insert(policy);
+  policy.id = 0;
+  policy.flags = 1 | 2;
+  policy.priority = 0;
+  policy.response = NET_POLICY_DROP;
+  netPolicyInsert(policy);
 
-    netlink_thread.join();
-    return 0;
+  NetlinkThread.join();
+  return 0;
 }

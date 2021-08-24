@@ -3,62 +3,42 @@
 #include <fcntl.h>
 #include <stdio.h>
 
-static int init_sys_call_table_addr(unsigned long *sys_call_table) {
-    int retval = -1;
-    char line[128];
+static int initSyscallTableAddr(unsigned long *sys_call_table) {
+  int retval = -1;
+  char line[128];
 
-    if (sys_call_table == NULL) {
-        return retval;
-    }
+  if (sys_call_table == NULL) {
+    return retval;
+  }
 
-    *sys_call_table = 0UL;
+  *sys_call_table = 0UL;
 
-    FILE *kallsyms = fopen("/proc/kallsyms", "r");
-    if (kallsyms == NULL) {
-        return retval;
-    }
+  FILE *kallsyms = fopen("/proc/kallsyms", "r");
+  if (kallsyms == NULL) {
+    return retval;
+  }
 
-    while (fgets(line, sizeof(line), kallsyms)) {
-        if (!strstr(line, " sys_call_table"))
-            continue;
-        sscanf(line, "%lx", sys_call_table);
-    }
+  while (fgets(line, sizeof(line), kallsyms)) {
+    if (!strstr(line, " sys_call_table"))
+      continue;
+    sscanf(line, "%lx", sys_call_table);
+  }
 
-    fclose(kallsyms);
-    return !*sys_call_table;
+  fclose(kallsyms);
+  return !*sys_call_table;
 }
 
 int handshake() {
-    int error = 0;
-    struct nl_msg *msg = NULL;
-    int size;
+  struct nl_msg *msg = NULL;
 
-    unsigned long sys_call_table;
-    if (init_sys_call_table_addr(&sys_call_table)) {
-        LOG("init_sys_call_table_addr failed");
-        goto errout;
-    }
+  unsigned long sys_call_table;
+  initSyscallTableAddr(&sys_call_table);
 
-    msg = nlmsg_alloc();
-    if (!msg) {
-        LOG("nlmsg_alloc failed");
-        goto errout;
-    }
-    genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
-    error = nla_put_u64(msg, HANDSHAKE_A_SYS_CALL_TABLE_HEADER, sys_call_table);
-    if (error) {
-        LOG("nla_put_u64 failed");
-        goto errout;
-    }
-
-    size = nl_send_auto(nlsock, msg);
-    if (size < 0) {
-        LOG("nl_send_auto failed error=[%d]", error);
-        error = size;
-        goto errout;
-    }
-
-errout:
-    nlmsg_free(msg);
-    return error;
+  msg = nlmsg_alloc();
+  genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, FamId, 0, NLM_F_REQUEST,
+              HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
+  nla_put_u64(msg, HANDSHAKE_A_SYS_CALL_TABLE_HEADER, sys_call_table);
+  nl_send_auto(NlSock, msg);
+  nlmsg_free(msg);
+  return 0;
 }

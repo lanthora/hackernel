@@ -1,8 +1,8 @@
 ﻿---
 BasedOnStyle: LLVM
-ColumnLimit: '140'
-IndentWidth: '4'
-AllowShortEnumsOnASingleLine: false
-
+AllowShortBlocksOnASingleLine: 'false'
+AllowShortCaseLabelsOnASingleLine: 'false'
+AllowShortFunctionsOnASingleLine: None
+AllowShortIfStatementsOnASingleLine: Never
 
 ...

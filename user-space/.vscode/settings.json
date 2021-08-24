@@ -65,6 +65,9 @@
                 "thread": "cpp",
                 "cinttypes": "cpp",
                 "typeinfo": "cpp",
-                "family.h": "c"
-        }
+                "family.h": "c",
+                "netfwd": "cpp",
+                "stdio.h": "c"
+        },
+        "editor.tabSize": 2
 }

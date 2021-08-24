@@ -1,85 +1,42 @@
 #include "command.h"
 #include "util.h"
 
-int update_process_protect_status(uint8_t status) {
-    int error = 0;
-    struct nl_msg *msg = NULL;
-    int size;
+int updateProcessProtectStatus(uint8_t Status) {
 
-    msg = nlmsg_alloc();
-    if (!msg) {
-        LOG("nlmsg_alloc failed");
-        error = -ENOMEM;
-        goto errout;
-    }
+  struct nl_msg *Message = NULL;
 
-    genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_PROCESS_PROTECT, HACKERNEL_FAMLY_VERSION);
-
-    error = nla_put_u8(msg, PROCESS_A_OP_TYPE, status);
-    if (error) {
-        LOG("nla_put_u8 failed");
-        goto errout;
-    }
-    size = nl_send_auto(nlsock, msg);
-    if (size < 0) {
-        LOG("nl_send_auto failed error=[%d]", error);
-        error = size;
-        goto errout;
-    }
-
-errout:
-    nlmsg_free(msg);
-    return error;
+  Message = nlmsg_alloc();
+  genlmsg_put(Message, NL_AUTO_PID, NL_AUTO_SEQ, FamId, 0, NLM_F_REQUEST,
+              HACKERNEL_C_PROCESS_PROTECT, HACKERNEL_FAMLY_VERSION);
+  nla_put_u8(Message, PROCESS_A_OP_TYPE, Status);
+  nl_send_auto(NlSock, Message);
+  nlmsg_free(Message);
+  return 0;
 }
 
-int enable_process_protect() { return update_process_protect_status(PROCESS_PROTECT_ENABLE); }
-int disable_process_protect() { return update_process_protect_status(PROCESS_PROTECT_DISABLE); }
-
-process_perm_t check_precess_perm(char *cmd) {
-    process_perm_t perm = PROCESS_ACCEPT;
-    return perm;
+int enableProcessProtect() {
+  return updateProcessProtectStatus(PROCESS_PROTECT_ENABLE);
+}
+int disableProcessProtect() {
+  return updateProcessProtectStatus(PROCESS_PROTECT_DISABLE);
 }
 
-int reply_process_perm(process_perm_id_t id, process_perm_t perm) {
-    int error = 0;
-    struct nl_msg *msg = NULL;
-    int size;
+ProcessPerm checkProcessPerm(char *Cmd) {
+  ProcessPerm Perm = PROCESS_ACCEPT;
+  return Perm;
+}
 
-    msg = nlmsg_alloc();
-    if (!msg) {
-        LOG("nlmsg_alloc failed");
-        error = -ENOMEM;
-        goto errout;
-    }
+int replyProcessPerm(ProcessPermId Id, ProcessPerm Perm) {
 
-    genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, famid, 0, NLM_F_REQUEST, HACKERNEL_C_PROCESS_PROTECT, HACKERNEL_FAMLY_VERSION);
+  struct nl_msg *Message = NULL;
 
-    error = nla_put_u8(msg, PROCESS_A_OP_TYPE, PROCESS_PROTECT_REPORT);
-    if (error) {
-        LOG("nla_put_u8 failed");
-        goto errout;
-    }
-
-    error = nla_put_s32(msg, PROCESS_A_ID, id);
-    if (error) {
-        LOG("nla_put_s32 failed");
-        goto errout;
-    }
-
-    error = nla_put_s32(msg, PROCESS_A_PERM, perm);
-    if (error) {
-        LOG("nla_put_s32 failed");
-        goto errout;
-    }
-
-    size = nl_send_auto(nlsock, msg);
-    if (size < 0) {
-        LOG("nl_send_auto failed error=[%d]", error);
-        error = size;
-        goto errout;
-    }
-
-errout:
-    nlmsg_free(msg);
-    return error;
+  Message = nlmsg_alloc();
+  genlmsg_put(Message, NL_AUTO_PID, NL_AUTO_SEQ, FamId, 0, NLM_F_REQUEST,
+              HACKERNEL_C_PROCESS_PROTECT, HACKERNEL_FAMLY_VERSION);
+  nla_put_u8(Message, PROCESS_A_OP_TYPE, PROCESS_PROTECT_REPORT);
+  nla_put_s32(Message, PROCESS_A_ID, Id);
+  nla_put_s32(Message, PROCESS_A_PERM, Perm);
+  nl_send_auto(NlSock, Message);
+  nlmsg_free(Message);
+  return 0;
 }

@@ -10,40 +10,42 @@
 #include <unistd.h>
 
 int insmod(const char *filename) {
-    int error = -1;
-    struct stat st;
-    int fd;
-    void *image;
-    int image_size = 0;
+  int error = -1;
+  struct stat st;
+  int fd;
+  void *image;
+  int image_size = 0;
 
-    fd = open(filename, O_RDONLY);
-    if (fd < 0)
-        goto out;
+  fd = open(filename, O_RDONLY);
+  if (fd < 0)
+    goto out;
 
-    error = fstat(fd, &st);
-    if (error)
-        goto closefd;
+  error = fstat(fd, &st);
+  if (error)
+    goto closefd;
 
-    image_size = st.st_size;
-    image = malloc(image_size);
-    if (!image)
-        goto closefd;
+  image_size = st.st_size;
+  image = malloc(image_size);
+  if (!image)
+    goto closefd;
 
-    error = read(fd, image, image_size);
-    if (error < 0)
-        goto freemem;
+  error = read(fd, image, image_size);
+  if (error < 0)
+    goto freemem;
 
-    error = syscall(__NR_init_module, image, image_size, "");
-    if (error)
-        goto freemem;
+  error = syscall(__NR_init_module, image, image_size, "");
+  if (error)
+    goto freemem;
 
-    error = 0;
+  error = 0;
 freemem:
-    free(image);
+  free(image);
 closefd:
-    close(fd);
+  close(fd);
 out:
-    return error;
+  return error;
 }
 
-int rmmod(const char *modulename) { return 0; }
+int rmmod(const char *modulename) {
+  return 0;
+}
