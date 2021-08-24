@@ -78,9 +78,9 @@ enum {
 };
 #define NET_A_MAX (__NET_A_MAX - 1)
 
-int netlinkServerInit(void);
-int netlinkServerStart(void);
-int netlinkServerStop(void);
+int initNetlinkServer(void);
+int startNetlinkServer(void);
+int stopNetlinkServer(void);
 
 extern struct nl_sock *NlSock;
 extern int FamId;

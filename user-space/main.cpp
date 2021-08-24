@@ -22,7 +22,7 @@ void sigHandler(int sig) {
   disableFileProtect();
   disableProcessProtect();
   disableNetProtect();
-  netlinkServerStop();
+  stopNetlinkServer();
 }
 
 int main() {
@@ -31,12 +31,12 @@ int main() {
   signal(SIGINT, sigHandler);
   signal(SIGTERM, sigHandler);
 
-  Error = netlinkServerInit();
+  Error = initNetlinkServer();
   if (Error) {
     exit(1);
   }
 
-  std::thread NetlinkThread(netlinkServerStart);
+  std::thread NetlinkThread(startNetlinkServer);
 
   handshake();
   enableProcessProtect();

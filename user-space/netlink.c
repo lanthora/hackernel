@@ -93,7 +93,7 @@ static struct genl_ops hackernel_genl_ops = {
     .o_ncmds = ARRAY_SIZE(hackernel_genl_cmds),
 };
 
-int netlinkServerInit() {
+int initNetlinkServer() {
   int error;
 
   if (NlSock) {
@@ -159,7 +159,7 @@ errout:
   return -1;
 }
 
-int netlinkServerStart(void) {
+int startNetlinkServer(void) {
   int error;
 
   struct pollfd fds = {
@@ -194,7 +194,7 @@ int netlinkServerStart(void) {
   return 0;
 }
 
-int netlinkServerStop(void) {
+int stopNetlinkServer(void) {
   Status = 0;
   return 0;
 }
