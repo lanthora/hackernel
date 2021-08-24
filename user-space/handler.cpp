@@ -7,7 +7,7 @@
 int handshakeHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd,
                       struct genl_info *genl_info, void *arg) {
   int code = nla_get_s32(genl_info->attrs[HANDSHAKE_A_STATUS_CODE]);
-  LOG("handshake response code=[%d]", code);
+  LOG("handshake Response code=[%d]", code);
   return 0;
 }
 
@@ -19,18 +19,18 @@ int processProtectHandler(struct nl_cache_ops *unused,
   case PROCESS_PROTECT_ENABLE: {
     int code;
     code = nla_get_s32(genl_info->attrs[PROCESS_A_STATUS_CODE]);
-    LOG("process ctl enable response code=[%d]", code);
+    LOG("process ctl enable Response code=[%d]", code);
     break;
   }
   case PROCESS_PROTECT_REPORT: {
     int error;
-    int id;
+    int Id;
     char *name;
 
-    id = nla_get_s32(genl_info->attrs[PROCESS_A_ID]);
+    Id = nla_get_s32(genl_info->attrs[PROCESS_A_ID]);
     name = nla_get_string(genl_info->attrs[PROCESS_A_NAME]);
     LOG("process: name=[%s]", name);
-    error = replyProcessPerm(id, checkProcessPerm(name));
+    error = replyProcessPerm(Id, checkProcessPerm(name));
     if (error) {
       LOG("replyProcessPerm failed");
     }
@@ -52,7 +52,7 @@ int fileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd,
   case FILE_PROTECT_DISABLE:
   case FILE_PROTECT_SET: {
     int code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
-    LOG("file ctrl response code=[%d]", code);
+    LOG("file ctrl Response code=[%d]", code);
     break;
   }
   case FILE_PROTECT_REPORT: {
@@ -87,7 +87,7 @@ int netProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd,
   case NET_PROTECT_INSERT:
   case NET_PROTECT_DELETE: {
     int code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
-    LOG("net ctrl response code=[%d]", code);
+    LOG("net ctrl Response code=[%d]", code);
     break;
   }
   default:

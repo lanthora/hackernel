@@ -32,7 +32,7 @@ enum {
 
 int enableFileProtect();
 int disableFileProtect();
-int setFileProtect(const std::string &path, file_perm_t perm);
+int setFileProtect(const std::string &Path, file_perm_t Perm);
 
 /**
  * process protect
@@ -54,18 +54,18 @@ enum {
 
 int enableProcessProtect();
 int disableProcessProtect();
-ProcessPerm checkProcessPerm(char *cmd);
-int replyProcessPerm(ProcessPermId id, ProcessPerm perm);
+ProcessPerm checkProcessPerm(char *Cmd);
+int replyProcessPerm(ProcessPermId Id, ProcessPerm Perm);
 
 /**
  * net protect
  */
-typedef uint32_t Addr;
-typedef uint16_t Port;
-typedef uint8_t Protocol;
-typedef uint32_t Response;
-typedef uint32_t PolicyId;
-typedef int8_t Priority;
+typedef uint32_t NetAddr;
+typedef uint16_t NetPort;
+typedef uint8_t NetProtocol;
+typedef uint32_t NetResponse;
+typedef uint32_t NetPolicyId;
+typedef int8_t NetPriority;
 
 #define NET_POLICY_DROP 0
 #define NET_POLICY_ACCEPT 1
@@ -79,47 +79,47 @@ enum {
 };
 
 /**
- * 优先级(priority)相同的情况下, 后添加的优先命中
- * 多个NetPolicy可以有相同的id, 根据id可以批量删除
+ * 优先级(Priority)相同的情况下, 后添加的优先命中
+ * 多个NetPolicy可以有相同的id, 根据Id可以批量删除
  * 所有的数据都为主机序
  */
 struct NetPolicy {
-  PolicyId id;
-  Priority priority;
+  NetPolicyId Id;
+  NetPriority Priority;
 
   struct {
     struct {
-      Addr begin;
-      Addr end;
-    } src;
+      NetAddr Begin;
+      NetAddr End;
+    } Src;
     struct {
-      Addr begin;
-      Addr end;
-    } dst;
-  } addr;
+      NetAddr Begin;
+      NetAddr End;
+    } Dst;
+  } Addr;
 
   struct {
     struct {
-      Port begin;
-      Port end;
-    } src;
+      NetPort Begin;
+      NetPort End;
+    } Src;
     struct {
-      Port begin;
-      Port end;
-    } dst;
-  } port;
+      NetPort Begin;
+      NetPort End;
+    } Dst;
+  } Port;
 
   struct {
-    Protocol begin;
-    Protocol end;
-  } protocol;
+    NetProtocol Begin;
+    NetProtocol End;
+  } Protocol;
 
-  Response response;
-  int flags;
+  NetResponse Response;
+  int Flags;
 };
 
-int netPolicyInsert(const NetPolicy &policy);
-int netPolicyDelete(PolicyId id);
+int netPolicyInsert(const NetPolicy &Policy);
+int netPolicyDelete(NetPolicyId Id);
 
 int enableNetProtect();
 int disableNetProtect(void);

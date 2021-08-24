@@ -17,7 +17,7 @@
 #include <thread>
 #include <unistd.h>
 
-void exitSigHandler(int sig) {
+void sigHandler(int sig) {
   LOG("received signal, exit now");
   disableFileProtect();
   disableProcessProtect();
@@ -28,8 +28,8 @@ void exitSigHandler(int sig) {
 int main() {
   int Error;
 
-  signal(SIGINT, exitSigHandler);
-  signal(SIGTERM, exitSigHandler);
+  signal(SIGINT, sigHandler);
+  signal(SIGTERM, sigHandler);
 
   Error = netlinkServerInit();
   if (Error) {
@@ -47,24 +47,24 @@ int main() {
   enableNetProtect();
 
   NetPolicy policy;
-  policy.addr.src.begin = ntohl(inet_addr("127.0.0.1"));
-  policy.addr.src.end = ntohl(inet_addr("127.0.0.1"));
-  policy.addr.dst.begin = ntohl(inet_addr("127.0.0.1"));
-  policy.addr.dst.end = ntohl(inet_addr("127.0.0.1"));
+  policy.Addr.Src.Begin = ntohl(inet_addr("127.0.0.1"));
+  policy.Addr.Src.End = ntohl(inet_addr("127.0.0.1"));
+  policy.Addr.Dst.Begin = ntohl(inet_addr("127.0.0.1"));
+  policy.Addr.Dst.End = ntohl(inet_addr("127.0.0.1"));
 
   // ssh
-  policy.port.src.begin = 0;
-  policy.port.src.end = UINT16_MAX;
-  policy.port.dst.begin = 22;
-  policy.port.dst.end = 22;
+  policy.Port.Src.Begin = 0;
+  policy.Port.Src.End = UINT16_MAX;
+  policy.Port.Dst.Begin = 22;
+  policy.Port.Dst.End = 22;
   // tcp
-  policy.protocol.begin = 6;
-  policy.protocol.end = 6;
+  policy.Protocol.Begin = 6;
+  policy.Protocol.End = 6;
 
-  policy.id = 0;
-  policy.flags = 1 | 2;
-  policy.priority = 0;
-  policy.response = NET_POLICY_DROP;
+  policy.Id = 0;
+  policy.Flags = 1 | 2;
+  policy.Priority = 0;
+  policy.Response = NET_POLICY_DROP;
   netPolicyInsert(policy);
 
   NetlinkThread.join();

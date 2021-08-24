@@ -67,7 +67,8 @@
                 "typeinfo": "cpp",
                 "family.h": "c",
                 "netfwd": "cpp",
-                "stdio.h": "c"
+                "stdio.h": "c",
+                "*.inc": "cpp"
         },
         "editor.tabSize": 2
 }
