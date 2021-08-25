@@ -33,7 +33,7 @@ static void process_perm_head_init(process_perm_head_t *perm_head)
 	rwlock_init(&perm_head->lock);
 }
 
-process_perm_head_t *process_perm_hlist;
+static process_perm_head_t *process_perm_hlist;
 
 static int process_perm_init(void)
 {

@@ -22,16 +22,16 @@ else
 
 KDIR :=/lib/modules/$(shell uname -r)/build
 
-release: build strip
+all: release strip
 
-build:
+release:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
-
-strip:
-	strip hackernel.ko --strip-unneeded
 
 debug:
 	$(MAKE) -C $(KDIR) M=$(PWD) HACKERNEL_MODULE_CFLAGS="-DDEBUG" modules
+
+strip:
+	strip hackernel.ko --strip-unneeded
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
