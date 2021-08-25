@@ -46,6 +46,8 @@ out:
   return error;
 }
 
-int rmmod(const char *modulename) {
-  return 0;
+int rmmod(const char *module) {
+  int error;
+  error = syscall(__NR_delete_module, module);
+  return error;
 }
