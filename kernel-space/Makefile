@@ -20,11 +20,11 @@ ccflags-y += $(call cc-option,-fmacro-prefix-map=$(PWD)/=)
 
 else
 
-KDIR :=/lib/modules/$(shell uname -r)/build
+KERNELRELEASE ?= $(shell uname -r)
+KDIR ?= /lib/modules/$(KERNELRELEASE)/build
 
 release:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
-	strip hackernel.ko --strip-unneeded
 
 debug:
 	$(MAKE) -C $(KDIR) M=$(PWD) HACKERNEL_MODULE_CFLAGS="-DDEBUG" modules
