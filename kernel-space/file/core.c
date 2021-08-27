@@ -38,6 +38,7 @@ DEFINE_HOOK(mknodat);
 
 static struct file_perm_list file_perm_list_head;
 static bool file_perm_list_initialized = false;
+static bool file_perm_enable = false;
 static DEFINE_RWLOCK(file_perm_list_lock);
 static DEFINE_RWLOCK(file_perm_tree_lock);
 
@@ -386,6 +387,9 @@ static int sys_open_helper(int dirfd, char __user *pathname, int flags,
 	char *path = NULL;
 	char *real = NULL;
 
+	if (!file_perm_enable)
+		return 0;
+
 	path = get_absolute_path_alloc(dirfd, pathname);
 	real = kmalloc(PATH_MAX, GFP_KERNEL);
 	if (!path || !real)
@@ -419,6 +423,9 @@ static int sys_unlink_helper(int dirfd, char __user *pathname,
 	int is_forbidden = 0;
 	char *path = NULL;
 
+	if (!file_perm_enable)
+		return 0;
+
 	path = get_absolute_path_alloc(dirfd, pathname);
 	if (!path)
 		goto out;
@@ -443,7 +450,8 @@ static int sys_rename_helper(int srcfd, char __user *srcpath, int dstfd,
 	int is_forbidden = 0;
 	char *src = NULL;
 	char *dst = NULL;
-
+	if (!file_perm_enable)
+		return 0;
 	src = get_absolute_path_alloc(srcfd, srcpath);
 	if (!src)
 		goto out;
@@ -742,11 +750,13 @@ int enable_file_protect(void)
 	REG_HOOK(symlinkat);
 	REG_HOOK(mknod);
 	REG_HOOK(mknodat);
+	file_perm_enable = true;
 	return 0;
 }
 
 int disable_file_protect(void)
 {
+	file_perm_enable = false;
 	UNREG_HOOK(open);
 	UNREG_HOOK(openat);
 	UNREG_HOOK(unlink);
