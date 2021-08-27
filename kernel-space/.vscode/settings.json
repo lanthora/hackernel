@@ -68,7 +68,9 @@
 		"set_memory.h": "c",
 		"process.h": "c",
 		"net.h": "c",
-		"sched.h": "c"
+		"sched.h": "c",
+		"memory": "c",
+		"sstream": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

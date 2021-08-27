@@ -36,9 +36,10 @@ DEFINE_HOOK(symlinkat);
 DEFINE_HOOK(mknod);
 DEFINE_HOOK(mknodat);
 
-static struct file_perm_list *file_perm_list_head;
-static rwlock_t *file_perm_list_lock;
-static rwlock_t *file_perm_tree_lock;
+static struct file_perm_list file_perm_list_head;
+static bool file_perm_list_initialized = false;
+static DEFINE_RWLOCK(file_perm_list_lock);
+static DEFINE_RWLOCK(file_perm_tree_lock);
 
 static int file_perm_node_cmp(struct file_perm_node *ns,
 			      struct file_perm_node *nt)
@@ -68,7 +69,7 @@ static int file_perm_tree_insert(struct rb_root *root,
 {
 	int error = 0;
 	struct rb_node **new = &(root->rb_node), *parent = NULL;
-	write_lock(file_perm_tree_lock);
+	write_lock(&file_perm_tree_lock);
 	while (*new) {
 		struct file_perm_node *this;
 		int result;
@@ -90,7 +91,7 @@ static int file_perm_tree_insert(struct rb_root *root,
 	rb_link_node(&data->node, parent, new);
 	rb_insert_color(&data->node, root);
 out:
-	write_unlock(file_perm_tree_lock);
+	write_unlock(&file_perm_tree_lock);
 	return error;
 }
 
@@ -99,7 +100,7 @@ static struct file_perm_node *file_perm_tree_search(struct rb_root *root,
 {
 	struct rb_node *node = root->rb_node;
 	struct file_perm_node *retval = NULL;
-	read_lock(file_perm_tree_lock);
+	read_lock(&file_perm_tree_lock);
 	while (node) {
 		struct file_perm_node *data;
 		int result;
@@ -117,14 +118,14 @@ static struct file_perm_node *file_perm_tree_search(struct rb_root *root,
 		}
 	}
 out:
-	read_unlock(file_perm_tree_lock);
+	read_unlock(&file_perm_tree_lock);
 	return retval;
 }
 
 static int file_perm_tree_destory(struct rb_root *root)
 {
 	struct file_perm_node *data;
-	write_lock(file_perm_tree_lock);
+	write_lock(&file_perm_tree_lock);
 	while (!RB_EMPTY_ROOT(root)) {
 		data = container_of(rb_first(root), struct file_perm_node,
 				    node);
@@ -133,21 +134,7 @@ static int file_perm_tree_destory(struct rb_root *root)
 	}
 
 	kfree(root);
-	write_unlock(file_perm_tree_lock);
-	return 0;
-}
-
-static int file_perm_list_init(void)
-{
-	if (file_perm_list_head)
-		return -EPERM;
-
-	file_perm_list_head =
-		kzalloc(sizeof(struct file_perm_list), GFP_KERNEL);
-	if (!file_perm_list_head)
-		return -ENOMEM;
-
-	INIT_LIST_HEAD(&file_perm_list_head->node);
+	write_unlock(&file_perm_tree_lock);
 	return 0;
 }
 
@@ -157,22 +144,19 @@ static struct rb_root *file_perm_list_search_or_create_perm_tree(fsid_t fsid)
 	struct file_perm_list *data, *n;
 	struct rb_root *retval = NULL;
 
-	if (!file_perm_list_head)
-		goto errout;
-
-	data = list_first_entry_or_null(&file_perm_list_head->node,
+	data = list_first_entry_or_null(&file_perm_list_head.node,
 					struct file_perm_list, node);
 	if (data && data->fsid == fsid)
 		return data->root;
 
-	write_lock(file_perm_list_lock);
-	list_for_each_entry_safe (data, n, &file_perm_list_head->node, node) {
+	write_lock(&file_perm_list_lock);
+	list_for_each_entry_safe (data, n, &file_perm_list_head.node, node) {
 		if (data->fsid != fsid)
 			continue;
-		list_move(&data->node, &file_perm_list_head->node);
+		list_move(&data->node, &file_perm_list_head.node);
 		retval = data->root;
 	}
-	write_unlock(file_perm_list_lock);
+	write_unlock(&file_perm_list_lock);
 
 	if (retval)
 		return retval;
@@ -186,9 +170,9 @@ static struct rb_root *file_perm_list_search_or_create_perm_tree(fsid_t fsid)
 	if (!data->root)
 		goto errout;
 
-	write_lock(file_perm_list_lock);
-	list_add(&data->node, &file_perm_list_head->node);
-	write_unlock(file_perm_list_lock);
+	write_lock(&file_perm_list_lock);
+	list_add(&data->node, &file_perm_list_head.node);
+	write_unlock(&file_perm_list_lock);
 
 	return data->root;
 
@@ -203,23 +187,14 @@ errout:
 static int file_perm_list_destory(void)
 {
 	struct file_perm_list *data, *n;
+	write_lock(&file_perm_list_lock);
 
-	if (!file_perm_list_head)
-		return -EPERM;
-	write_lock(file_perm_list_lock);
-	list_for_each_entry_safe (data, n, &file_perm_list_head->node, node) {
+	list_for_each_entry_safe (data, n, &file_perm_list_head.node, node) {
 		list_del(&data->node);
-
-		write_lock(file_perm_tree_lock);
 		file_perm_tree_destory(data->root);
-		write_unlock(file_perm_tree_lock);
-
 		kfree(data);
 	}
-
-	kfree(file_perm_list_head);
-	file_perm_list_head = NULL;
-	write_unlock(file_perm_list_lock);
+	write_unlock(&file_perm_list_lock);
 	return 0;
 }
 
@@ -741,37 +716,19 @@ static asmlinkage u64 sys_mknodat_hook(struct pt_regs *regs)
 
 static int file_perm_init(void)
 {
-	int error;
-	error = file_perm_list_init();
-	if (error)
-		return error;
-
-	file_perm_list_lock = kmalloc(sizeof(rwlock_t), GFP_KERNEL);
-	file_perm_tree_lock = kmalloc(sizeof(rwlock_t), GFP_KERNEL);
-
-	if (file_perm_list_lock && file_perm_tree_lock) {
-		rwlock_init(file_perm_list_lock);
-		rwlock_init(file_perm_tree_lock);
+	if (file_perm_list_initialized)
 		return 0;
-	}
-	kfree(file_perm_list_lock);
-	kfree(file_perm_tree_lock);
-	return -ENOMEM;
+
+	INIT_LIST_HEAD(&file_perm_list_head.node);
+	file_perm_list_initialized = true;
+
+	return 0;
 }
 
 static int file_perm_destory(void)
 {
-	file_perm_list_destory();
-	if (file_perm_list_lock) {
-		kfree(file_perm_list_lock);
-		file_perm_list_lock = NULL;
-	}
-
-	if (file_perm_tree_lock) {
-		kfree(file_perm_tree_lock);
-		file_perm_tree_lock = NULL;
-	}
-
+	if (file_perm_list_initialized)
+		file_perm_list_destory();
 	return 0;
 }
 int enable_file_protect(void)
