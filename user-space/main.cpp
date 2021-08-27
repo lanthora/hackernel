@@ -25,6 +25,10 @@ void sigHandler(int sig) {
   stopNetlinkServer();
 }
 
+#define PROCESS_PROTECT 1
+#define FILE_PROTECT 1
+#define NET_PROTECT 1
+
 int main() {
   int Error;
 
