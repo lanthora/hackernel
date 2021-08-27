@@ -39,11 +39,18 @@ int main() {
   std::thread NetlinkThread(startNetlinkServer);
 
   handshake();
+
+#if PROCESS_PROTECT
   enableProcessProtect();
+#endif
+
+#if FILE_PROTECT
 
   enableFileProtect();
   setFileProtect("/root/hackernel/build/nothing", ALL_FILE_PROTECT_FLAG);
+#endif
 
+#if NET_PROTECT
   enableNetProtect();
 
   NetPolicy policy;
@@ -66,6 +73,7 @@ int main() {
   policy.Priority = 0;
   policy.Response = NET_POLICY_DROP;
   netPolicyInsert(policy);
+#endif
 
   NetlinkThread.join();
   return 0;
