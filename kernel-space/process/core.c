@@ -34,17 +34,24 @@ static void process_perm_head_init(process_perm_head_t *perm_head)
 }
 
 static process_perm_head_t *process_perm_hlist;
+static DEFINE_RWLOCK(process_perm_hlist_lock);
 
 static int process_perm_init(void)
 {
-	int idx;
+	int idx, error;
 	const size_t size = sizeof(process_perm_head_t) * PROCESS_PERM_SIZE;
-	if (process_perm_hlist)
-		return -EPERM;
+
+	write_lock(&process_perm_hlist_lock);
+	if (process_perm_hlist) {
+		error = -EPERM;
+		goto out;
+	}
 
 	process_perm_hlist = kmalloc(size, GFP_KERNEL);
 	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx)
 		process_perm_head_init(&process_perm_hlist[idx]);
+out:
+	write_unlock(&process_perm_hlist_lock);
 
 	return 0;
 }
@@ -64,14 +71,19 @@ static void process_perm_hlist_node_destory(process_perm_head_t *perm_head)
 static int process_perm_destory(void)
 {
 	size_t idx;
-	if (!process_perm_hlist)
-		return -EPERM;
 
+	write_lock(&process_perm_hlist_lock);
+	if (!process_perm_hlist) {
+		return -EPERM;
+		goto out;
+	}
 	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx)
 		process_perm_hlist_node_destory(&process_perm_hlist[idx]);
 
 	kfree(process_perm_hlist);
 	process_perm_hlist = NULL;
+out:
+	write_unlock(&process_perm_hlist_lock);
 	return 0;
 }
 
