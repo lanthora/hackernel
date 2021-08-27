@@ -41,27 +41,19 @@ static bool file_perm_list_initialized = false;
 static DEFINE_RWLOCK(file_perm_list_lock);
 static DEFINE_RWLOCK(file_perm_tree_lock);
 
-static int file_perm_node_cmp(struct file_perm_node *ns,
-			      struct file_perm_node *nt)
-{
-	if (ns->ino < nt->ino)
-		return -1;
-
-	if (ns->ino > nt->ino)
-		return 1;
-
-	return 0;
-}
-
 static int ino_cmp(ino_t ns, ino_t nt)
 {
 	if (ns < nt)
 		return -1;
-
 	if (ns > nt)
 		return 1;
-
 	return 0;
+}
+
+static int file_perm_node_cmp(struct file_perm_node *ns,
+			      struct file_perm_node *nt)
+{
+	return ino_cmp(ns->ino, nt->ino);
 }
 
 static int file_perm_tree_insert(struct rb_root *root,

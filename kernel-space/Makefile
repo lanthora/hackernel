@@ -22,6 +22,7 @@ else
 
 KERNELRELEASE ?= $(shell uname -r)
 KDIR ?= /lib/modules/$(KERNELRELEASE)/build
+DRIVER_VERSION := 0.0.1
 
 release:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
@@ -32,5 +33,17 @@ debug:
 
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
+
+install:
+	mkdir -p /usr/src/hackernel-$(DRIVER_VERSION)
+	cp -r * /usr/src/hackernel-$(DRIVER_VERSION)
+	dkms add -m hackernel -v $(DRIVER_VERSION)
+	dkms build -m hackernel -v $(DRIVER_VERSION)
+	dkms install -m hackernel -v $(DRIVER_VERSION)
+	dkms status
+
+remove:
+	dkms remove hackernel/$(DRIVER_VERSION) --all
+	rm -rf /usr/src/hackernel-$(DRIVER_VERSION)
 
 endif 

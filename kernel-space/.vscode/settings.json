@@ -70,7 +70,8 @@
 		"net.h": "c",
 		"sched.h": "c",
 		"memory": "c",
-		"sstream": "c"
+		"sstream": "c",
+		"cstring": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
