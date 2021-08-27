@@ -33,7 +33,7 @@ static void process_perm_head_init(process_perm_head_t *perm_head)
 	rwlock_init(&perm_head->lock);
 }
 
-static process_perm_head_t *process_perm_hlist;
+static process_perm_head_t *process_perm_hlist = NULL;
 static DEFINE_RWLOCK(process_perm_hlist_lock);
 
 static int process_perm_init(void)
@@ -71,10 +71,10 @@ static void process_perm_hlist_node_destory(process_perm_head_t *perm_head)
 static int process_perm_destory(void)
 {
 	size_t idx;
-
+	int error = 0;
 	write_lock(&process_perm_hlist_lock);
 	if (!process_perm_hlist) {
-		return -EPERM;
+		error = -EPERM;
 		goto out;
 	}
 	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx)
@@ -84,7 +84,7 @@ static int process_perm_destory(void)
 	process_perm_hlist = NULL;
 out:
 	write_unlock(&process_perm_hlist_lock);
-	return 0;
+	return error;
 }
 
 static int process_perm_insert(const process_perm_id_t id)

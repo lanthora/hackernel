@@ -267,14 +267,14 @@ static const struct nf_hook_ops net_policy_ops[] = {
 	},
 };
 
-static u8 hooked = 0;
+static bool hooked = false;
 int enable_net_protect(void)
 {
 	if (hooked)
 		return -EPERM;
 	if (!nf_register_net_hooks(&init_net, net_policy_ops,
 				   ARRAY_SIZE(net_policy_ops)))
-		hooked = 1;
+		hooked = true;
 	return 0;
 }
 
@@ -286,6 +286,6 @@ int disable_net_protect(void)
 	net_policy_clear();
 	nf_unregister_net_hooks(&init_net, net_policy_ops,
 				ARRAY_SIZE(net_policy_ops));
-	hooked = 0;
+	hooked = false;
 	return 0;
 }
