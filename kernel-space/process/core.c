@@ -91,15 +91,26 @@ static int process_perm_insert(const process_perm_id_t id)
 {
 	const size_t size = sizeof(process_perm_node_t);
 	const size_t idx = PROCESS_PERM_HASH(id);
-	process_perm_head_t *perm_head = &process_perm_hlist[idx];
-	process_perm_node_t *new = kmalloc(size, GFP_KERNEL);
+	process_perm_head_t *perm_head;
+	process_perm_node_t *new;
 
+	read_lock(&process_perm_hlist_lock);
+	if (!process_perm_hlist)
+		goto out;
+	perm_head = &process_perm_hlist[idx];
+	new = kmalloc(size, GFP_KERNEL);
+	if (!new) {
+		LOG("no memory");
+		goto out;
+	}
 	new->id = id;
 	new->perm = PROCESS_WATT;
 
 	write_lock(&perm_head->lock);
 	hlist_add_head(&new->node, &perm_head->head);
 	write_unlock(&perm_head->lock);
+out:
+	read_unlock(&process_perm_hlist_lock);
 	return 0;
 }
 
@@ -107,7 +118,12 @@ int process_perm_update(const process_perm_id_t id, const process_perm_t perm)
 {
 	struct process_perm_node *pos;
 	const size_t idx = PROCESS_PERM_HASH(id);
-	process_perm_head_t *perm_head = &process_perm_hlist[idx];
+	process_perm_head_t *perm_head;
+
+	read_lock(&process_perm_hlist_lock);
+	if (!process_perm_hlist)
+		goto out;
+	perm_head = &process_perm_hlist[idx];
 
 	write_lock(&perm_head->lock);
 	hlist_for_each_entry (pos, &perm_head->head, node) {
@@ -118,7 +134,8 @@ int process_perm_update(const process_perm_id_t id, const process_perm_t perm)
 		break;
 	}
 	write_unlock(&perm_head->lock);
-
+out:
+	read_unlock(&process_perm_hlist_lock);
 	wake_up(&wq_process_perm);
 
 	return 0;
@@ -128,8 +145,13 @@ static process_perm_t process_perm_search(const process_perm_id_t id)
 {
 	struct process_perm_node *pos;
 	const size_t idx = PROCESS_PERM_HASH(id);
-	process_perm_head_t *perm_head = &process_perm_hlist[idx];
 	process_perm_t perm = PROCESS_INVAILD;
+	process_perm_head_t *perm_head;
+
+	read_lock(&process_perm_hlist_lock);
+	if (!process_perm_hlist)
+		goto out;
+	perm_head = &process_perm_hlist[idx];
 
 	read_lock(&perm_head->lock);
 	hlist_for_each_entry (pos, &perm_head->head, node) {
@@ -140,6 +162,8 @@ static process_perm_t process_perm_search(const process_perm_id_t id)
 		break;
 	}
 	read_unlock(&perm_head->lock);
+out:
+	read_unlock(&process_perm_hlist_lock);
 	return perm;
 }
 
@@ -148,7 +172,12 @@ static int process_perm_delele(const process_perm_id_t id)
 	struct process_perm_node *victim;
 	struct hlist_node *n;
 	const size_t idx = PROCESS_PERM_HASH(id);
-	process_perm_head_t *perm_head = &process_perm_hlist[idx];
+	process_perm_head_t *perm_head;
+
+	read_lock(&process_perm_hlist_lock);
+	if (!process_perm_hlist)
+		goto out;
+	perm_head = &process_perm_hlist[idx];
 
 	write_lock(&perm_head->lock);
 	hlist_for_each_entry_safe (victim, n, &perm_head->head, node) {
@@ -160,6 +189,8 @@ static int process_perm_delele(const process_perm_id_t id)
 		break;
 	}
 	write_unlock(&perm_head->lock);
+out:
+	read_unlock(&process_perm_hlist_lock);
 	return 0;
 }
 

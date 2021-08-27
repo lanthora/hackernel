@@ -34,7 +34,7 @@ debug:
 clean:
 	$(MAKE) -C $(KDIR) M=$(PWD) clean
 
-install:
+install: clean
 	mkdir -p /usr/src/hackernel-$(DRIVER_VERSION)
 	cp -r * /usr/src/hackernel-$(DRIVER_VERSION)
 	dkms add -m hackernel -v $(DRIVER_VERSION)
