@@ -1,5 +1,10 @@
 # hackernel
 
-## 运行环境
+## TODO
 
-由于兼容性问题，本项目仅确保可在最新版本的Archlinux中运行。
+- [x] 支持x86架构
+- [ ] 支持ARM架构
+- [x] DKMS
+- [x] linux stable
+- [x] linux 5.10.x
+
