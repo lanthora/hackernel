@@ -419,6 +419,14 @@ void disable_wp(phys_addr_t addr)
 #endif
 
 #if defined(CONFIG_ARM)
+/**
+ * 需要关闭系统调用表的内存写保护.在x86架构中,可以屏蔽CR0中的写保护位,
+ * ARM中貌似没有这样的寄存器.后面的思路是修改内存页表项,尝试通过init_mm
+ * 实现,发现init_mm没有导出,也就没有办法通过init_mm找到pte,有没有什么
+ * 其他办法可以找到pte,另外还需要考虑pte有没有被pmd加了写保护.
+ *
+ * 或者说,这件事可能根本就做不到?
+ */
 void enable_wp(phys_addr_t addr)
 {
 }
