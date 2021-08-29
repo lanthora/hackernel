@@ -28,9 +28,9 @@ extern sys_call_ptr_t *g_sys_call_table;
 			hk_sys_##name = g_sys_call_table[__NR_##name];         \
 		}                                                              \
                                                                                \
-		disable_write_protection();                                    \
+		disable_wp((phys_addr_t)(g_sys_call_table + __NR_##name));     \
 		g_sys_call_table[__NR_##name] = &sys_##name##_hook;            \
-		enable_write_protection();                                     \
+		enable_wp((phys_addr_t)(g_sys_call_table + __NR_##name));      \
 		return 0;                                                      \
 	}                                                                      \
                                                                                \
@@ -43,9 +43,9 @@ extern sys_call_ptr_t *g_sys_call_table;
 		if (!hk_sys_##name) {                                          \
 			return -EPERM;                                         \
 		}                                                              \
-		disable_write_protection();                                    \
+		disable_wp((phys_addr_t)(g_sys_call_table + __NR_##name));     \
 		g_sys_call_table[__NR_##name] = hk_sys_##name;                 \
-		enable_write_protection();                                     \
+		enable_wp((phys_addr_t)(g_sys_call_table + __NR_##name));      \
 		return 0;                                                      \
 	}
 #endif

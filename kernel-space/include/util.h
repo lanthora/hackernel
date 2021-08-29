@@ -32,7 +32,7 @@ char *adjust_path(char *path);
 #define ASCII_US 0x1F
 #define ASCII_US_STR "\x1F"
 
-void disable_write_protection(void);
-void enable_write_protection(void);
+void disable_wp(phys_addr_t addr);
+void enable_wp(phys_addr_t addr);
 
 #endif

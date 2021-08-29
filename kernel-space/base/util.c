@@ -407,23 +407,23 @@ static inline void write_cr0_forced(unsigned long val)
 	asm volatile("mov %0,%%cr0" : : "r"(val) : "memory");
 }
 
-void enable_write_protection(void)
+void enable_wp(phys_addr_t addr)
 {
 	write_cr0_forced(read_cr0() | X86_CR0_WP);
 }
 
-void disable_write_protection(void)
+void disable_wp(phys_addr_t addr)
 {
 	write_cr0_forced(read_cr0() & ~X86_CR0_WP);
 }
 #endif
 
 #if defined(CONFIG_ARM)
-void enable_write_protection(void)
+void enable_wp(phys_addr_t addr)
 {
 }
 
-void disable_write_protection(void)
+void disable_wp(phys_addr_t addr)
 {
 }
 #endif
