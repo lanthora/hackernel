@@ -215,7 +215,6 @@ out:
 	return retval;
 }
 
-// TODO: 添加对内存申请是否成功的校验
 static int sys_execveat_helper(int dirfd, char __user *pathname,
 			       char __user *__user *argv,
 			       char __user *__user *envp, int flag)
@@ -223,6 +222,7 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 	char *cmd = NULL;
 	char *params = NULL;
 	char *msg = NULL;
+	char *pwd = NULL;
 	int error = 0, len;
 	process_perm_t perm = PROCESS_INVAILD;
 
@@ -236,10 +236,15 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 	if (!msg)
 		goto out;
 
+	pwd = get_pwd_path_alloc();
+	if (!pwd)
+		goto out;
+	strcat(msg, pwd);
+
 	cmd = get_absolute_path_alloc(dirfd, pathname);
 	if (!cmd)
 		goto out;
-
+	strcat(msg, ASCII_US_STR);
 	strcat(msg, cmd);
 
 	params = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
@@ -265,6 +270,7 @@ out:
 	kfree(cmd);
 	kfree(msg);
 	kfree(params);
+	kfree(pwd);
 	return error;
 }
 

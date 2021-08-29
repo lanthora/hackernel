@@ -52,7 +52,7 @@ int parse_argv(const char __user *const __user *argv, char *params, long size)
 		goto out;
 
 	len = 0, cursor = params;
-	for (idx = 1; idx < argc; ++idx) {
+	for (idx = 0; idx < argc; ++idx) {
 		remain = size - (cursor - params);
 		if (remain <= 0)
 			break;
