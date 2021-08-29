@@ -184,7 +184,7 @@ static int condition_process_perm(process_perm_id_t id)
 	return process_perm_search(id);
 }
 
-static process_perm_t process_protect_status(char *params)
+static process_perm_t process_protect_status(char *msg)
 {
 	int error;
 	static process_perm_id_t id;
@@ -199,7 +199,7 @@ static process_perm_t process_protect_status(char *params)
 		goto out;
 	}
 
-	error = process_protect_report_to_userspace(id, params);
+	error = process_protect_report_to_userspace(id, msg);
 	if (error) {
 		LOG("process_protect_report_to_userspace failed");
 		goto out;
@@ -219,11 +219,12 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 			       char __user *__user *argv,
 			       char __user *__user *envp, int flag)
 {
-	char *cmd = NULL;
-	char *params = NULL;
 	char *msg = NULL;
 	char *pwd = NULL;
-	int error = 0, len;
+	char *exec = NULL;
+	char *cmd = NULL;
+
+	int error = 0;
 	process_perm_t perm = PROCESS_INVAILD;
 
 	if (!process_perm_enable)
@@ -241,24 +242,18 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 		goto out;
 	strcat(msg, pwd);
 
-	cmd = get_absolute_path_alloc(dirfd, pathname);
-	if (!cmd)
+	exec = get_absolute_path_alloc(dirfd, pathname);
+	if (!exec)
 		goto out;
 	strcat(msg, ASCII_US_STR);
+	strcat(msg, exec);
+
+	cmd = parse_argv_alloc((const char *const *)argv);
+	if (!cmd)
+		goto out;
+
+	strcat(msg, ASCII_US_STR);
 	strcat(msg, cmd);
-
-	params = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
-	if (!params)
-		goto out;
-
-	len = parse_argv((const char *const *)argv, params, MAX_ARG_STRLEN);
-	if (len < 0)
-		goto out;
-
-	if (len > 0) {
-		strcat(msg, ASCII_US_STR);
-		strcat(msg, params);
-	}
 
 	msg = adjust_path(msg);
 
@@ -267,10 +262,11 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 		error = -EPERM;
 
 out:
-	kfree(cmd);
 	kfree(msg);
-	kfree(params);
 	kfree(pwd);
+	kfree(exec);
+	kfree(cmd);
+
 	return error;
 }
 

@@ -5,9 +5,7 @@
 #include <linux/sched.h>
 #include <linux/uuid.h>
 
-int parse_pathname(const char __user *pathname, char *path, long size);
-int parse_argv(const char __user *const __user *argv, char *params, long size);
-
+char *parse_argv_alloc(const char __user *const __user *argv);
 char *get_root_path_alloc(void);
 char *get_pwd_path_alloc(void);
 char *get_current_process_path_alloc(void);

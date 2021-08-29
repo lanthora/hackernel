@@ -3,7 +3,7 @@
 
 extern struct genl_family genl_family;
 
-int process_protect_report_to_userspace(process_perm_id_t id, char *arg)
+int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 {
 	int error = 0;
 	struct sk_buff *skb = NULL;
@@ -38,7 +38,7 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *arg)
 		goto errout;
 	}
 
-	error = nla_put_string(skb, PROCESS_A_NAME, arg);
+	error = nla_put_string(skb, PROCESS_A_NAME, cmd);
 	if (error) {
 		LOG("nla_put_string failed");
 		goto errout;

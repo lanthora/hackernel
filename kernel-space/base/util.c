@@ -23,59 +23,60 @@ static int argv_size_user(char __user *__user *argv, int max)
 	return argc;
 }
 
-int parse_pathname(const char __user *pathname, char *path, long size)
+char *parse_argv_alloc(const char __user *const __user *argv)
 {
-	unsigned long lack;
-	lack = copy_from_user(path, pathname, strnlen_user(pathname, size));
-	return lack;
-}
-
-int parse_argv(const char __user *const __user *argv, char *params, long size)
-{
-	char __user **p, *cursor;
+	char *cmd;
+	int argc;
 	long idx, remain, len;
 	unsigned long lack;
-	int retval = -EFAULT;
-	int argc;
+	long size = MAX_ARG_STRLEN;
+	char __user **p = NULL, *cursor;
+
+	cmd = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
+	if (!cmd)
+		goto errout;
 
 	argc = argv_size_user((char **)argv, BINPRM_BUF_SIZE);
 	if (!argc)
-		goto out;
+		goto errout;
 
 	p = kmalloc(argc * sizeof(void *), GFP_KERNEL);
 
 	if (!p)
-		goto out;
+		goto errout;
 
 	lack = copy_from_user(p, argv, argc * sizeof(void *));
 	if (lack)
-		goto out;
+		goto errout;
 
-	len = 0, cursor = params;
+	len = 0, cursor = cmd;
 	for (idx = 0; idx < argc; ++idx) {
-		remain = size - (cursor - params);
+		remain = size - (cursor - cmd);
 		if (remain <= 0)
 			break;
 
 		len = strnlen_user(p[idx], remain);
-		if (!len)
-			break;
+		if (len == 0 || len > remain)
+			goto errout;
 
 		lack = copy_from_user(cursor, p[idx], len);
 		if (lack)
 			break;
 
 		cursor += len;
-		if (cursor > params)
-			*(cursor - 1) = ASCII_US;
+		*(cursor - 1) = ASCII_US;
 	}
-	if (cursor > params)
-		*(cursor - 1) = '\0';
+	if (!(cursor > cmd))
+		goto errout;
 
-	retval = cursor - params;
-out:
+	*(cursor - 1) = '\0';
+
 	kfree(p);
-	return retval;
+	return cmd;
+errout:
+	kfree(p);
+	kfree(cmd);
+	return NULL;
 }
 
 char *get_exec_path(struct task_struct *task, void *buffer, size_t buffer_size)
