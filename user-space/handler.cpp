@@ -19,6 +19,7 @@ int processProtectHandler(struct nl_cache_ops *unused,
   int Id;
   char *Name;
   int Code;
+  std::string Msg;
 
   switch (Type) {
   case PROCESS_PROTECT_ENABLE:
@@ -29,7 +30,14 @@ int processProtectHandler(struct nl_cache_ops *unused,
   case PROCESS_PROTECT_REPORT:
     Id = nla_get_s32(genl_info->attrs[PROCESS_A_ID]);
     Name = nla_get_string(genl_info->attrs[PROCESS_A_NAME]);
-    LOG("process: Id=[%d] Name=[%s]", Id, Name);
+    Msg.assign(Name);
+
+    std::for_each(Msg.begin(), Msg.end(), [](char &c) {
+      if (c == 0x1F)
+        c = '#';
+    });
+
+    LOG("process: Id=[%d] Name=[%s]", Id, Msg.data());
     Error = replyProcessPerm(Id, checkProcessPerm(Name));
     if (Error)
       LOG("replyProcessPerm failed");

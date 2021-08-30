@@ -9,6 +9,7 @@ add_executable(${PROJECT_NAME} ${DIR_SRCS})
 
 set(CMAKE_C_FLAGS "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/=")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS}")
+set_property(TARGET hackernel PROPERTY CXX_STANDARD 20)
 
 target_link_libraries(${PROJECT_NAME} nl-3)
 target_link_libraries(${PROJECT_NAME} nl-genl-3)
