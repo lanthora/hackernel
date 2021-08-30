@@ -776,3 +776,13 @@ int disable_file_protect(void)
 	file_perm_destory();
 	return 0;
 }
+
+int file_protect_init(void)
+{
+	return 0;
+}
+
+int file_protect_destory(void)
+{
+	return disable_file_protect();
+}

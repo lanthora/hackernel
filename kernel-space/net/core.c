@@ -199,7 +199,7 @@ miss:
 	return NET_POLICY_MISS;
 }
 static int net_policy_bound_hit(const struct hknf_buff *buff,
-			    const struct net_policy_t *policy)
+				const struct net_policy_t *policy)
 {
 	switch (buff->state->hook) {
 	case NF_INET_LOCAL_IN:
@@ -288,4 +288,14 @@ int disable_net_protect(void)
 				ARRAY_SIZE(net_policy_ops));
 	hooked = false;
 	return 0;
+}
+
+int net_protect_init(void)
+{
+	return 0;
+}
+
+int net_protect_destory(void)
+{
+	return disable_net_protect();
 }

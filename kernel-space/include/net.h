@@ -106,6 +106,8 @@ int net_policy_delete(policy_id_t id);
 
 int enable_net_protect(void);
 int disable_net_protect(void);
+int net_protect_init(void);
+int net_protect_destory(void);
 
 enum {
 	NET_PROTECT_UNSPEC,

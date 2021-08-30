@@ -10,6 +10,9 @@ MODULE_LICENSE("GPL v2");
 static int init(void)
 {
 	LOG("module_init");
+	process_protect_init();
+	file_protect_init();
+	net_protect_init();
 	netlink_kernel_start();
 	return 0;
 }
@@ -17,9 +20,9 @@ static int init(void)
 static void cleanup(void)
 {
 	netlink_kernel_stop();
-	disable_process_protect();
-	disable_file_protect();
-	disable_net_protect();
+	process_protect_destory();
+	file_protect_destory();
+	net_protect_destory();
 	LOG("module_exit");
 	return;
 }

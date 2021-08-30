@@ -43,7 +43,8 @@ int process_perm_update(const process_perm_id_t id, const process_perm_t perm);
 
 int enable_process_protect(void);
 int disable_process_protect(void);
-
+int process_protect_init(void);
+int process_protect_destory(void);
 
 enum {
 	PROCESS_PROTECT_UNSPEC,

@@ -30,29 +30,26 @@ static atomic_t atomic_process_id = ATOMIC_INIT(0);
 static process_perm_head_t process_perm_hlist[PROCESS_PERM_SIZE];
 static DEFINE_RWLOCK(process_perm_hlist_lock);
 
-static bool process_perm_enable = false;
-
-static void process_perm_head_init(process_perm_head_t *perm_head)
+static void process_perm_hlist_node_init(process_perm_head_t *perm_head)
 {
-	if (hlist_empty(&perm_head->head))
-		return;
 	INIT_HLIST_HEAD(&perm_head->head);
+	/* 读写锁需要运行时初始化 */
 	rwlock_init(&perm_head->lock);
 }
 
-static int process_perm_init(void)
+static int process_perm_hlist_init(void)
 {
 	int idx;
 
 	write_lock(&process_perm_hlist_lock);
 	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx)
-		process_perm_head_init(&process_perm_hlist[idx]);
+		process_perm_hlist_node_init(&process_perm_hlist[idx]);
 	write_unlock(&process_perm_hlist_lock);
 
 	return 0;
 }
 
-static void process_perm_hlist_node_destory(process_perm_head_t *perm_head)
+static void process_perm_hlist_node_clear(process_perm_head_t *perm_head)
 {
 	struct process_perm_node *pos;
 	struct hlist_node *n;
@@ -64,13 +61,13 @@ static void process_perm_hlist_node_destory(process_perm_head_t *perm_head)
 	write_unlock(&perm_head->lock);
 }
 
-static int process_perm_destory(void)
+static int process_perm_hlist_clear(void)
 {
 	size_t idx;
 
 	write_lock(&process_perm_hlist_lock);
 	for (idx = 0; idx < PROCESS_PERM_SIZE; ++idx)
-		process_perm_hlist_node_destory(&process_perm_hlist[idx]);
+		process_perm_hlist_node_clear(&process_perm_hlist[idx]);
 	write_unlock(&process_perm_hlist_lock);
 
 	return 0;
@@ -179,9 +176,10 @@ static int process_perm_delele(const process_perm_id_t id)
 	return 0;
 }
 
-static int condition_process_perm(process_perm_id_t id)
+static int process_perm_condition(process_perm_id_t id, process_perm_t *retval)
 {
-	return process_perm_search(id);
+	*retval = process_perm_search(id);
+	return *retval;
 }
 
 static process_perm_t process_protect_status(char *msg)
@@ -205,10 +203,8 @@ static process_perm_t process_protect_status(char *msg)
 		goto out;
 	}
 
-	wait_event_timeout(process_perm_wq, condition_process_perm(id),
+	wait_event_timeout(process_perm_wq, process_perm_condition(id, &retval),
 			   timeout);
-
-	retval = process_perm_search(id);
 
 out:
 	process_perm_delele(id);
@@ -226,9 +222,6 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 
 	int error = 0;
 	process_perm_t perm = PROCESS_INVAILD;
-
-	if (!process_perm_enable)
-		return 0;
 
 	if (!portid)
 		goto out;
@@ -297,18 +290,25 @@ static asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
 }
 int enable_process_protect(void)
 {
-	process_perm_init();
 	REG_HOOK(execve);
 	REG_HOOK(execveat);
-	process_perm_enable = true;
 	return 0;
 }
 
 int disable_process_protect(void)
 {
-	process_perm_enable = false;
 	UNREG_HOOK(execve);
 	UNREG_HOOK(execveat);
-	process_perm_destory();
+	process_perm_hlist_clear();
 	return 0;
+}
+
+int process_protect_init()
+{
+	return process_perm_hlist_init();
+}
+
+int process_protect_destory()
+{
+	return disable_process_protect();
 }
