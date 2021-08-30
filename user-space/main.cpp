@@ -49,9 +49,8 @@ int main() {
 #endif
 
 #if FILE_PROTECT
-
   enableFileProtect();
-  setFileProtect("/root/hackernel/build/nothing", ALL_FILE_PROTECT_FLAG);
+  setFileProtect("/etc/fstab", ALL_FILE_PROTECT_FLAG - READ_PROTECT_FLAG);
 #endif
 
 #if NET_PROTECT
