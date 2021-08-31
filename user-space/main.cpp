@@ -51,6 +51,8 @@ int main() {
 #if FILE_PROTECT
   enableFileProtect();
   setFileProtect("/etc/fstab", ALL_FILE_PROTECT_FLAG - READ_PROTECT_FLAG);
+  setFileProtect("/boot/grub/grub.cfg", ALL_FILE_PROTECT_FLAG);
+  setFileProtect("/etc/host.conf", ALL_FILE_PROTECT_FLAG - READ_PROTECT_FLAG);
 #endif
 
 #if NET_PROTECT
