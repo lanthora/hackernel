@@ -71,7 +71,8 @@
 		"sched.h": "c",
 		"memory": "c",
 		"sstream": "c",
-		"cstring": "c"
+		"cstring": "c",
+		"compare": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

@@ -36,7 +36,7 @@ struct nla_policy net_policy[NET_A_MAX + 1] = {
 };
 
 LIST_HEAD(policys);
-DEFINE_RWLOCK(lock);
+DEFINE_RWLOCK(policys_lock);
 
 static struct net_policy_t *net_policy_alloc(void)
 {
@@ -63,40 +63,40 @@ int net_policy_insert(struct net_policy_t *policy)
 
 	memcpy(new, policy, sizeof(struct net_policy_t));
 
-	write_lock(&lock);
+	write_lock(&policys_lock);
 	list_for_each_entry_safe (pos, n, &policys, list) {
 		if (new->priority > pos->priority)
 			continue;
 		break;
 	}
 	list_add_tail(&new->list, &pos->list);
-	write_unlock(&lock);
+	write_unlock(&policys_lock);
 	return 0;
 }
 
 int net_policy_delete(policy_id_t id)
 {
 	struct net_policy_t *pos, *n;
-	write_lock(&lock);
+	write_lock(&policys_lock);
 	list_for_each_entry_safe (pos, n, &policys, list) {
 		if (pos->id != id)
 			continue;
 		list_del(&pos->list);
 		net_policy_free(pos);
 	}
-	write_unlock(&lock);
+	write_unlock(&policys_lock);
 	return 0;
 }
 
 static int net_policy_clear(void)
 {
 	struct net_policy_t *pos, *n;
-	write_lock(&lock);
+	write_lock(&policys_lock);
 	list_for_each_entry_safe (pos, n, &policys, list) {
 		list_del(&pos->list);
 		net_policy_free(pos);
 	}
-	write_unlock(&lock);
+	write_unlock(&policys_lock);
 	return 0;
 }
 
@@ -238,7 +238,7 @@ static response_t net_policy_hook(void *priv, struct sk_buff *skb,
 	struct net_policy_t *policy = NULL;
 	struct hknf_buff buff = { .skb = skb, .state = state };
 
-	read_lock(&lock);
+	read_lock(&policys_lock);
 	list_for_each_entry (policy, &policys, list) {
 		/** 
 		 * 只有策略命中的时候,才会修改response的值,如果没有策略命中,
@@ -247,7 +247,7 @@ static response_t net_policy_hook(void *priv, struct sk_buff *skb,
 		if (net_policy_hit(&buff, policy, &response))
 			break;
 	}
-	read_unlock(&lock);
+	read_unlock(&policys_lock);
 
 	return response;
 }
@@ -268,25 +268,29 @@ static const struct nf_hook_ops net_policy_ops[] = {
 };
 
 static bool hooked = false;
+static DEFINE_RWLOCK(nf_lock);
 int enable_net_protect(void)
 {
-	if (hooked)
-		return -EPERM;
-	if (!nf_register_net_hooks(&init_net, net_policy_ops,
-				   ARRAY_SIZE(net_policy_ops)))
-		hooked = true;
+	write_lock(&nf_lock);
+	if (!hooked) {
+		if (!nf_register_net_hooks(&init_net, net_policy_ops,
+					   ARRAY_SIZE(net_policy_ops)))
+			hooked = true;
+	}
+	write_unlock(&nf_lock);
 	return 0;
 }
 
 int disable_net_protect(void)
 {
-	if (!hooked)
-		return -EPERM;
-
-	net_policy_clear();
-	nf_unregister_net_hooks(&init_net, net_policy_ops,
-				ARRAY_SIZE(net_policy_ops));
-	hooked = false;
+	write_lock(&nf_lock);
+	if (hooked) {
+		net_policy_clear();
+		nf_unregister_net_hooks(&init_net, net_policy_ops,
+					ARRAY_SIZE(net_policy_ops));
+		hooked = false;
+	}
+	write_unlock(&nf_lock);
 	return 0;
 }
 

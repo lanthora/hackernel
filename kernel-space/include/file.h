@@ -41,18 +41,12 @@ struct file_perm_data {
 
 struct file_perm_node {
 	struct rb_node node;
+	fsid_t fsid;
 	ino_t ino;
 	file_perm_t perm;
 };
 
-struct file_perm_list {
-	struct list_head node;
-	struct rb_root *root;
-	fsid_t fsid;
-};
-
 int file_perm_set_path(const char *path, file_perm_t perm);
-
 int enable_file_protect(void);
 int disable_file_protect(void);
 int file_protect_init(void);

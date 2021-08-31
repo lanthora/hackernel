@@ -35,4 +35,6 @@ char *adjust_path(char *path);
 void disable_wp(phys_addr_t addr);
 void enable_wp(phys_addr_t addr);
 
+#define spaceship(a, b) ((a == b) ? 0 : ((a > b) ? 1 : -1))
+
 #endif
