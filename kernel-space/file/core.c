@@ -39,14 +39,10 @@ DEFINE_HOOK(mknodat);
 static struct rb_root file_perm_tree = RB_ROOT;
 static DEFINE_RWLOCK(file_perm_tree_lock);
 
-static int file_perm_node_cmp(const struct file_perm_node *ns,
-			      const struct file_perm_node *nt)
+static inline bool file_perm_node_cmp(const struct file_perm_node *a,
+				      const struct file_perm_node *b)
 {
-	int tmp;
-	if (!ns || !nt)
-		return 0;
-	tmp = spaceship(ns->fsid, nt->fsid);
-	return tmp ? tmp : spaceship(ns->ino, nt->ino);
+	return a->fsid == b->fsid ? a->ino < b->ino : a->fsid < b->fsid;
 }
 
 static int file_perm_tree_insert_or_update(fsid_t fsid, ino_t ino,
@@ -67,15 +63,12 @@ static int file_perm_tree_insert_or_update(fsid_t fsid, ino_t ino,
 	parent = NULL;
 	while (*new) {
 		struct file_perm_node *this;
-		int result;
 
 		this = container_of(*new, struct file_perm_node, node);
-		result = file_perm_node_cmp(data, this);
 		parent = *new;
-
-		if (result < 0)
+		if (file_perm_node_cmp(data, this))
 			new = &((*new)->rb_left);
-		else if (result > 0)
+		else if (file_perm_node_cmp(this, data))
 			new = &((*new)->rb_right);
 		else {
 			this->perm = perm;
@@ -100,13 +93,11 @@ static file_perm_t file_perm_tree_search(fsid_t fsid, ino_t ino)
 	read_lock(&file_perm_tree_lock);
 	while (node) {
 		struct file_perm_node *this;
-		int result;
-
 		this = container_of(node, struct file_perm_node, node);
-		result = file_perm_node_cmp(&tmp, this);
-		if (result < 0) {
+
+		if (file_perm_node_cmp(&tmp, this)) {
 			node = node->rb_left;
-		} else if (result > 0) {
+		} else if (file_perm_node_cmp(this, &tmp)) {
 			node = node->rb_right;
 		} else {
 			perm = this->perm;
