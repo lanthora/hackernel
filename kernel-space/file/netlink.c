@@ -1,10 +1,17 @@
-#include "file.h"
 #include "netlink.h"
+#include "file.h"
 #include <linux/version.h>
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 11, 0))
 #define nla_strscpy nla_strlcpy
 #endif
+
+struct nla_policy file_policy[FILE_A_MAX + 1] = {
+	[FILE_A_STATUS_CODE] = { .type = NLA_S32 },
+	[FILE_A_OP_TYPE] = { .type = NLA_U8 },
+	[FILE_A_NAME] = { .type = NLA_STRING },
+	[FILE_A_PERM] = { .type = NLA_S32 },
+};
 
 extern struct genl_family genl_family;
 

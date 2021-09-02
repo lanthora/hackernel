@@ -4,6 +4,10 @@
 #include <net/genetlink.h>
 
 extern struct genl_family genl_family;
+struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1] = {
+	[HANDSHAKE_A_STATUS_CODE] = { .type = NLA_S32 },
+	[HANDSHAKE_A_SYS_CALL_TABLE_HEADER] = { .type = NLA_U64 },
+};
 
 int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 {

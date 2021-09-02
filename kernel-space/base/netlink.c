@@ -1,5 +1,6 @@
 #include "netlink.h"
 #include "file.h"
+#include "handshake.h"
 #include "net.h"
 #include "process.h"
 #include "syscall.h"
@@ -9,14 +10,10 @@
 
 u32 portid = 0;
 
+extern struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1];
 extern struct nla_policy file_policy[FILE_A_MAX + 1];
 extern struct nla_policy process_policy[PROCESS_A_MAX + 1];
 extern struct nla_policy net_policy[NET_A_MAX + 1];
-
-static struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1] = {
-	[HANDSHAKE_A_STATUS_CODE] = { .type = NLA_S32 },
-	[HANDSHAKE_A_SYS_CALL_TABLE_HEADER] = { .type = NLA_U64 },
-};
 
 static struct genl_ops genl_ops[] = {
 	{
@@ -70,4 +67,3 @@ void netlink_kernel_stop(void)
 	if (error)
 		LOG("genl_unregister_family failed");
 }
-
