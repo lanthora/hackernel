@@ -9,7 +9,7 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 
-extern pid_t service_pid;
+extern pid_t service_tgid;
 
 struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
 	[PROCESS_A_STATUS_CODE] = { .type = NLA_S32 },
@@ -294,11 +294,13 @@ static asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
 
 static int self_protect(pid_t pid, int sig)
 {
+	struct task_struct *thread;
 	/* 小于等于0的情况不做处理,可以参考kill命令的文档 */
 	if (pid <= 0)
 		return 0;
 	/* 不是发给服务进程的信号不处理 */
-	if (pid != service_pid)
+	thread = get_pid_task(find_get_pid(pid), PIDTYPE_PID);
+	if (thread->tgid != service_tgid)
 		return 0;
 	return -EPERM;
 }

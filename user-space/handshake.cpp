@@ -39,7 +39,7 @@ int handshake() {
   genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, FamId, 0, NLM_F_REQUEST,
               HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
   nla_put_u64(msg, HANDSHAKE_A_SYS_CALL_TABLE_HEADER, sys_call_table);
-  nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_PID, getpid());
+  nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_TGID, getpgrp());
   nl_send_auto(NlSock, msg);
   nlmsg_free(msg);
   return 0;
