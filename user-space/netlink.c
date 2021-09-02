@@ -19,6 +19,7 @@ static int Status = 0;
 static struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1] = {
     [HANDSHAKE_A_STATUS_CODE] = {.type = NLA_S32},
     [HANDSHAKE_A_SYS_CALL_TABLE_HEADER] = {.type = NLA_U64},
+    [HANDSHAKE_A_SYS_SERVICE_PID] = {.type = NLA_S32},
 };
 
 struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
