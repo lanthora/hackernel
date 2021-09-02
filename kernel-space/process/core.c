@@ -9,6 +9,8 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 
+extern pid_t service_pid;
+
 struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
 	[PROCESS_A_STATUS_CODE] = { .type = NLA_S32 },
 	[PROCESS_A_OP_TYPE] = { .type = NLA_U8 },
@@ -19,6 +21,7 @@ struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
 
 DEFINE_HOOK(execve);
 DEFINE_HOOK(execveat);
+DEFINE_HOOK(kill);
 
 static DECLARE_WAIT_QUEUE_HEAD(process_perm_wq);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
@@ -288,10 +291,34 @@ static asmlinkage u64 sys_execveat_hook(struct pt_regs *regs)
 
 	return hk_sys_execveat(regs);
 }
+
+static int self_protect(pid_t pid, int sig)
+{
+	/* 小于等于0的情况不做处理,可以参考kill命令的文档 */
+	if (pid <= 0)
+		return 0;
+	/* 不是发给服务进程的信号不处理 */
+	if (pid != service_pid)
+		return 0;
+	return -EPERM;
+}
+
+static asmlinkage u64 sys_kill_hook(struct pt_regs *regs)
+{
+	pid_t pid = (pid_t)HKSC_ARGV_ONE;
+	int sig = (int)HKSC_ARGV_TWO;
+
+	if (self_protect(pid, sig))
+		return -EPERM;
+
+	return hk_sys_kill(regs);
+}
+
 int enable_process_protect(void)
 {
 	REG_HOOK(execve);
 	REG_HOOK(execveat);
+	REG_HOOK(kill);
 	return 0;
 }
 
@@ -299,6 +326,7 @@ int disable_process_protect(void)
 {
 	UNREG_HOOK(execve);
 	UNREG_HOOK(execveat);
+	UNREG_HOOK(kill);
 	process_perm_hlist_clear();
 	return 0;
 }

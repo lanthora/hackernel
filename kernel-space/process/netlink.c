@@ -2,6 +2,7 @@
 #include "process.h"
 
 extern struct genl_family genl_family;
+extern pid_t service_pid;
 
 int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 {
@@ -60,6 +61,7 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 		goto out;
 
 	portid = 0;
+	service_pid = 0;
 	LOG("genlmsg_unicast failed error=[%d]", error);
 
 out:

@@ -14,6 +14,7 @@ struct nla_policy file_policy[FILE_A_MAX + 1] = {
 };
 
 extern struct genl_family genl_family;
+extern pid_t service_pid;
 
 int file_protect_report_to_userspace(struct file_perm_data *data)
 {
@@ -78,6 +79,7 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	}
 
 	portid = 0;
+	service_pid = 0;
 	LOG("genlmsg_unicast failed error=[%d]", error);
 
 out:
