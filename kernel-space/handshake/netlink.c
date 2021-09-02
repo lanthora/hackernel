@@ -7,12 +7,12 @@ extern struct genl_family genl_family;
 struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1] = {
 	[HANDSHAKE_A_STATUS_CODE] = { .type = NLA_S32 },
 	[HANDSHAKE_A_SYS_CALL_TABLE_HEADER] = { .type = NLA_U64 },
+	[HANDSHAKE_A_SYS_SERVICE_PID] = { .type = NLA_S32 },
 };
 
 int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 {
 	int error = 0;
-	unsigned long long syscall_table = 0;
 	struct sk_buff *reply = NULL;
 	void *head = NULL;
 	int code;
@@ -28,9 +28,14 @@ int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 		goto response;
 	}
 
-	syscall_table =
-		nla_get_u64(info->attrs[HANDSHAKE_A_SYS_CALL_TABLE_HEADER]);
-	code = init_sys_call_table(syscall_table);
+	if (!info->attrs[HANDSHAKE_A_SYS_SERVICE_PID]) {
+		code = -EINVAL;
+		LOG("HANDSHAKE_A_SYS_SERVICE_PID failed");
+		goto response;
+	}
+	code = init_sys_call_table(
+		nla_get_u64(info->attrs[HANDSHAKE_A_SYS_CALL_TABLE_HEADER]));
+	init_service_pid(nla_get_s32(info->attrs[HANDSHAKE_A_SYS_SERVICE_PID]));
 	portid = info->snd_portid;
 
 response:

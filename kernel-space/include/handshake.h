@@ -13,5 +13,6 @@ enum {
 #define HANDSHAKE_A_MAX (__HANDSHAKE_A_MAX - 1)
 
 int init_sys_call_table(u64 sys_call_table);
+void init_service_pid(pid_t pid);
 
 #endif
