@@ -6,7 +6,7 @@
 
 static int Status = 0;
 
-static int heartbeatHelper(bool keep) {
+static int heartbeatHelper(int keep) {
   struct nl_msg *msg = NULL;
   pid_t tgid = getpgrp();
 
@@ -18,7 +18,7 @@ static int heartbeatHelper(bool keep) {
     nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_TGID, tgid);
     nl_send_auto(NlSock, msg);
     nlmsg_free(msg);
-    sleep(1);
+    sleep(keep);
   } while (Status);
 
   return 0;
@@ -29,9 +29,9 @@ void stopHeartbeat() {
 }
 
 int handshake() {
-  return heartbeatHelper(false);
+  return heartbeatHelper(0);
 }
 
 int heartbeat() {
-  return heartbeatHelper(true);
+  return heartbeatHelper(1);
 }
