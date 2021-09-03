@@ -10,6 +10,7 @@ MODULE_LICENSE("GPL v2");
 static int init(void)
 {
 	LOG("module_init");
+	util_init();
 	process_protect_init();
 	file_protect_init();
 	net_protect_init();

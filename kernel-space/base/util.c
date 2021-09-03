@@ -435,3 +435,19 @@ void disable_wp(phys_addr_t addr)
 {
 }
 #endif
+
+#ifdef KPROBE_LOOKUP
+kallsyms_lookup_name_t hk_kallsyms_lookup_name;
+struct kprobe hk_kp;
+#endif
+
+void util_init(void)
+{
+#ifdef KPROBE_LOOKUP
+	memset(&hk_kp, 0, sizeof(hk_kp));
+	hk_kp.symbol_name = "kallsyms_lookup_name";
+	register_kprobe(&hk_kp);
+	hk_kallsyms_lookup_name = (kallsyms_lookup_name_t)hk_kp.addr;
+	unregister_kprobe(&hk_kp);
+#endif
+}

@@ -4,6 +4,7 @@
 #include <linux/kernel.h>
 #include <linux/sched.h>
 #include <linux/uuid.h>
+#include <linux/version.h>
 
 char *parse_argv_alloc(const char __user *const __user *argv);
 char *get_root_path_alloc(void);
@@ -36,5 +37,17 @@ void disable_wp(phys_addr_t addr);
 void enable_wp(phys_addr_t addr);
 
 #define spaceship(a, b) ((a == b) ? 0 : ((a > b) ? 1 : -1))
+
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 7, 0)
+#define KPROBE_LOOKUP 1
+#include <linux/kprobes.h>
+typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
+extern kallsyms_lookup_name_t hk_kallsyms_lookup_name;
+extern struct kprobe hk_kp;
+#else
+#define hk_kallsyms_lookup_name kallsyms_lookup_name
+#endif
+
+void util_init(void);
 
 #endif

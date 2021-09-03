@@ -72,7 +72,8 @@
 		"memory": "c",
 		"sstream": "c",
 		"cstring": "c",
-		"compare": "c"
+		"compare": "c",
+		"version.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
