@@ -1,6 +1,5 @@
 #include "syscall.h"
 
-
 pid_t g_service_tgid;
 
 extern u32 g_portid;
@@ -18,8 +17,6 @@ int hackernel_heartbeat_check(u32 portid)
 	g_portid = portid;
 	return 0;
 }
-
-
 
 void init_tgid(pid_t pid)
 {

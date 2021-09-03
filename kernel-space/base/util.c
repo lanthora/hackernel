@@ -445,7 +445,7 @@ struct kprobe hk_kp;
 
 int init_sys_call_table(void)
 {
-	u64 syscall_kernel;
+	unsigned long syscall_kernel;
 	syscall_kernel = hk_kallsyms_lookup_name("sys_call_table");
 	g_sys_call_table = (sys_call_ptr_t *)syscall_kernel;
 	return 0;

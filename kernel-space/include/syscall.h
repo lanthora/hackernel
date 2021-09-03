@@ -7,12 +7,13 @@
 
 /**
  * 系统调用替换和恢复的实现，使用这个宏必须实现
- * u64 sys_name_hook(struct pt_regs *regs)
+ * unsigned long sys_name_hook(struct pt_regs *regs)
  * 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
  */
 #ifndef DEFINE_HOOK
 #define DEFINE_HOOK(name)                                                      \
-	static asmlinkage u64 sys_##name##_hook(struct pt_regs *regs);         \
+	static asmlinkage unsigned long sys_##name##_hook(                     \
+		struct pt_regs *regs);                                         \
 	static sys_call_ptr_t hk_sys_##name = NULL;                            \
 	static int replace_##name(void)                                        \
 	{                                                                      \

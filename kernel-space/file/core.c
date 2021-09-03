@@ -356,7 +356,7 @@ out:
 	return is_forbidden;
 }
 
-static asmlinkage u64 sys_open_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_open_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)HKSC_ARGV_ONE;
 	int flags = (int)HKSC_ARGV_TWO;
@@ -369,7 +369,7 @@ static asmlinkage u64 sys_open_hook(struct pt_regs *regs)
 	return hk_sys_open(regs);
 }
 
-static asmlinkage u64 sys_openat_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_openat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)HKSC_ARGV_ONE;
 	char *pathname = (char *)HKSC_ARGV_TWO;
@@ -383,11 +383,11 @@ static asmlinkage u64 sys_openat_hook(struct pt_regs *regs)
 	return hk_sys_openat(regs);
 }
 
-static asmlinkage u64 sys_unlink_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_unlink_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)HKSC_ARGV_ONE;
 
-	u64 error;
+	unsigned long error;
 	struct file_perm_data data;
 
 	if (sys_unlink_helper(AT_FDCWD, pathname, &data))
@@ -399,12 +399,12 @@ static asmlinkage u64 sys_unlink_hook(struct pt_regs *regs)
 	return error;
 }
 
-static asmlinkage u64 sys_unlinkat_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_unlinkat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)HKSC_ARGV_ONE;
 	char *pathname = (char *)HKSC_ARGV_TWO;
 
-	u64 error;
+	unsigned long error;
 	struct file_perm_data data;
 
 	if (sys_unlink_helper(dirfd, pathname, &data))
@@ -416,12 +416,12 @@ static asmlinkage u64 sys_unlinkat_hook(struct pt_regs *regs)
 	return error;
 }
 
-static asmlinkage u64 sys_rename_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_rename_hook(struct pt_regs *regs)
 {
 	char *srcpath = (char *)HKSC_ARGV_ONE;
 	char *dstpath = (char *)HKSC_ARGV_TWO;
 
-	u64 error;
+	unsigned long error;
 	struct file_perm_data data;
 
 	if (sys_rename_helper(AT_FDCWD, srcpath, AT_FDCWD, dstpath, &data))
@@ -433,14 +433,14 @@ static asmlinkage u64 sys_rename_hook(struct pt_regs *regs)
 	return error;
 }
 
-static asmlinkage u64 sys_renameat_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_renameat_hook(struct pt_regs *regs)
 {
 	int srcfd = (int)HKSC_ARGV_ONE;
 	char *srcpath = (char *)HKSC_ARGV_TWO;
 	int dstfd = (int)HKSC_ARGV_THREE;
 	char *dstpath = (char *)HKSC_ARGV_FOUR;
 
-	u64 error;
+	unsigned long error;
 	struct file_perm_data data;
 
 	if (sys_rename_helper(srcfd, srcpath, dstfd, dstpath, &data))
@@ -452,14 +452,14 @@ static asmlinkage u64 sys_renameat_hook(struct pt_regs *regs)
 	return error;
 }
 
-static asmlinkage u64 sys_renameat2_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_renameat2_hook(struct pt_regs *regs)
 {
 	int srcfd = (int)HKSC_ARGV_ONE;
 	char *srcpath = (char *)HKSC_ARGV_TWO;
 	int dstfd = (int)HKSC_ARGV_THREE;
 	char *dstpath = (char *)HKSC_ARGV_FOUR;
 
-	u64 error;
+	unsigned long error;
 	struct file_perm_data data;
 
 	if (sys_rename_helper(srcfd, srcpath, dstfd, dstpath, &data))
@@ -471,7 +471,7 @@ static asmlinkage u64 sys_renameat2_hook(struct pt_regs *regs)
 	return error;
 }
 
-static asmlinkage u64 sys_mkdir_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_mkdir_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)HKSC_ARGV_ONE;
 
@@ -483,7 +483,7 @@ static asmlinkage u64 sys_mkdir_hook(struct pt_regs *regs)
 	return hk_sys_mkdir(regs);
 }
 
-static asmlinkage u64 sys_mkdirat_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_mkdirat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)HKSC_ARGV_ONE;
 	char *pathname = (char *)HKSC_ARGV_TWO;
@@ -496,11 +496,11 @@ static asmlinkage u64 sys_mkdirat_hook(struct pt_regs *regs)
 	return hk_sys_mkdirat(regs);
 }
 
-static asmlinkage u64 sys_rmdir_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_rmdir_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)HKSC_ARGV_ONE;
 
-	u64 error;
+	unsigned long error;
 	struct file_perm_data data;
 
 	if (sys_unlink_helper(AT_FDCWD, pathname, &data))
@@ -512,7 +512,7 @@ static asmlinkage u64 sys_rmdir_hook(struct pt_regs *regs)
 	return error;
 }
 
-static asmlinkage u64 sys_link_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_link_hook(struct pt_regs *regs)
 {
 	char *dstpath = (char *)HKSC_ARGV_TWO;
 
@@ -524,7 +524,7 @@ static asmlinkage u64 sys_link_hook(struct pt_regs *regs)
 	return hk_sys_link(regs);
 }
 
-static asmlinkage u64 sys_linkat_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_linkat_hook(struct pt_regs *regs)
 {
 	int dstfd = (int)HKSC_ARGV_THREE;
 	char *dstpath = (char *)HKSC_ARGV_FOUR;
@@ -537,7 +537,7 @@ static asmlinkage u64 sys_linkat_hook(struct pt_regs *regs)
 	return hk_sys_linkat(regs);
 }
 
-static asmlinkage u64 sys_symlink_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_symlink_hook(struct pt_regs *regs)
 {
 	char *dstpath = (char *)HKSC_ARGV_TWO;
 
@@ -549,7 +549,7 @@ static asmlinkage u64 sys_symlink_hook(struct pt_regs *regs)
 	return hk_sys_symlink(regs);
 }
 
-static asmlinkage u64 sys_symlinkat_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_symlinkat_hook(struct pt_regs *regs)
 {
 	int dstfd = (int)HKSC_ARGV_TWO;
 	char *dstpath = (char *)HKSC_ARGV_THREE;
@@ -562,7 +562,7 @@ static asmlinkage u64 sys_symlinkat_hook(struct pt_regs *regs)
 	return hk_sys_symlinkat(regs);
 }
 
-static asmlinkage u64 sys_mknod_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_mknod_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)HKSC_ARGV_ONE;
 
@@ -574,7 +574,7 @@ static asmlinkage u64 sys_mknod_hook(struct pt_regs *regs)
 	return hk_sys_mknod(regs);
 }
 
-static asmlinkage u64 sys_mknodat_hook(struct pt_regs *regs)
+static asmlinkage unsigned long sys_mknodat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)HKSC_ARGV_ONE;
 	char *pathname = (char *)HKSC_ARGV_TWO;
