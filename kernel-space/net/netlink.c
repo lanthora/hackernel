@@ -1,4 +1,5 @@
 #include "netlink.h"
+#include "handshake.h"
 #include "net.h"
 #include "util.h"
 
@@ -95,7 +96,7 @@ int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	void *head = NULL;
 	u8 type;
 
-	if (portid != info->snd_portid)
+	if (g_portid != info->snd_portid)
 		return -EPERM;
 
 	if (!info->attrs[NET_A_OP_TYPE]) {

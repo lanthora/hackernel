@@ -1,8 +1,9 @@
 #include "netlink.h"
+#include "handshake.h"
 #include "process.h"
 
 extern struct genl_family genl_family;
-extern pid_t service_tgid;
+extern pid_t g_service_tgid;
 
 int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 {
@@ -20,7 +21,7 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 		goto errout;
 	}
 
-	head = genlmsg_put(skb, portid, 0, &genl_family, 0,
+	head = genlmsg_put(skb, g_portid, 0, &genl_family, 0,
 			   HACKERNEL_C_PROCESS_PROTECT);
 	if (!head) {
 		LOG("genlmsg_put failed");
@@ -46,7 +47,7 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 	}
 	genlmsg_end(skb, head);
 
-	error = genlmsg_unicast(&init_net, skb, portid);
+	error = genlmsg_unicast(&init_net, skb, g_portid);
 	if (!error) {
 		errcnt = atomic_xchg(&atomic_errcnt, 0);
 		if (unlikely(errcnt))
@@ -60,8 +61,8 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 	if (error == -EAGAIN)
 		goto out;
 
-	portid = 0;
-	service_tgid = 0;
+	g_portid = 0;
+	g_service_tgid = 0;
 	LOG("genlmsg_unicast failed error=[%d]", error);
 
 out:
@@ -79,7 +80,7 @@ int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	void *head = NULL;
 	u8 type;
 
-	if (portid != info->snd_portid)
+	if (g_portid != info->snd_portid)
 		return -EPERM;
 
 	if (!info->attrs[PROCESS_A_OP_TYPE]) {

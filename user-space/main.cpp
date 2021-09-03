@@ -22,6 +22,7 @@ void sigHandler(int sig) {
   disableFileProtect();
   disableProcessProtect();
   disableNetProtect();
+  stopHeartbeat();
   stopNetlinkServer();
 }
 
@@ -43,6 +44,8 @@ int main() {
   std::thread NetlinkThread(startNetlinkServer);
 
   handshake();
+
+  std::thread HeartbeatThread(heartbeat);
 
 #if PROCESS_PROTECT
   enableProcessProtect();
@@ -81,5 +84,6 @@ int main() {
 #endif
 
   NetlinkThread.join();
+  HeartbeatThread.join();
   return 0;
 }

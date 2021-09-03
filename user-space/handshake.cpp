@@ -29,18 +29,40 @@ static int initSyscallTableAddr(unsigned long *sys_call_table) {
   return !*sys_call_table;
 }
 
-int handshake() {
+
+static int Status = 0;
+
+static int heartbeatHelper(bool keep) {
   struct nl_msg *msg = NULL;
+
+  pid_t tgid = getpgrp();
 
   unsigned long sys_call_table;
   initSyscallTableAddr(&sys_call_table);
 
-  msg = nlmsg_alloc();
-  genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, FamId, 0, NLM_F_REQUEST,
-              HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
-  nla_put_u64(msg, HANDSHAKE_A_SYS_CALL_TABLE_HEADER, sys_call_table);
-  nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_TGID, getpgrp());
-  nl_send_auto(NlSock, msg);
-  nlmsg_free(msg);
+  Status = keep;
+  do {
+    msg = nlmsg_alloc();
+    genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, FamId, 0, NLM_F_REQUEST,
+                HACKERNEL_C_HANDSHAKE, HACKERNEL_FAMLY_VERSION);
+    nla_put_u64(msg, HANDSHAKE_A_SYS_CALL_TABLE_HEADER, sys_call_table);
+    nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_TGID, tgid);
+    nl_send_auto(NlSock, msg);
+    nlmsg_free(msg);
+    sleep(1);
+  } while (Status);
+
   return 0;
+}
+
+void stopHeartbeat() {
+  Status = 0;
+}
+
+int handshake() {
+  return heartbeatHelper(false);
+}
+
+int heartbeat() {
+  return heartbeatHelper(true);
 }

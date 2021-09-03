@@ -20,7 +20,7 @@ enum {
 void netlink_kernel_start(void);
 void netlink_kernel_stop(void);
 
-extern u32 portid;
+extern u32 g_portid;
 
 int handshake_handler(struct sk_buff *skb, struct genl_info *info);
 

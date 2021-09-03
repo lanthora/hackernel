@@ -14,5 +14,6 @@ enum {
 
 int init_sys_call_table(u64 sys_call_table);
 void init_service_tgid(pid_t pid);
+int hackernel_heartbeat_check(u32 portid);
 
 #endif

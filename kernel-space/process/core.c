@@ -9,7 +9,7 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 
-extern pid_t service_tgid;
+extern pid_t g_service_tgid;
 
 struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
 	[PROCESS_A_STATUS_CODE] = { .type = NLA_S32 },
@@ -190,7 +190,7 @@ static process_perm_t process_protect_status(char *msg)
 	int error;
 	static process_perm_id_t id;
 	process_perm_t retval = PROCESS_INVAILD;
-	const long timeout = msecs_to_jiffies(100U);
+	const unsigned long timeout = msecs_to_jiffies(100U);
 
 	id = atomic_inc_return(&atomic_process_id);
 
@@ -226,7 +226,7 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 	int error = 0;
 	process_perm_t perm = PROCESS_INVAILD;
 
-	if (!portid)
+	if (!g_portid)
 		goto out;
 
 	msg = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
@@ -305,7 +305,7 @@ static int self_protect(pid_t nr, int sig)
 	task = get_pid_task(pid, PIDTYPE_PID);
 	if (!task)
 		return 0;
-	if (task->tgid != service_tgid)
+	if (task->tgid != g_service_tgid)
 		return 0;
 	return -EPERM;
 }

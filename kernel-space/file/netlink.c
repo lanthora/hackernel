@@ -1,5 +1,6 @@
 #include "netlink.h"
 #include "file.h"
+#include "handshake.h"
 #include <linux/version.h>
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 11, 0))
@@ -14,7 +15,7 @@ struct nla_policy file_policy[FILE_A_MAX + 1] = {
 };
 
 extern struct genl_family genl_family;
-extern pid_t service_tgid;
+extern pid_t g_service_tgid;
 
 int file_protect_report_to_userspace(struct file_perm_data *data)
 {
@@ -37,7 +38,7 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 		goto errout;
 	}
 
-	head = genlmsg_put(skb, portid, 0, &genl_family, 0,
+	head = genlmsg_put(skb, g_portid, 0, &genl_family, 0,
 			   HACKERNEL_C_FILE_PROTECT);
 	if (!head) {
 		LOG("genlmsg_put failed");
@@ -63,7 +64,7 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	}
 	genlmsg_end(skb, head);
 
-	error = genlmsg_unicast(&init_net, skb, portid);
+	error = genlmsg_unicast(&init_net, skb, g_portid);
 	if (!error) {
 		errcnt = atomic_xchg(&atomic_errcnt, 0);
 		if (unlikely(errcnt))
@@ -78,8 +79,8 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 		goto out;
 	}
 
-	portid = 0;
-	service_tgid = 0;
+	g_portid = 0;
+	g_service_tgid = 0;
 	LOG("genlmsg_unicast failed error=[%d]", error);
 
 out:
@@ -97,7 +98,7 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	struct sk_buff *reply = NULL;
 	void *head = NULL;
 
-	if (portid != info->snd_portid)
+	if (g_portid != info->snd_portid)
 		return -EPERM;
 
 	if (!info->attrs[FILE_A_OP_TYPE]) {

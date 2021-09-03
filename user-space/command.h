@@ -10,6 +10,8 @@
  * handshake
  */
 int handshake();
+int heartbeat();
+void stopHeartbeat();
 
 /**
  * file protect
