@@ -3,7 +3,7 @@ Description=Hackernel
 
 [Service]
 Type=forking
-ExecStart=/usr/bin/daemonize -o /var/log/hackernel.log /usr/local/bin/hackernel
+ExecStart=/usr/bin/daemonize -a -o /var/log/hackernel.log /usr/local/bin/hackernel
 
 [Install]
 WantedBy=multi-user.target
