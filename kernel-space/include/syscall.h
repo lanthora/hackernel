@@ -5,10 +5,6 @@
 #include <generated/autoconf.h>
 #include <linux/kernel.h>
 
-typedef asmlinkage u64 (*sys_call_ptr_t)(struct pt_regs *);
-
-extern sys_call_ptr_t *g_sys_call_table;
-
 /**
  * 系统调用替换和恢复的实现，使用这个宏必须实现
  * u64 sys_name_hook(struct pt_regs *regs)

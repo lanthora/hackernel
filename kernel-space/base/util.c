@@ -5,6 +5,8 @@
 #include <linux/statfs.h>
 #include <linux/syscalls.h>
 
+sys_call_ptr_t *g_sys_call_table = NULL;
+
 static int argv_size_user(char __user *__user *argv, int max)
 {
 	int argc = 0;
@@ -441,6 +443,14 @@ kallsyms_lookup_name_t hk_kallsyms_lookup_name;
 struct kprobe hk_kp;
 #endif
 
+int init_sys_call_table(void)
+{
+	u64 syscall_kernel;
+	syscall_kernel = hk_kallsyms_lookup_name("sys_call_table");
+	g_sys_call_table = (sys_call_ptr_t *)syscall_kernel;
+	return 0;
+}
+
 void util_init(void)
 {
 #ifdef KPROBE_LOOKUP
@@ -450,4 +460,5 @@ void util_init(void)
 	hk_kallsyms_lookup_name = (kallsyms_lookup_name_t)hk_kp.addr;
 	unregister_kprobe(&hk_kp);
 #endif
+	init_sys_call_table();
 }

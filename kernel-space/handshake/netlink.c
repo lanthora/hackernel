@@ -6,7 +6,6 @@
 extern struct genl_family genl_family;
 struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1] = {
 	[HANDSHAKE_A_STATUS_CODE] = { .type = NLA_S32 },
-	[HANDSHAKE_A_SYS_CALL_TABLE_HEADER] = { .type = NLA_U64 },
 	[HANDSHAKE_A_SYS_SERVICE_TGID] = { .type = NLA_S32 },
 };
 
@@ -24,13 +23,7 @@ int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 
 	if (hackernel_heartbeat_check(info->snd_portid)) {
 		code = -EPERM;
-		LOG("HANDSHAKE_A_SYS_CALL_TABLE_HEADER failed");
-		goto response;
-	}
-
-	if (!info->attrs[HANDSHAKE_A_SYS_CALL_TABLE_HEADER]) {
-		code = -EINVAL;
-		LOG("HANDSHAKE_A_SYS_CALL_TABLE_HEADER failed");
+		LOG("hackernel_heartbeat_check failed");
 		goto response;
 	}
 
@@ -40,10 +33,7 @@ int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 		goto response;
 	}
 
-	init_sys_call_table(
-		nla_get_u64(info->attrs[HANDSHAKE_A_SYS_CALL_TABLE_HEADER]));
-	init_service_tgid(
-		nla_get_s32(info->attrs[HANDSHAKE_A_SYS_SERVICE_TGID]));
+	init_tgid(nla_get_s32(info->attrs[HANDSHAKE_A_SYS_SERVICE_TGID]));
 
 response:
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);

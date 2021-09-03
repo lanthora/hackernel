@@ -50,4 +50,7 @@ extern struct kprobe hk_kp;
 
 void util_init(void);
 
+typedef asmlinkage u64 (*sys_call_ptr_t)(struct pt_regs *);
+extern sys_call_ptr_t *g_sys_call_table;
+
 #endif
