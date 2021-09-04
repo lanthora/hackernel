@@ -438,9 +438,19 @@ void disable_wp(phys_addr_t addr)
 }
 #endif
 
-#ifdef KPROBE_LOOKUP
+#ifdef NO_KALLSYMS_LOOKUP_NAME
 kallsyms_lookup_name_t hk_kallsyms_lookup_name;
-struct kprobe hk_kp;
+static struct kprobe hk_kp = { .symbol_name = "kallsyms_lookup_name" };
+static void init_hk_kallsyms_lookup_name(void)
+{
+	register_kprobe(&hk_kp);
+	hk_kallsyms_lookup_name = (kallsyms_lookup_name_t)hk_kp.addr;
+	unregister_kprobe(&hk_kp);
+}
+#else
+static void init_hk_kallsyms_lookup_name(void)
+{
+}
 #endif
 
 int init_sys_call_table(void)
@@ -453,12 +463,6 @@ int init_sys_call_table(void)
 
 void util_init(void)
 {
-#ifdef KPROBE_LOOKUP
-	memset(&hk_kp, 0, sizeof(hk_kp));
-	hk_kp.symbol_name = "kallsyms_lookup_name";
-	register_kprobe(&hk_kp);
-	hk_kallsyms_lookup_name = (kallsyms_lookup_name_t)hk_kp.addr;
-	unregister_kprobe(&hk_kp);
-#endif
+	init_hk_kallsyms_lookup_name();
 	init_sys_call_table();
 }

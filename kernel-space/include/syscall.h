@@ -10,6 +10,8 @@
  * unsigned long sys_name_hook(struct pt_regs *regs)
  * 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
  */
+extern sys_call_ptr_t *g_sys_call_table;
+
 #ifndef DEFINE_HOOK
 #define DEFINE_HOOK(name)                                                      \
 	static asmlinkage unsigned long sys_##name##_hook(                     \

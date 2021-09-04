@@ -3,7 +3,7 @@
 #include "handshake.h"
 #include <linux/version.h>
 
-#if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 11, 0))
+#if NO_NLA_STRSCPY
 #define nla_strscpy nla_strlcpy
 #endif
 
