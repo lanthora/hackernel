@@ -1,0 +1,8 @@
+/var/log/hackernel.log {
+        daily
+        missingok
+        rotate 8
+        compress
+        delaycompress
+        copytruncate
+}
