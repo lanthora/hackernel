@@ -1,6 +1,7 @@
 #include "util.h"
 #include <linux/binfmts.h>
 #include <linux/fs_struct.h>
+#include <linux/mount.h>
 #include <linux/namei.h>
 #include <linux/statfs.h>
 #include <linux/syscalls.h>
@@ -123,30 +124,17 @@ static char *get_pwd_path(void *buffer, size_t buffer_size)
 	return d_path(&pwd, buffer, buffer_size);
 }
 
-#if defined(CONFIG_CHROOT)
-static char *get_root_path(void *buffer, size_t buffer_size)
-{
-	struct path root;
-	struct dentry *dentry;
-	char *ptr = buffer + buffer_size - 1;
-	*ptr = 0;
-	get_fs_root(current->fs, &root);
-	dentry = root.dentry;
-	while (!IS_ROOT(dentry)) {
-		ptr -= dentry->d_name.len;
-		memcpy(ptr, dentry->d_name.name, dentry->d_name.len);
-		*(--ptr) = '/';
-		dentry = dentry->d_parent;
-	}
-	return ptr;
-}
-#else
+/**
+ * 通过这个函数获取根目录的路径,在一般情况下,根目录的路径是/
+ * 但是在chroot或者使用namespace后,这个路径相应的会产生变化,
+ * 目前的一个想法是:建立挂载点及对应的inode号的映射关系,并
+ * 检查当前进程的根目录对应的inode号,以此获取映射关系
+ */
 static char *get_root_path(void *buffer, size_t buffer_size)
 {
 	strcpy(buffer, "/");
 	return buffer;
 }
-#endif
 
 char *get_root_path_alloc(void)
 {

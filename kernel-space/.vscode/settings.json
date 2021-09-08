@@ -73,7 +73,8 @@
 		"sstream": "c",
 		"cstring": "c",
 		"compare": "c",
-		"version.h": "c"
+		"version.h": "c",
+		"mount.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
