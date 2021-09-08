@@ -409,20 +409,48 @@ void disable_wp(phys_addr_t addr)
 #endif
 
 #if defined(CONFIG_ARM)
-/**
- * 需要关闭系统调用表的内存写保护.在x86架构中,可以屏蔽CR0中的写保护位,
- * ARM中貌似没有这样的寄存器.后面的思路是修改内存页表项,尝试通过init_mm
- * 实现,发现init_mm没有导出,也就没有办法通过init_mm找到pte,有没有什么
- * 其他办法可以找到pte,另外还需要考虑pte有没有被pmd加了写保护.
- *
- * 或者说,这件事可能根本就做不到?
- */
-void enable_wp(phys_addr_t addr)
+
+#include <asm/pgtable-hwdef.h>
+#include <linux/pgtable.h>
+
+static struct mm_struct *init_mm_ptr = NULL;
+static void init_init_mm_ptr(void)
 {
+	init_mm_ptr = (struct mm_struct *)hk_kallsyms_lookup_name("init_mm");
+	LOG("init_mm: [%lx]", (unsigned long)init_mm_ptr);
 }
 
-void disable_wp(phys_addr_t addr)
+#ifdef CONFIG_ARM_LPAE
+static pmdval_t mask = ~(L_PMD_SECT_RDONLY | PMD_SECT_AP2);
+static pmdval_t prot = L_PMD_SECT_RDONLY | PMD_SECT_AP2;
+static pmdval_t clear;
+#else
+static pmdval_t mask = ~(PMD_SECT_APX | PMD_SECT_AP_WRITE);
+static pmdval_t prot = PMD_SECT_APX | PMD_SECT_AP_WRITE;
+static pmdval_t clear = PMD_SECT_AP_WRITE;
+#endif
+
+static inline void section_update(unsigned long addr, pmdval_t mask,
+				  pmdval_t prot, struct mm_struct *mm)
 {
+	pmd_t *pmd;
+
+	pmd = pmd_offset(
+		pud_offset(p4d_offset(pgd_offset(mm, addr), addr), addr), addr);
+	pmd[0] = __pmd((pmd_val(pmd[0]) & mask) | prot);
+
+	flush_pmd_entry(pmd);
+	local_flush_tlb_kernel_range(addr, addr + SECTION_SIZE);
+}
+
+void enable_wp(unsigned long addr)
+{
+	section_update(addr, mask, prot, init_mm_ptr);
+}
+
+void disable_wp(unsigned long addr)
+{
+	section_update(addr, mask, clear, init_mm_ptr);
 }
 #endif
 
