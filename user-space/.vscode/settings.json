@@ -68,7 +68,11 @@
                 "family.h": "c",
                 "netfwd": "cpp",
                 "stdio.h": "c",
-                "*.inc": "cpp"
+                "*.inc": "cpp",
+                "genetlink.h": "c",
+                "msg.h": "c",
+                "mngt.h": "c",
+                "netlink.h": "c"
         },
         "editor.tabSize": 2
 }

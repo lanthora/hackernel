@@ -38,6 +38,7 @@ int main() {
 
   Error = initNetlinkServer();
   if (Error) {
+    LOG("init netlink failed. exit");
     exit(1);
   }
 

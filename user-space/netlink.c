@@ -185,6 +185,10 @@ int startNetlinkServer(void) {
     error = nl_recvmsgs_default(NlSock);
     if (error) {
       LOG("nl_recvmsgs_default failed error=[%d]", error);
+      if(error == -12){
+        LOG("not fount kernel module. exit");
+        exit(1);
+      }
     }
   }
 
