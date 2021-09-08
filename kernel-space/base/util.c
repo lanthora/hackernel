@@ -445,12 +445,12 @@ static inline void section_update(unsigned long addr, pmdval_t mask,
 
 void enable_wp(unsigned long addr)
 {
-	section_update(addr, mask, prot, init_mm_ptr);
+	section_update(addr & SECTION_MASK, mask, prot, init_mm_ptr);
 }
 
 void disable_wp(unsigned long addr)
 {
-	section_update(addr, mask, clear, init_mm_ptr);
+	section_update(addr & SECTION_MASK, mask, clear, init_mm_ptr);
 }
 #endif
 
