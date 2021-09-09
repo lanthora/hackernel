@@ -116,10 +116,4 @@ extern unsigned long *g_sys_call_table;
 #define SC_ARG_iiiii (regs->r8)
 #endif
 
-#if defined(CONFIG_ARM)
-/**
- * 32位ARM系统调用参数没有放到pt_regs数据结构里,而是直接作为函数参数传递
- */
-#endif
-
 #endif
