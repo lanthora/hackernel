@@ -12,23 +12,6 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 
-DEFINE_HOOK(open);
-DEFINE_HOOK(openat);
-DEFINE_HOOK(unlink);
-DEFINE_HOOK(unlinkat);
-DEFINE_HOOK(rename);
-DEFINE_HOOK(renameat);
-DEFINE_HOOK(renameat2);
-DEFINE_HOOK(mkdir);
-DEFINE_HOOK(mkdirat);
-DEFINE_HOOK(rmdir);
-DEFINE_HOOK(link);
-DEFINE_HOOK(linkat);
-DEFINE_HOOK(symlink);
-DEFINE_HOOK(symlinkat);
-DEFINE_HOOK(mknod);
-DEFINE_HOOK(mknodat);
-
 static struct rb_root file_perm_tree = RB_ROOT;
 static DEFINE_RWLOCK(file_perm_tree_lock);
 
@@ -356,235 +339,140 @@ out:
 	return is_forbidden;
 }
 
-static asmlinkage long sys_open_hook(struct pt_regs *regs)
+HOOK_DEFINE2(open, char __user *, filename, int, flags, umode_t, mode)
 {
-	char *pathname = (char *)SC_ARG_1;
-	int flags = (int)SC_ARG_2;
-
 	struct file_perm_data data;
-
-	if (sys_open_helper(AT_FDCWD, pathname, flags, &data))
+	if (sys_open_helper(AT_FDCWD, filename, flags, &data))
 		return -EPERM;
 
-	return hk_sys_open(regs);
+	return 0;
 }
 
-static asmlinkage long sys_openat_hook(struct pt_regs *regs)
+HOOK_DEFINE4(openat, int, dfd, char __user *, filename, int, flags, umode_t,
+	     mode)
 {
-	int dirfd = (int)SC_ARG_1;
-	char *pathname = (char *)SC_ARG_2;
-	int flags = (int)SC_ARG_3;
-
 	struct file_perm_data data;
-
-	if (sys_open_helper(dirfd, pathname, flags, &data))
+	if (sys_open_helper(dfd, filename, flags, &data))
 		return -EPERM;
-
-	return hk_sys_openat(regs);
+	return 0;
 }
 
-static asmlinkage long sys_unlink_hook(struct pt_regs *regs)
+HOOK_DEFINE1(unlink, char __user *, pathname)
 {
-	char *pathname = (char *)SC_ARG_1;
+	struct file_perm_data data;
+	if (sys_unlink_helper(AT_FDCWD, pathname, &data))
+		return -EPERM;
+	return 0;
+}
 
-	long error;
+HOOK_DEFINE3(unlinkat, int, dfd, char __user *, pathname, int, flag)
+{
+	struct file_perm_data data;
+	if (sys_unlink_helper(dfd, pathname, &data))
+		return -EPERM;
+	return 0;
+}
+
+HOOK_DEFINE2(rename, char __user *, oldname, char __user *, newname)
+{
+	struct file_perm_data data;
+	if (sys_rename_helper(AT_FDCWD, oldname, AT_FDCWD, newname, &data))
+		return -EPERM;
+	return 0;
+}
+
+HOOK_DEFINE4(renameat, int, olddfd, char __user *, oldname, int, newdfd,
+	     char __user *, newname)
+{
+	struct file_perm_data data;
+	if (sys_rename_helper(olddfd, oldname, newdfd, newname, &data))
+		return -EPERM;
+	return 0;
+}
+
+HOOK_DEFINE5(renameat2, int, olddfd, char __user *, oldname, int, newdfd,
+	     char __user *, newname, unsigned int, flags)
+{
+	struct file_perm_data data;
+	if (sys_rename_helper(olddfd, oldname, newdfd, newname, &data))
+		return -EPERM;
+	return 0;
+}
+
+HOOK_DEFINE2(mkdir, char __user *, pathname, umode_t, mode)
+{
+	struct file_perm_data data;
+	if (sys_open_helper(AT_FDCWD, pathname, O_CREAT, &data))
+		return -EPERM;
+	return 0;
+}
+
+HOOK_DEFINE3(mkdirat, int, dfd, char __user *, pathname, umode_t, mode)
+{
+	struct file_perm_data data;
+	if (sys_open_helper(dfd, pathname, O_CREAT, &data))
+		return -EPERM;
+	return 0;
+}
+
+HOOK_DEFINE1(rmdir, char __user *, pathname)
+{
 	struct file_perm_data data;
 
 	if (sys_unlink_helper(AT_FDCWD, pathname, &data))
 		return -EPERM;
-
-	error = hk_sys_unlink(regs);
-	if (!error && data.this_perm)
-		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
-	return error;
+	return 0;
 }
 
-static asmlinkage long sys_unlinkat_hook(struct pt_regs *regs)
+HOOK_DEFINE2(link, char __user *, oldname, char __user *, newname)
 {
-	int dirfd = (int)SC_ARG_1;
-	char *pathname = (char *)SC_ARG_2;
-
-	long error;
 	struct file_perm_data data;
-
-	if (sys_unlink_helper(dirfd, pathname, &data))
+	if (sys_open_helper(AT_FDCWD, newname, O_CREAT, &data))
 		return -EPERM;
-
-	error = hk_sys_unlinkat(regs);
-	if (!error && data.this_perm)
-		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
-	return error;
+	return 0;
 }
 
-static asmlinkage long sys_rename_hook(struct pt_regs *regs)
+HOOK_DEFINE5(linkat, int, olddfd, char __user *, oldname, int, newdfd,
+	     char __user *, newname, int, flags)
 {
-	char *srcpath = (char *)SC_ARG_1;
-	char *dstpath = (char *)SC_ARG_2;
-
-	long error;
 	struct file_perm_data data;
-
-	if (sys_rename_helper(AT_FDCWD, srcpath, AT_FDCWD, dstpath, &data))
+	if (sys_open_helper(newdfd, newname, O_CREAT, &data))
 		return -EPERM;
-
-	error = hk_sys_rename(regs);
-	if (!error && data.this_perm)
-		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
-	return error;
+	return 0;
 }
 
-static asmlinkage long sys_renameat_hook(struct pt_regs *regs)
+HOOK_DEFINE2(symlink, char __user *, oldname, char __user *, newname)
 {
-	int srcfd = (int)SC_ARG_1;
-	char *srcpath = (char *)SC_ARG_2;
-	int dstfd = (int)SC_ARG_3;
-	char *dstpath = (char *)SC_ARG_4;
-
-	long error;
 	struct file_perm_data data;
-
-	if (sys_rename_helper(srcfd, srcpath, dstfd, dstpath, &data))
+	if (sys_open_helper(AT_FDCWD, newname, O_CREAT, &data))
 		return -EPERM;
-
-	error = hk_sys_renameat(regs);
-	if (!error && data.this_perm)
-		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
-	return error;
+	return 0;
 }
 
-static asmlinkage long sys_renameat2_hook(struct pt_regs *regs)
+HOOK_DEFINE3(symlinkat, char __user *, oldname, int, newdfd, char __user *,
+	     newname)
 {
-	int srcfd = (int)SC_ARG_1;
-	char *srcpath = (char *)SC_ARG_2;
-	int dstfd = (int)SC_ARG_3;
-	char *dstpath = (char *)SC_ARG_4;
-
-	long error;
 	struct file_perm_data data;
-
-	if (sys_rename_helper(srcfd, srcpath, dstfd, dstpath, &data))
+	if (sys_open_helper(newdfd, newname, O_CREAT, &data))
 		return -EPERM;
-
-	error = hk_sys_renameat2(regs);
-	if (!error && data.this_perm)
-		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
-	return error;
+	return 0;
 }
 
-static asmlinkage long sys_mkdir_hook(struct pt_regs *regs)
+HOOK_DEFINE3(mknod, char __user *, filename, umode_t, mode, unsigned, dev)
 {
-	char *pathname = (char *)SC_ARG_1;
-
 	struct file_perm_data data;
-
-	if (sys_open_helper(AT_FDCWD, pathname, O_CREAT, &data))
+	if (sys_open_helper(AT_FDCWD, filename, O_CREAT, &data))
 		return -EPERM;
-
-	return hk_sys_mkdir(regs);
+	return 0;
 }
 
-static asmlinkage long sys_mkdirat_hook(struct pt_regs *regs)
+HOOK_DEFINE4(mknodat, int, dfd, char __user *, filename, umode_t, mode,
+	     unsigned int, dev)
 {
-	int dirfd = (int)SC_ARG_1;
-	char *pathname = (char *)SC_ARG_2;
-
 	struct file_perm_data data;
-
-	if (sys_open_helper(dirfd, pathname, O_CREAT, &data))
+	if (sys_open_helper(dfd, filename, O_CREAT, &data))
 		return -EPERM;
-
-	return hk_sys_mkdirat(regs);
-}
-
-static asmlinkage long sys_rmdir_hook(struct pt_regs *regs)
-{
-	char *pathname = (char *)SC_ARG_1;
-
-	long error;
-	struct file_perm_data data;
-
-	if (sys_unlink_helper(AT_FDCWD, pathname, &data))
-		return -EPERM;
-
-	error = hk_sys_rmdir(regs);
-	if (!error && data.this_perm)
-		file_perm_set(data.fsid, data.ino, INVAILD_PERM);
-	return error;
-}
-
-static asmlinkage long sys_link_hook(struct pt_regs *regs)
-{
-	char *dstpath = (char *)SC_ARG_2;
-
-	struct file_perm_data data;
-
-	if (sys_open_helper(AT_FDCWD, dstpath, O_CREAT, &data))
-		return -EPERM;
-
-	return hk_sys_link(regs);
-}
-
-static asmlinkage long sys_linkat_hook(struct pt_regs *regs)
-{
-	int dstfd = (int)SC_ARG_3;
-	char *dstpath = (char *)SC_ARG_4;
-
-	struct file_perm_data data;
-
-	if (sys_open_helper(dstfd, dstpath, O_CREAT, &data))
-		return -EPERM;
-
-	return hk_sys_linkat(regs);
-}
-
-static asmlinkage long sys_symlink_hook(struct pt_regs *regs)
-{
-	char *dstpath = (char *)SC_ARG_2;
-
-	struct file_perm_data data;
-
-	if (sys_open_helper(AT_FDCWD, dstpath, O_CREAT, &data))
-		return -EPERM;
-
-	return hk_sys_symlink(regs);
-}
-
-static asmlinkage long sys_symlinkat_hook(struct pt_regs *regs)
-{
-	int dstfd = (int)SC_ARG_2;
-	char *dstpath = (char *)SC_ARG_3;
-
-	struct file_perm_data data;
-
-	if (sys_open_helper(dstfd, dstpath, O_CREAT, &data))
-		return -EPERM;
-
-	return hk_sys_symlinkat(regs);
-}
-
-static asmlinkage long sys_mknod_hook(struct pt_regs *regs)
-{
-	char *pathname = (char *)SC_ARG_1;
-
-	struct file_perm_data data;
-
-	if (sys_open_helper(AT_FDCWD, pathname, O_CREAT, &data))
-		return -EPERM;
-
-	return hk_sys_mknod(regs);
-}
-
-static asmlinkage long sys_mknodat_hook(struct pt_regs *regs)
-{
-	int dirfd = (int)SC_ARG_1;
-	char *pathname = (char *)SC_ARG_2;
-
-	struct file_perm_data data;
-
-	if (sys_open_helper(dirfd, pathname, O_CREAT, &data))
-		return -EPERM;
-
-	return hk_sys_mknodat(regs);
+	return 0;
 }
 
 int enable_file_protect(void)

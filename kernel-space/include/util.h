@@ -39,7 +39,7 @@ void enable_wp(unsigned long addr);
 
 #define spaceship(a, b) ((a == b) ? 0 : ((a > b) ? 1 : -1))
 
-#if NO_KALLSYMS_LOOKUP_NAME
+#if CONFIG_KALLSYMS_LOOKUP_NAME
 #include <linux/kprobes.h>
 typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
 extern kallsyms_lookup_name_t hk_kallsyms_lookup_name;
@@ -48,7 +48,5 @@ extern kallsyms_lookup_name_t hk_kallsyms_lookup_name;
 #endif
 
 void util_init(void);
-
-typedef asmlinkage long (*sys_call_ptr_t)(struct pt_regs *);
 
 #endif

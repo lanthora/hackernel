@@ -4,11 +4,27 @@
 #include <linux/version.h>
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 7, 0)
-#define NO_KALLSYMS_LOOKUP_NAME 1
+#define CONFIG_KALLSYMS_LOOKUP_NAME 1
 #endif
 
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 11, 0))
-#define NO_NLA_STRSCPY 1
+#define CONFIG_NLA_STRSCPY 1
+#endif
+
+#if CONFIG_X86
+#define CONFIG_SYSCALL_PTREG 1
+#endif
+
+#ifndef CONFIG_KALLSYMS_LOOKUP_NAME
+#define CONFIG_KALLSYMS_LOOKUP_NAME 0
+#endif
+
+#ifndef CONFIG_NLA_STRSCPY
+#define CONFIG_NLA_STRSCPY 0
+#endif
+
+#ifndef CONFIG_SYSCALL_PTREG
+#define CONFIG_SYSCALL_PTREG 0
 #endif
 
 #endif

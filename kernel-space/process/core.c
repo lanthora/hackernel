@@ -19,9 +19,6 @@ struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
 	[PROCESS_A_ID] = { .type = NLA_S32 },
 };
 
-DEFINE_HOOK(execve);
-DEFINE_HOOK(execveat);
-
 static DECLARE_WAIT_QUEUE_HEAD(process_perm_wq);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
 
@@ -265,32 +262,6 @@ out:
 	return error;
 }
 
-static asmlinkage long sys_execve_hook(struct pt_regs *regs)
-{
-	char *pathname = (char *)SC_ARG_1;
-	char **argv = (char **)SC_ARG_2;
-	char **envp = (char **)SC_ARG_3;
-
-	if (sys_execveat_helper(AT_FDCWD, pathname, argv, envp, 0))
-		return -EPERM;
-
-	return hk_sys_execve(regs);
-}
-
-static asmlinkage long sys_execveat_hook(struct pt_regs *regs)
-{
-	int dirfd = (int)SC_ARG_1;
-	char *pathname = (char *)SC_ARG_2;
-	char **argv = (char **)SC_ARG_3;
-	char **envp = (char **)SC_ARG_4;
-	int flags = (int)SC_ARG_5;
-
-	if (sys_execveat_helper(dirfd, pathname, argv, envp, flags))
-		return -EPERM;
-
-	return hk_sys_execveat(regs);
-}
-
 static int self_protect(pid_t nr, int sig)
 {
 	struct task_struct *task;
@@ -309,55 +280,25 @@ static int self_protect(pid_t nr, int sig)
 	return -EPERM;
 }
 
-#define __MAP1(cnt, m, t, a, ...) m(t, a, cnt)
-#define __MAP2(cnt, m, t, a, ...) m(t, a, cnt), __MAP1(cnt##i, m, __VA_ARGS__)
-#define __MAP3(cnt, m, t, a, ...) m(t, a, cnt), __MAP2(cnt##i, m, __VA_ARGS__)
-#define __MAP4(cnt, m, t, a, ...) m(t, a, cnt), __MAP3(cnt##i, m, __VA_ARGS__)
-#define __MAP5(cnt, m, t, a, ...) m(t, a, cnt), __MAP4(cnt##i, m, __VA_ARGS__)
-#define __MAP6(cnt, m, t, a, ...) m(t, a, cnt), __MAP5(cnt##i, m, __VA_ARGS__)
+HOOK_DEFINE3(execve, char *, pathname, char **, argv, char **, envp)
+{
+	if (sys_execveat_helper(AT_FDCWD, pathname, argv, envp, 0))
+		return -EPERM;
+	return 0;
+}
 
-#if CONFIG_X86
-
-#define __HOOK_DECL(t, a, cnt) t a
-#define __HOOK_ARGS(t, a, cnt) a
-
-#define DECL_MAP(n, ...) __MAP##n(i, __HOOK_DECL, __VA_ARGS__)
-#define ARGS_MAP(n, ...) __MAP##n(i, __HOOK_ARGS, __VA_ARGS__)
-#define DECL_MAP_RAW DECL_MAP
-#define ARGS_MAP_RAW ARGS_MAP
-
-#else
-
-#define __HOOK_DECL(t, a, cnt) t a
-#define __HOOK_ARGS(t, a, cnt) t SC_ARG_##cnt
-#define DECL_MAP(n, ...) __MAP##n(i, __HOOK_DECL, __VA_ARGS__)
-#define ARGS_MAP(n, ...) __MAP##n(i, __HOOK_ARGS, __VA_ARGS__)
-#define DECL_MAP_RAW(n, ...) struct pt_regs *regs
-#define ARGS_MAP_RAW(n, ...) regs
-
-#endif
-
-#define HOOK_DEFINEx(x, name, ...)                                             \
-	static long __sys_##name##_hook(DECL_MAP(x, __VA_ARGS__));             \
-	static long *hk_##name##_hook(DECL_MAP_RAW(x, __VA_ARGS__));           \
-	long sys_##name##_hook(DECL_MAP_RAW(x, __VA_ARGS__))                   \
-	{                                                                      \
-		long retval;                                                   \
-		retval = __sys_##name##_hook(ARGS_MAP(x, __VA_ARGS__));        \
-		if (retval)                                                    \
-			return retval;                                         \
-		return hk_##name##_hook(ARGS_MAP_RAW(x, __VA_ARGS__));         \
-	}
-
-#define HOOK_DEFINE1(name, ...) HOOK_DEFINEx(1, name, __VA_ARGS__)
-#define HOOK_DEFINE2(name, ...) HOOK_DEFINEx(2, name, __VA_ARGS__)
-#define HOOK_DEFINE3(name, ...) HOOK_DEFINEx(3, name, __VA_ARGS__)
-#define HOOK_DEFINE4(name, ...) HOOK_DEFINEx(4, name, __VA_ARGS__)
-#define HOOK_DEFINE5(name, ...) HOOK_DEFINEx(5, name, __VA_ARGS__)
-#define HOOK_DEFINE6(name, ...) HOOK_DEFINEx(6, name, __VA_ARGS__)
+HOOK_DEFINE5(execveat, int, dirfd, char *, pathname, char **, argv, char **,
+	     envp, int, flags)
+{
+	if (sys_execveat_helper(dirfd, pathname, argv, envp, flags))
+		return -EPERM;
+	return 0;
+}
 
 HOOK_DEFINE2(kill, pid_t, pid, int, sig)
 {
+	if (self_protect(pid, sig))
+		return -EPERM;
 	return 0;
 }
 

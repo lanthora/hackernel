@@ -6,7 +6,7 @@
 #include <linux/statfs.h>
 #include <linux/syscalls.h>
 
-sys_call_ptr_t *g_sys_call_table = NULL;
+unsigned long *g_sys_call_table = NULL;
 
 static int argv_size_user(char __user *__user *argv, int max)
 {
@@ -457,7 +457,7 @@ void disable_wp(unsigned long addr)
 }
 #endif
 
-#ifdef NO_KALLSYMS_LOOKUP_NAME
+#ifdef CONFIG_KALLSYMS_LOOKUP_NAME
 kallsyms_lookup_name_t hk_kallsyms_lookup_name;
 static struct kprobe hk_kp = { .symbol_name = "kallsyms_lookup_name" };
 static void init_hk_kallsyms_lookup_name(void)
@@ -476,7 +476,7 @@ int init_sys_call_table(void)
 {
 	unsigned long syscall_kernel;
 	syscall_kernel = hk_kallsyms_lookup_name("sys_call_table");
-	g_sys_call_table = (sys_call_ptr_t *)syscall_kernel;
+	g_sys_call_table = (unsigned long *)syscall_kernel;
 	return 0;
 }
 

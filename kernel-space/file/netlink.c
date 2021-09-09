@@ -3,7 +3,7 @@
 #include "handshake.h"
 #include <linux/version.h>
 
-#if NO_NLA_STRSCPY
+#if CONFIG_NLA_STRSCPY
 #define nla_strscpy nla_strlcpy
 #endif
 
