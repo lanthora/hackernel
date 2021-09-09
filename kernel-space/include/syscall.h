@@ -71,11 +71,11 @@ extern sys_call_ptr_t *g_sys_call_table;
 #endif
 
 #if defined(CONFIG_X86)
-#define HKSC_ARGV_ONE (regs->di)
-#define HKSC_ARGV_TWO (regs->si)
-#define HKSC_ARGV_THREE (regs->dx)
-#define HKSC_ARGV_FOUR (regs->r10)
-#define HKSC_ARGV_FIVE (regs->r8)
+#define SC_ARG_1 (regs->di)
+#define SC_ARG_2 (regs->si)
+#define SC_ARG_3 (regs->dx)
+#define SC_ARG_4 (regs->r10)
+#define SC_ARG_5 (regs->r8)
 #endif
 
 #if defined(CONFIG_ARM)

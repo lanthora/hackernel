@@ -74,7 +74,8 @@
 		"cstring": "c",
 		"compare": "c",
 		"version.h": "c",
-		"mount.h": "c"
+		"mount.h": "c",
+		"random": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
