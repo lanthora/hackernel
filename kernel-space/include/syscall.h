@@ -5,11 +5,6 @@
 #include <generated/autoconf.h>
 #include <linux/kernel.h>
 
-/**
- * 系统调用替换和恢复的实现，使用这个宏必须实现
- * long sys_name_hook(struct pt_regs *regs)
- * 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
- */
 extern unsigned long *g_sys_call_table;
 
 #define HKMAP1(cnt, m, t, a, ...) m(t, a, cnt)
