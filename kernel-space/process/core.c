@@ -266,7 +266,7 @@ out:
 	return error;
 }
 
-static asmlinkage unsigned long sys_execve_hook(struct pt_regs *regs)
+static asmlinkage long sys_execve_hook(struct pt_regs *regs)
 {
 	char *pathname = (char *)HKSC_ARGV_ONE;
 	char **argv = (char **)HKSC_ARGV_TWO;
@@ -278,7 +278,7 @@ static asmlinkage unsigned long sys_execve_hook(struct pt_regs *regs)
 	return hk_sys_execve(regs);
 }
 
-static asmlinkage unsigned long sys_execveat_hook(struct pt_regs *regs)
+static asmlinkage long sys_execveat_hook(struct pt_regs *regs)
 {
 	int dirfd = (int)HKSC_ARGV_ONE;
 	char *pathname = (char *)HKSC_ARGV_TWO;
@@ -310,7 +310,7 @@ static int self_protect(pid_t nr, int sig)
 	return -EPERM;
 }
 
-static asmlinkage unsigned long sys_kill_hook(struct pt_regs *regs)
+static asmlinkage long sys_kill_hook(struct pt_regs *regs)
 {
 	pid_t pid = (pid_t)HKSC_ARGV_ONE;
 	int sig = (int)HKSC_ARGV_TWO;

@@ -392,17 +392,20 @@ unsigned long get_ino(const char *name)
 }
 
 #if defined(CONFIG_X86)
+static void init_init_mm_ptr(void)
+{
+}
 static inline void write_cr0_forced(unsigned long val)
 {
 	asm volatile("mov %0,%%cr0" : : "r"(val) : "memory");
 }
 
-void enable_wp(phys_addr_t addr)
+void enable_wp(unsigned long addr)
 {
 	write_cr0_forced(read_cr0() | X86_CR0_WP);
 }
 
-void disable_wp(phys_addr_t addr)
+void disable_wp(unsigned long addr)
 {
 	write_cr0_forced(read_cr0() & ~X86_CR0_WP);
 }
@@ -480,5 +483,6 @@ int init_sys_call_table(void)
 void util_init(void)
 {
 	init_hk_kallsyms_lookup_name();
+	init_init_mm_ptr();
 	init_sys_call_table();
 }

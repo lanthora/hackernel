@@ -7,15 +7,14 @@
 
 /**
  * 系统调用替换和恢复的实现，使用这个宏必须实现
- * unsigned long sys_name_hook(struct pt_regs *regs)
+ * long sys_name_hook(struct pt_regs *regs)
  * 系统调用的参数与内核源码中 include/linux/syscalls.h 中的声明保持一致
  */
 extern sys_call_ptr_t *g_sys_call_table;
 
 #ifndef DEFINE_HOOK
 #define DEFINE_HOOK(name)                                                      \
-	static asmlinkage unsigned long sys_##name##_hook(                     \
-		struct pt_regs *regs);                                         \
+	static asmlinkage long sys_##name##_hook(struct pt_regs *regs);        \
 	static sys_call_ptr_t hk_sys_##name = NULL;                            \
 	static int replace_##name(void)                                        \
 	{                                                                      \
@@ -27,9 +26,9 @@ extern sys_call_ptr_t *g_sys_call_table;
 			hk_sys_##name = g_sys_call_table[__NR_##name];         \
 		}                                                              \
                                                                                \
-		disable_wp((phys_addr_t)(g_sys_call_table + __NR_##name));     \
+		disable_wp((unsigned long)(g_sys_call_table + __NR_##name));   \
 		g_sys_call_table[__NR_##name] = &sys_##name##_hook;            \
-		enable_wp((phys_addr_t)(g_sys_call_table + __NR_##name));      \
+		enable_wp((unsigned long)(g_sys_call_table + __NR_##name));    \
 		return 0;                                                      \
 	}                                                                      \
                                                                                \
@@ -42,9 +41,9 @@ extern sys_call_ptr_t *g_sys_call_table;
 		if (!hk_sys_##name) {                                          \
 			return -EPERM;                                         \
 		}                                                              \
-		disable_wp((phys_addr_t)(g_sys_call_table + __NR_##name));     \
+		disable_wp((unsigned long)(g_sys_call_table + __NR_##name));   \
 		g_sys_call_table[__NR_##name] = hk_sys_##name;                 \
-		enable_wp((phys_addr_t)(g_sys_call_table + __NR_##name));      \
+		enable_wp((unsigned long)(g_sys_call_table + __NR_##name));    \
 		return 0;                                                      \
 	}
 #endif
@@ -80,11 +79,9 @@ extern sys_call_ptr_t *g_sys_call_table;
 #endif
 
 #if defined(CONFIG_ARM)
-#define HKSC_ARGV_ONE (regs->uregs[1])
-#define HKSC_ARGV_TWO (regs->uregs[2])
-#define HKSC_ARGV_THREE (regs->uregs[3])
-#define HKSC_ARGV_FOUR (regs->uregs[4])
-#define HKSC_ARGV_FIVE (regs->uregs[5])
+/**
+ * 32位ARM系统调用参数没有放到pt_regs数据结构里,而是直接作为函数参数传递
+ */
 #endif
 
 #endif

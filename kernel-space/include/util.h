@@ -34,8 +34,8 @@ char *adjust_path(char *path);
 #define ASCII_US 0x1F
 #define ASCII_US_STR "\x1F"
 
-void disable_wp(phys_addr_t addr);
-void enable_wp(phys_addr_t addr);
+void disable_wp(unsigned long addr);
+void enable_wp(unsigned long addr);
 
 #define spaceship(a, b) ((a == b) ? 0 : ((a > b) ? 1 : -1))
 
@@ -49,6 +49,6 @@ extern kallsyms_lookup_name_t hk_kallsyms_lookup_name;
 
 void util_init(void);
 
-typedef asmlinkage unsigned long (*sys_call_ptr_t)(struct pt_regs *);
+typedef asmlinkage long (*sys_call_ptr_t)(struct pt_regs *);
 
 #endif
