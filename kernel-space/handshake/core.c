@@ -9,7 +9,7 @@ int hackernel_heartbeat_check(u32 portid)
 	static unsigned long last = 0UL;
 	const unsigned long timeout = msecs_to_jiffies(3000U);
 
-	if (portid != g_portid && time_is_before_eq_jiffies(last + timeout))
+	if (portid != g_portid && time_is_after_eq_jiffies(last + timeout))
 		return -EPERM;
 
 	last = jiffies;
