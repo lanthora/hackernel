@@ -27,8 +27,8 @@ void sigHandler(int sig) {
 }
 
 #define PROCESS_PROTECT 1
-#define FILE_PROTECT 1
-#define NET_PROTECT 1
+#define FILE_PROTECT 0
+#define NET_PROTECT 0
 
 int main() {
   int Error;
