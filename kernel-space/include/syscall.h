@@ -29,12 +29,7 @@ extern unsigned long *g_sys_call_table;
 #define ARGS_MAP_RAW ARGS_MAP
 #endif
 
-#define HOOK_DEFINEx(x, name, ...)                                             \
-	__diag_push();                                                         \
-	__diag_ignore(GCC, 8, "-Wint-conversion", "");                         \
-	static long __sys_##name##_hook(DECL_MAP(x, __VA_ARGS__));             \
-	long sys_##name##_hook(DECL_MAP_RAW(x, __VA_ARGS__));                  \
-	long (*hk_sys_##name)(DECL_MAP_RAW(x, __VA_ARGS__));                   \
+#define REG_DEFINE(name)                                                       \
 	static int replace_##name(void)                                        \
 	{                                                                      \
 		if (!g_sys_call_table) {                                       \
@@ -49,7 +44,9 @@ extern unsigned long *g_sys_call_table;
 		g_sys_call_table[__NR_##name] = &sys_##name##_hook;            \
 		enable_wp((unsigned long)(g_sys_call_table + __NR_##name));    \
 		return 0;                                                      \
-	}                                                                      \
+	}
+
+#define UNREG_DEFINE(name)                                                     \
 	static int restore_##name(void)                                        \
 	{                                                                      \
 		if (!g_sys_call_table) {                                       \
@@ -63,7 +60,14 @@ extern unsigned long *g_sys_call_table;
 		g_sys_call_table[__NR_##name] = hk_sys_##name;                 \
 		enable_wp((unsigned long)(g_sys_call_table + __NR_##name));    \
 		return 0;                                                      \
-	}                                                                      \
+	}
+
+#define HOOK_DEFINEx(x, name, ...)                                             \
+	__diag_push();                                                         \
+	__diag_ignore(GCC, 8, "-Wint-conversion", "");                         \
+	static long __sys_##name##_hook(DECL_MAP(x, __VA_ARGS__));             \
+	long sys_##name##_hook(DECL_MAP_RAW(x, __VA_ARGS__));                  \
+	long (*hk_sys_##name)(DECL_MAP_RAW(x, __VA_ARGS__));                   \
 	long sys_##name##_hook(DECL_MAP_RAW(x, __VA_ARGS__))                   \
 	{                                                                      \
 		long retval;                                                   \
@@ -72,6 +76,8 @@ extern unsigned long *g_sys_call_table;
 			return retval;                                         \
 		return hk_sys_##name(ARGS_MAP_RAW(x, __VA_ARGS__));            \
 	}                                                                      \
+	REG_DEFINE(name)                                                       \
+	UNREG_DEFINE(name)                                                     \
 	__diag_pop();                                                          \
 	static long __sys_##name##_hook(DECL_MAP(x, __VA_ARGS__))
 
