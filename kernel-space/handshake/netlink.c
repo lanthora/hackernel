@@ -22,9 +22,8 @@ int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 	}
 
 	if (hackernel_heartbeat_check(info->snd_portid)) {
-		code = -EPERM;
 		LOG("hackernel_heartbeat_check failed");
-		goto response;
+		return -EPERM;
 	}
 
 	if (!info->attrs[HANDSHAKE_A_SYS_SERVICE_TGID]) {

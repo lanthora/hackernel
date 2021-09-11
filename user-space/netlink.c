@@ -4,6 +4,7 @@
 #include "util.h"
 #include <linux/genetlink.h>
 #include <netlink/attr.h>
+#include <netlink/errno.h>
 #include <netlink/genl/ctrl.h>
 #include <netlink/genl/family.h>
 #include <netlink/genl/genl.h>
@@ -184,11 +185,8 @@ int startNetlinkServer(void) {
 
     error = nl_recvmsgs_default(NlSock);
     if (error) {
-      LOG("nl_recvmsgs_default failed error=[%d]", error);
-      if(error == -12){
-        LOG("not fount kernel module. exit");
-        exit(1);
-      }
+      LOG("error=[%d] msg=[%s]", error, nl_geterror(error));
+      exit(1);
     }
   }
 
