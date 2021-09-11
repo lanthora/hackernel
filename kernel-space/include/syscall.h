@@ -30,7 +30,7 @@ extern unsigned long *g_sys_call_table;
 #endif
 
 #define REG_DEFINE(name)                                                       \
-	static int replace_##name(void)                                        \
+	static int __hook_##name(void)                                        \
 	{                                                                      \
 		if (!g_sys_call_table) {                                       \
 			return -EPERM;                                         \
@@ -47,7 +47,7 @@ extern unsigned long *g_sys_call_table;
 	}
 
 #define UNREG_DEFINE(name)                                                     \
-	static int restore_##name(void)                                        \
+	static int __unhook_##name(void)                                        \
 	{                                                                      \
 		if (!g_sys_call_table) {                                       \
 			return -EPERM;                                         \
@@ -94,8 +94,8 @@ extern unsigned long *g_sys_call_table;
 #ifndef REG_HOOK
 #define REG_HOOK(name)                                                         \
 	do {                                                                   \
-		if (replace_##name()) {                                        \
-			LOG("replace_" STR(name) " failed");                   \
+		if (__hook_##name()) {                                        \
+			LOG("__hook_" STR(name) " failed");                   \
 		}                                                              \
 	} while (0)
 #endif
@@ -103,8 +103,8 @@ extern unsigned long *g_sys_call_table;
 #ifndef UNREG_HOOK
 #define UNREG_HOOK(name)                                                       \
 	do {                                                                   \
-		if (restore_##name()) {                                        \
-			LOG("restore_" STR(name) " failed");                   \
+		if (__unhook_##name()) {                                        \
+			LOG("__unhook_" STR(name) " failed");                   \
 		}                                                              \
 	} while (0)
 #endif
