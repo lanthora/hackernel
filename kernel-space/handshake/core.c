@@ -6,14 +6,21 @@ extern u32 g_portid;
 
 int hackernel_heartbeat_check(u32 portid)
 {
-	static unsigned long last = 0UL;
+	static unsigned long last = INITIAL_JIFFIES;
 	const unsigned long timeout = msecs_to_jiffies(3000U);
 
-	if (portid != g_portid && time_is_after_eq_jiffies(last + timeout))
-		return -EPERM;
+	if (portid == g_portid)
+		goto lastout;
 
-	last = jiffies;
+	if (time_is_before_jiffies(last + timeout))
+		goto portidout;
+
+	return -EPERM;
+
+portidout:
 	g_portid = portid;
+lastout:
+	last = jiffies;
 	return 0;
 }
 
