@@ -5,6 +5,14 @@
 extern struct genl_family genl_family;
 extern pid_t g_service_tgid;
 
+struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
+	[PROCESS_A_STATUS_CODE] = { .type = NLA_S32 },
+	[PROCESS_A_OP_TYPE] = { .type = NLA_U8 },
+	[PROCESS_A_NAME] = { .type = NLA_STRING },
+	[PROCESS_A_PERM] = { .type = NLA_S32 },
+	[PROCESS_A_ID] = { .type = NLA_S32 },
+};
+
 int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 {
 	int error = 0;

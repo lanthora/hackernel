@@ -11,14 +11,6 @@
 
 extern pid_t g_service_tgid;
 
-struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
-	[PROCESS_A_STATUS_CODE] = { .type = NLA_S32 },
-	[PROCESS_A_OP_TYPE] = { .type = NLA_U8 },
-	[PROCESS_A_NAME] = { .type = NLA_STRING },
-	[PROCESS_A_PERM] = { .type = NLA_S32 },
-	[PROCESS_A_ID] = { .type = NLA_S32 },
-};
-
 static DECLARE_WAIT_QUEUE_HEAD(process_perm_wq);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
 
