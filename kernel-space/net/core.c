@@ -211,7 +211,7 @@ miss:
 static response_t net_policy_hook(void *priv, struct sk_buff *skb,
 				  const struct nf_hook_state *state)
 {
-	response_t response = NF_ACCEPT;
+	response_t response = NET_POLICY_ACCEPT;
 	struct net_policy_t *policy = NULL;
 	struct hknf_buff buff = { .skb = skb, .state = state };
 
@@ -219,7 +219,7 @@ static response_t net_policy_hook(void *priv, struct sk_buff *skb,
 	list_for_each_entry (policy, &policys, list) {
 		/** 
 		 * 只有策略命中的时候,才会修改response的值,如果没有策略命中,
-		 * response将保留默认值 NF_ACCEPT,此时会被放行
+		 * response将保留默认值 NET_POLICY_ACCEPT,此时会被放行
 		 */
 		if (net_policy_hit(&buff, policy, &response))
 			break;
