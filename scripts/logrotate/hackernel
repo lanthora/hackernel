@@ -1,7 +1,7 @@
 /var/log/hackernel.log {
         daily
         missingok
-        rotate 8
+        rotate 7
         compress
         delaycompress
         copytruncate
