@@ -45,5 +45,6 @@ install: clean
 remove:
 	dkms remove hackernel/$(DRIVER_VERSION) --all
 	rm -rf /usr/src/hackernel-$(DRIVER_VERSION)
+	rm -rf /var/lib/dkms/hackernel
 
 endif 
