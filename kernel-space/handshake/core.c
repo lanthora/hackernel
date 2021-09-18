@@ -9,6 +9,9 @@ int hackernel_heartbeat_check(u32 portid)
 	static unsigned long last = INITIAL_JIFFIES;
 	const unsigned long timeout = msecs_to_jiffies(3000U);
 
+	if (g_portid == 0)
+		goto portidout;
+
 	if (portid == g_portid)
 		goto lastout;
 
