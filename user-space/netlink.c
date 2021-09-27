@@ -1,7 +1,5 @@
 #include "netlink.h"
-#include "handler.h"
-#include "syscall.h"
-#include "util.h"
+
 #include <linux/genetlink.h>
 #include <netlink/attr.h>
 #include <netlink/errno.h>
@@ -12,10 +10,14 @@
 #include <netlink/msg.h>
 #include <stdio.h>
 
-struct nl_sock *NlSock = NULL;
-int FamId = 0;
+#include "handler.h"
+#include "syscall.h"
+#include "util.h"
 
-static int Status = 0;
+struct nl_sock *g_nl_sock = NULL;
+int g_fam_id = 0;
+
+static int status = 0;
 
 static struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1] = {
     [HANDSHAKE_A_STATUS_CODE] = {.type = NLA_S32},
@@ -63,28 +65,28 @@ static struct genl_cmd hackernel_genl_cmds[] = {
         .c_name = "HACKERNEL_C_HANDSHAKE",
         .c_maxattr = HANDSHAKE_A_MAX,
         .c_attr_policy = handshake_policy,
-        .c_msg_parser = &handshakeHandler,
+        .c_msg_parser = &HandshakeHandler,
     },
     {
         .c_id = HACKERNEL_C_PROCESS_PROTECT,
         .c_name = "HACKERNEL_C_PROCESS_PROTECT",
         .c_maxattr = PROCESS_A_MAX,
         .c_attr_policy = process_policy,
-        .c_msg_parser = &processProtectHandler,
+        .c_msg_parser = &ProcessProtectHandler,
     },
     {
         .c_id = HACKERNEL_C_FILE_PROTECT,
         .c_name = "HACKERNEL_C_FILE_PROTECT",
         .c_maxattr = FILE_A_MAX,
         .c_attr_policy = file_policy,
-        .c_msg_parser = &fileProtectHandler,
+        .c_msg_parser = &FileProtectHandler,
     },
     {
         .c_id = HACKERNEL_C_NET_PROTECT,
         .c_name = "HACKERNEL_C_NET_PROTECT",
         .c_maxattr = NET_A_MAX,
         .c_attr_policy = net_policy,
-        .c_msg_parser = &netProtectHandler,
+        .c_msg_parser = &NetProtectHandler,
     },
 };
 
@@ -94,21 +96,21 @@ static struct genl_ops hackernel_genl_ops = {
     .o_ncmds = ARRAY_SIZE(hackernel_genl_cmds),
 };
 
-int initNetlinkServer() {
+int InitNetlinkServer() {
   int error;
 
-  if (NlSock) {
-    LOG("Generic Netlink has be init");
+  if (g_nl_sock) {
+    LOG("Generic Netlink has been inited");
     return 0;
   }
 
-  NlSock = nl_socket_alloc();
-  if (!NlSock) {
+  g_nl_sock = nl_socket_alloc();
+  if (!g_nl_sock) {
     LOG("Netlink Socket memory alloc failed");
     goto errout;
   }
 
-  error = genl_connect(NlSock);
+  error = genl_connect(g_nl_sock);
   if (error) {
     LOG("Generic Netlink connect failed");
     goto errout;
@@ -116,13 +118,13 @@ int initNetlinkServer() {
 
   // 缓冲区大小设置为4MB
   const int buff_size = 4 * 1024 * 1024;
-  error = nl_socket_set_buffer_size(NlSock, buff_size, buff_size);
+  error = nl_socket_set_buffer_size(g_nl_sock, buff_size, buff_size);
   if (error) {
     LOG("nl_socket_set_buffer_size failed");
     goto errout;
   }
 
-  error = genl_ops_resolve(NlSock, &hackernel_genl_ops);
+  error = genl_ops_resolve(g_nl_sock, &hackernel_genl_ops);
   if (error) {
     LOG("Resolve a single Generic Netlink family failed");
     goto errout;
@@ -133,26 +135,26 @@ int initNetlinkServer() {
     LOG("Generic Netlink Register failed");
     goto errout;
   }
-  FamId = hackernel_genl_ops.o_id;
+  g_fam_id = hackernel_genl_ops.o_id;
 
-  error = nl_socket_modify_cb(NlSock, NL_CB_VALID, NL_CB_CUSTOM,
+  error = nl_socket_modify_cb(g_nl_sock, NL_CB_VALID, NL_CB_CUSTOM,
                               genl_handle_msg, NULL);
   if (error) {
     LOG("Generic Netlink modify callback failed");
     goto errout;
   }
 
-  error = nl_socket_set_nonblocking(NlSock);
+  error = nl_socket_set_nonblocking(g_nl_sock);
   if (error) {
     LOG("Generic Netlink set noblocking failed");
     goto errout;
   }
 
   // 应用层收到消息会检查当前期待收到的seq与上次发送的seq是否一致
-  nl_socket_disable_seq_check(NlSock);
+  nl_socket_disable_seq_check(g_nl_sock);
 
   // 内核收到消息会自动回复确认
-  nl_socket_disable_auto_ack(NlSock);
+  nl_socket_disable_auto_ack(g_nl_sock);
   return 0;
 
 errout:
@@ -160,16 +162,16 @@ errout:
   return -1;
 }
 
-int startNetlinkServer(void) {
+int StartNetlinkServer(void) {
   int error;
 
   struct pollfd fds = {
-      .fd = nl_socket_get_fd(NlSock),
+      .fd = nl_socket_get_fd(g_nl_sock),
       .events = POLLIN,
   };
 
-  Status = 1;
-  while (Status) {
+  status = 1;
+  while (status) {
     const int nfds = 1;
     const int timeout = 100;
 
@@ -183,20 +185,20 @@ int startNetlinkServer(void) {
       break;
     }
 
-    error = nl_recvmsgs_default(NlSock);
+    error = nl_recvmsgs_default(g_nl_sock);
     if (error) {
       LOG("error=[%d] msg=[%s]", error, nl_geterror(error));
       exit(1);
     }
   }
 
-  nl_close(NlSock);
-  nl_socket_free(NlSock);
+  nl_close(g_nl_sock);
+  nl_socket_free(g_nl_sock);
 
   return 0;
 }
 
-int stopNetlinkServer(void) {
-  Status = 0;
+int StopNetlinkServer(void) {
+  status = 0;
   return 0;
 }

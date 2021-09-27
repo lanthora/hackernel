@@ -14,7 +14,7 @@
     fflush(stdout);                                                            \
   } while (0)
 
-int insmod(const char *filename);
-int rmmod(const char *modulename);
+int InsertKernelModule(const char *filename);
+int RemovekernelModule(const char *modulename);
 
 #endif

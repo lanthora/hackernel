@@ -14,94 +14,87 @@ class Broadcaster;
 class Receiver;
 
 class Receiver {
-public:
-  void setBroadcaster(std::shared_ptr<Broadcaster> Broadcaster) {
-    this->BindBroadcaster = Broadcaster;
+ public:
+  void SetBroadcaster(std::shared_ptr<Broadcaster> broadcaster) {
+    this->bind_broadcaster_ = broadcaster;
   }
-  void newMessage(std::string Message) {
-    const std::lock_guard<std::mutex> Lock(MessageQueueMutex);
-    MessageQueue.push(Message);
-    Signal.notify_one();
+  void NewMessage(std::string message) {
+    const std::lock_guard<std::mutex> lock(message_queue_mutex_);
+    message_queue_.push(message);
+    signal_.notify_one();
   }
 
-  void startToConsume() {
-    bool FinalHandler;
-    Running = true;
-    while (Running) {
-      std::string Message;
-      waitAndPopMessage(Message);
+  void StartToConsume() {
+    bool final_handler;
+    running_ = true;
+    while (running_) {
+      std::string message;
+      WaitAndPopMessage(message);
 
-      if (exitHandler(Message))
-        break;
+      if (ExitHandler(message)) break;
 
-      for (const auto &Handler : Handlers)
-        if (FinalHandler = Handler(Message))
-          break;
+      for (const auto &handler : handlers_)
+        if (final_handler = handler(message)) break;
 
-      if (!FinalHandler)
-        defaultHandler(Message);
+      if (!final_handler) DefaultHandler(message);
     }
   }
-  void addHandler(std::function<bool(const std::string &)> NewHandler) {
-    Handlers.push_back(NewHandler);
+  void AddHandler(std::function<bool(const std::string &)> new_handler) {
+    handlers_.push_back(new_handler);
   }
 
-private:
-  void waitAndPopMessage(std::string &Message) {
-    std::unique_lock<std::mutex> Lock(MessageQueueMutex);
-    while (MessageQueue.empty())
-      Signal.wait(Lock);
+ private:
+  void WaitAndPopMessage(std::string &message) {
+    std::unique_lock<std::mutex> lock(message_queue_mutex_);
+    while (message_queue_.empty()) signal_.wait(lock);
 
-    Message = MessageQueue.front();
-    MessageQueue.pop();
+    message = message_queue_.front();
+    message_queue_.pop();
   }
 
-  bool exitHandler(const std::string &Message) {
-    if (Message != ReceiverExit)
-      return false;
+  bool ExitHandler(const std::string &message) {
+    if (message != ReceiverExit) return false;
 
-    Running = false;
+    running_ = false;
     return true;
   }
 
-  bool defaultHandler(const std::string &Message) {
-    std::cout << Message << std::endl;
+  bool DefaultHandler(const std::string &message) {
+    std::cout << message << std::endl;
     return true;
   }
 
-private:
-  std::shared_ptr<Broadcaster> BindBroadcaster;
-  std::queue<std::string> MessageQueue;
-  std::mutex MessageQueueMutex;
-  std::condition_variable Signal;
-  bool Running;
-  std::list<std::function<bool(const std::string &)>> Handlers;
+ private:
+  std::shared_ptr<Broadcaster> bind_broadcaster_;
+  std::queue<std::string> message_queue_;
+  std::mutex message_queue_mutex_;
+  std::condition_variable signal_;
+  bool running_;
+  std::list<std::function<bool(const std::string &)>> handlers_;
 };
 
 class Broadcaster : public std::enable_shared_from_this<Broadcaster> {
-public:
-  void addReceiver(std::shared_ptr<Receiver> Receiver) {
-    Receiver->setBroadcaster(shared_from_this());
-    const std::lock_guard<std::mutex> Lock(ReceiversMutex);
-    Receivers.push_back(Receiver);
+ public:
+  void AddReceiver(std::shared_ptr<Receiver> receiver) {
+    receiver->SetBroadcaster(shared_from_this());
+    const std::lock_guard<std::mutex> lock(receivers_mutex_);
+    receivers_.push_back(receiver);
   }
 
-  void notify(std::string Message) {
-    const std::lock_guard<std::mutex> Lock(ReceiversMutex);
-    for (auto &Receiver : Receivers) {
-      auto Recv = Receiver.lock();
-      if (!Recv) {
+  void Notify(std::string message) {
+    const std::lock_guard<std::mutex> lock(receivers_mutex_);
+    for (auto &receiver : receivers_) {
+      auto recv = receiver.lock();
+      if (!recv) {
         continue;
       }
-      Recv->newMessage(Message);
+      recv->NewMessage(message);
     }
   }
 
-  void exitAllReceiver() {
-    notify(ReceiverExit);
-  }
+  void ExitAllReceiver() { Notify(ReceiverExit); }
 
-private:
-  std::list<std::weak_ptr<Receiver>> Receivers;
-  std::mutex ReceiversMutex;
+ private:
+  std::list<std::weak_ptr<Receiver>> receivers_;
+  std::mutex receivers_mutex_;
 };

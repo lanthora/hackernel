@@ -1,4 +1,5 @@
 #include "util.h"
+
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -9,7 +10,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int insmod(const char *filename) {
+int InsertKernelModule(const char *filename) {
   int error = -1;
   struct stat st;
   int fd;
@@ -17,25 +18,20 @@ int insmod(const char *filename) {
   int image_size = 0;
 
   fd = open(filename, O_RDONLY);
-  if (fd < 0)
-    goto out;
+  if (fd < 0) goto out;
 
   error = fstat(fd, &st);
-  if (error)
-    goto closefd;
+  if (error) goto closefd;
 
   image_size = st.st_size;
   image = malloc(image_size);
-  if (!image)
-    goto closefd;
+  if (!image) goto closefd;
 
   error = read(fd, image, image_size);
-  if (error < 0)
-    goto freemem;
+  if (error < 0) goto freemem;
 
   error = syscall(__NR_init_module, image, image_size, "");
-  if (error)
-    goto freemem;
+  if (error) goto freemem;
 
   error = 0;
 freemem:
@@ -46,7 +42,7 @@ out:
   return error;
 }
 
-int rmmod(const char *module) {
+int RemovekernelModule(const char *module) {
   int error;
   error = syscall(__NR_delete_module, module);
   return error;

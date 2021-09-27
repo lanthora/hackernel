@@ -78,12 +78,12 @@ enum {
 };
 #define NET_A_MAX (__NET_A_MAX - 1)
 
-int initNetlinkServer(void);
-int startNetlinkServer(void);
-int stopNetlinkServer(void);
+int InitNetlinkServer(void);
+int StartNetlinkServer(void);
+int StopNetlinkServer(void);
 
-extern struct nl_sock *NlSock;
-extern int FamId;
+extern struct nl_sock *g_nl_sock;
+extern int g_fam_id;
 
 #ifdef __cplusplus
 }

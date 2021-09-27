@@ -1,22 +1,19 @@
 #ifndef HACKERNEL_COMMAND_H
 #define HACKERNEL_COMMAND_H
-#include "netlink.h"
-#include <cstdint>
+
 #include <netlink/genl/genl.h>
 #include <netlink/msg.h>
+
+#include <cstdint>
 #include <string>
 
-/**
- * handshake
- */
-int handshake();
-int heartbeat();
-void stopHeartbeat();
+#include "netlink.h"
 
-/**
- * file protect
- */
-typedef int32_t file_perm_t;
+int Handshake();
+int Heartbeat();
+void StopHeartbeat();
+
+typedef int32_t FilePerm;
 
 #define READ_PROTECT_FLAG 1
 #define WRITE_PROTECT_FLAG 2
@@ -32,13 +29,10 @@ enum {
   FILE_PROTECT_SET
 };
 
-int enableFileProtect();
-int disableFileProtect();
-int setFileProtect(const std::string &Path, file_perm_t Perm);
+int EnableFileProtect();
+int DisableFileProtect();
+int SetFileProtect(const std::string &path, FilePerm perm);
 
-/**
- * process protect
- */
 typedef int ProcessPermId;
 typedef int32_t ProcessPerm;
 
@@ -54,14 +48,11 @@ enum {
 #define PROCESS_ACCEPT 1
 #define PROCESS_REJECT 2
 
-int enableProcessProtect();
-int disableProcessProtect();
-ProcessPerm checkProcessPerm(char *Cmd);
-int replyProcessPerm(ProcessPermId Id, ProcessPerm Perm);
+int EnableProcessProtect();
+int DisableProcessProtect();
+ProcessPerm CheckProcessPerm(char *cmd);
+int ReplyProcessPerm(ProcessPermId id, ProcessPerm perm);
 
-/**
- * net protect
- */
 typedef uint32_t NetAddr;
 typedef uint16_t NetPort;
 typedef uint8_t NetProtocol;
@@ -80,50 +71,47 @@ enum {
   NET_PROTECT_DELETE,
 };
 
-/**
- * 优先级(Priority)相同的情况下, 后添加的优先命中
- * 多个NetPolicy可以有相同的id, 根据Id可以批量删除
- * 所有的数据都为主机序
- */
+// 优先级(Priority)相同的情况下, 后添加的优先命中,多个NetPolicy可以有相同的id,
+// 根据Id可以批量删除 所有的数据都为主机序
 struct NetPolicy {
-  NetPolicyId Id;
-  NetPriority Priority;
+  NetPolicyId id;
+  NetPriority priority;
 
   struct {
     struct {
-      NetAddr Begin;
-      NetAddr End;
-    } Src;
+      NetAddr begin;
+      NetAddr end;
+    } src;
     struct {
-      NetAddr Begin;
-      NetAddr End;
-    } Dst;
-  } Addr;
+      NetAddr begin;
+      NetAddr end;
+    } dst;
+  } addr;
 
   struct {
     struct {
-      NetPort Begin;
-      NetPort End;
-    } Src;
+      NetPort begin;
+      NetPort end;
+    } src;
     struct {
-      NetPort Begin;
-      NetPort End;
-    } Dst;
-  } Port;
+      NetPort begin;
+      NetPort end;
+    } dst;
+  } port;
 
   struct {
-    NetProtocol Begin;
-    NetProtocol End;
-  } Protocol;
+    NetProtocol begin;
+    NetProtocol end;
+  } protocol;
 
-  NetResponse Response;
-  int Flags;
+  NetResponse response;
+  int flags;
 };
 
-int netPolicyInsert(const NetPolicy &Policy);
-int netPolicyDelete(NetPolicyId Id);
+int NetPolicyInsert(const NetPolicy &policy);
+int NetPolicyDelete(NetPolicyId id);
 
-int enableNetProtect();
-int disableNetProtect(void);
+int EnableNetProtect();
+int DisableNetProtect(void);
 
 #endif
