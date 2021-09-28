@@ -97,14 +97,19 @@ int main() {
   policy.response = NET_POLICY_ACCEPT;
   NetPolicyInsert(policy);
 
-  // all
+  // allow tcp header
   policy.port.src.begin = 0;
   policy.port.src.end = UINT16_MAX;
   policy.port.dst.begin = 0;
   policy.port.dst.end = UINT16_MAX;
   policy.id = 1;
   policy.priority = 1;
-  policy.flags = FLAG_INBOUND_MASK | FLAG_OUTBOUND_MASK;
+  policy.flags = FLAG_OUTBOUND_MASK | FLAG_TCP_HEADER_ONLY_MASK;
+  policy.response = NET_POLICY_ACCEPT;
+  NetPolicyInsert(policy);
+
+  // disable others
+  policy.flags = FLAG_OUTBOUND_MASK;
   policy.response = NET_POLICY_DROP;
   NetPolicyInsert(policy);
 #endif
