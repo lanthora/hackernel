@@ -43,7 +43,7 @@ typedef s8 priority_t;
 
 #define NET_POLICY_DROP NF_DROP // 0
 #define NET_POLICY_ACCEPT NF_ACCEPT // 1
-#define NET_POLICY_HIT 1
+#define NET_POLICY_CONTINUE 1
 #define NET_POLICY_MISS 0
 
 /**
@@ -92,8 +92,10 @@ struct net_policy_t {
 	s32 flags;
 };
 
-#define HKNP_INBOUND(flags) ((flags & 0x01) ? NET_POLICY_HIT : NET_POLICY_MISS)
-#define HKNP_OUTBOUND(flags) ((flags & 0x02) ? NET_POLICY_HIT : NET_POLICY_MISS)
+#define FLAG_INBOUND_MASK (1U << 0)
+#define FLAG_OUTBOUND_MASK (1U << 1)
+#define FLAG_TCP_HANDSHAKE_MASK (1U << 2)
+#define FLAG_TCP_HEADER_ONLY_MASK (1U << 3)
 
 struct hknf_buff {
 	const struct sk_buff *skb;
