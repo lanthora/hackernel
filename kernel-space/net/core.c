@@ -213,9 +213,9 @@ static int net_policy_bound(const struct hknf_buff *buff,
 			    const struct net_policy_t *policy)
 {
 	switch (buff->state->hook) {
-	case NF_INET_LOCAL_IN:
+	case NF_INET_PRE_ROUTING:
 		return FLAG_INBOUND_MASK & policy->flags;
-	case NF_INET_LOCAL_OUT:
+	case NF_INET_POST_ROUTING:
 		return FLAG_OUTBOUND_MASK & policy->flags;
 	}
 	return NET_POLICY_MISS;
@@ -267,13 +267,13 @@ static const struct nf_hook_ops net_policy_ops[] = {
 	{
 		.hook = net_policy_hook,
 		.pf = PF_INET,
-		.hooknum = NF_INET_LOCAL_IN,
+		.hooknum = NF_INET_PRE_ROUTING,
 		.priority = NF_IP_PRI_FIRST,
 	},
 	{
 		.hook = net_policy_hook,
 		.pf = PF_INET,
-		.hooknum = NF_INET_LOCAL_OUT,
+		.hooknum = NF_INET_POST_ROUTING,
 		.priority = NF_IP_PRI_FIRST,
 	},
 };
