@@ -109,6 +109,8 @@ int main() {
   NetPolicyInsert(policy);
 
   // disable others
+  policy.id = 2;
+  policy.priority = 2;
   policy.flags = FLAG_OUTBOUND_MASK;
   policy.response = NET_POLICY_DROP;
   NetPolicyInsert(policy);
