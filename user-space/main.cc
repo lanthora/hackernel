@@ -108,7 +108,27 @@ int main() {
   policy.response = NET_POLICY_ACCEPT;
   NetPolicyInsert(policy);
 
+  // allow localhost
+  policy.addr.src.begin = ntohl(inet_addr("127.0.0.1"));
+  policy.addr.src.end = ntohl(inet_addr("127.0.0.1"));
+  policy.addr.dst.begin = ntohl(inet_addr("127.0.0.1"));
+  policy.addr.dst.end = ntohl(inet_addr("127.0.0.1"));
+  policy.flags = FLAG_INBOUND_MASK | FLAG_OUTBOUND_MASK;
+  NetPolicyInsert(policy);
+
+  // docker
+  policy.addr.src.begin = ntohl(inet_addr("172.17.0.0"));
+  policy.addr.src.end = ntohl(inet_addr("172.17.255.255"));
+  policy.addr.dst.begin = ntohl(inet_addr("172.17.0.0"));
+  policy.addr.dst.end = ntohl(inet_addr("172.17.255.255"));
+  policy.flags = FLAG_INBOUND_MASK | FLAG_OUTBOUND_MASK;
+  NetPolicyInsert(policy);
+
   // disable others
+  policy.addr.src.begin = ntohl(inet_addr("0.0.0.0"));
+  policy.addr.src.end = ntohl(inet_addr("255.255.255.255"));
+  policy.addr.dst.begin = ntohl(inet_addr("0.0.0.0"));
+  policy.addr.dst.end = ntohl(inet_addr("255.255.255.255"));
   policy.id = 2;
   policy.priority = 2;
   policy.flags = FLAG_OUTBOUND_MASK;

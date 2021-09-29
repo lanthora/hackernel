@@ -240,8 +240,6 @@ miss:
 	return NET_POLICY_MISS;
 }
 
-// TODO:
-// 这个地方可能需要上报日志,只有这里能区分
 static response_t net_policy_hook(void *priv, struct sk_buff *skb,
 				  const struct nf_hook_state *state)
 {
