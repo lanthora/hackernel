@@ -118,7 +118,7 @@ static int net_policy_tcp_header_only(const struct hknf_buff *buff,
 		return NET_POLICY_CONTINUE;
 
 	iph = ip_hdr(buff->skb);
-	if (tcp_hdrlen(buff->skb) + sizeof(struct iphdr) == iph->tot_len)
+	if (tcp_hdrlen(buff->skb) + sizeof(struct iphdr) == ntohs(iph->tot_len))
 		return NET_POLICY_CONTINUE;
 
 	return NET_POLICY_MISS;
