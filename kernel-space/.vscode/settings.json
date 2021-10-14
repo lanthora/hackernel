@@ -75,7 +75,8 @@
 		"compare": "c",
 		"version.h": "c",
 		"mount.h": "c",
-		"random": "c"
+		"random": "c",
+		"unistd32.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

@@ -6,6 +6,9 @@
                 "/usr/src/linux/include",
                 "/usr/src/linux/arch/x86/include",
                 "/usr/src/linux/arch/x86/include/generated",
+		"/usr/src/linux-aarch64/include",
+		"/usr/src/linux-aarch64/arch/arm64/include",
+		"/usr/src/linux-aarch64/arch/arm64/include/generated",
 		"${workspaceFolder}/include"
             ],
             "defines": [

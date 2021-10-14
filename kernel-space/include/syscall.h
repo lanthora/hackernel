@@ -14,7 +14,7 @@ extern unsigned long *g_sys_call_table;
 #define HKMAP4(cnt, m, t, a, ...) m(t, a, cnt), HKMAP3(cnt##i, m, __VA_ARGS__)
 #define HKMAP5(cnt, m, t, a, ...) m(t, a, cnt), HKMAP4(cnt##i, m, __VA_ARGS__)
 
-#if CONFIG_SYSCALL_PTREG
+#if CONFIG_SYSCALL_PTREGS
 #define __HOOK_DECL(t, a, cnt) t a
 #define __HOOK_ARGS(t, a, cnt) (t) SC_ARG_##cnt
 #define DECL_MAP(n, ...) HKMAP##n(i, __HOOK_DECL, __VA_ARGS__)
@@ -116,12 +116,20 @@ extern unsigned long *g_sys_call_table;
 	} while (0)
 #endif
 
-#if defined(CONFIG_X86)
+#if defined(CONFIG_X86_64)
 #define SC_ARG_i (regs->di)
 #define SC_ARG_ii (regs->si)
 #define SC_ARG_iii (regs->dx)
 #define SC_ARG_iiii (regs->r10)
 #define SC_ARG_iiiii (regs->r8)
+#endif
+
+#if defined(CONFIG_ARM64)
+#define SC_ARG_i (regs->regs[1])
+#define SC_ARG_ii (regs->regs[2])
+#define SC_ARG_iii (regs->regs[3])
+#define SC_ARG_iiii (regs->regs[4])
+#define SC_ARG_iiiii (regs->regs[5])
 #endif
 
 #endif

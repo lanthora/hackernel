@@ -391,10 +391,14 @@ unsigned long get_ino(const char *name)
 	return retval;
 }
 
-#if defined(CONFIG_X86)
+static struct mm_struct *init_mm_ptr = NULL;
 static void init_init_mm_ptr(void)
 {
+	init_mm_ptr = (struct mm_struct *)hk_kallsyms_lookup_name("init_mm");
+	LOG("init_mm: [%lx]", (unsigned long)init_mm_ptr);
 }
+
+#if defined(CONFIG_X86)
 static inline void write_cr0_forced(unsigned long val)
 {
 	asm volatile("mov %0,%%cr0" : : "r"(val) : "memory");
@@ -415,13 +419,6 @@ void disable_wp(unsigned long addr)
 
 #include <asm/pgtable-hwdef.h>
 #include <linux/pgtable.h>
-
-static struct mm_struct *init_mm_ptr = NULL;
-static void init_init_mm_ptr(void)
-{
-	init_mm_ptr = (struct mm_struct *)hk_kallsyms_lookup_name("init_mm");
-	LOG("init_mm: [%lx]", (unsigned long)init_mm_ptr);
-}
 
 #ifdef CONFIG_ARM_LPAE
 static pmdval_t mask = ~(L_PMD_SECT_RDONLY | PMD_SECT_AP2);
@@ -454,6 +451,16 @@ void enable_wp(unsigned long addr)
 void disable_wp(unsigned long addr)
 {
 	section_update(addr & SECTION_MASK, mask, clear, init_mm_ptr);
+}
+#endif
+
+#if defined(CONFIG_ARM64)
+void enable_wp(unsigned long addr)
+{
+}
+
+void disable_wp(unsigned long addr)
+{
 }
 #endif
 
