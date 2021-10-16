@@ -1,6 +1,7 @@
 #ifndef HACKERNEL_SYSCALL_H
 #define HACKERNEL_SYSCALL_H
 
+#include "define.h"
 #include "util.h"
 #include <generated/autoconf.h>
 #include <linux/kernel.h>
@@ -30,25 +31,31 @@ extern unsigned long *g_sys_call_table;
 #endif
 
 #define REG_DEFINE(name)                                                       \
-	static int __hook_##name(void)                                        \
+	static int __hook_##name(void)                                         \
 	{                                                                      \
+		if (HK_NR_##name == HK_NR_UNDEFINED) {                         \
+			return -ENOSYS;                                        \
+		}                                                              \
 		if (!g_sys_call_table) {                                       \
 			return -EPERM;                                         \
 		}                                                              \
                                                                                \
 		if (!hk_sys_##name) {                                          \
-			hk_sys_##name = g_sys_call_table[__NR_##name];         \
+			hk_sys_##name = g_sys_call_table[HK_NR_##name];        \
 		}                                                              \
                                                                                \
-		disable_wp((unsigned long)(g_sys_call_table + __NR_##name));   \
-		g_sys_call_table[__NR_##name] = &sys_##name##_hook;            \
-		enable_wp((unsigned long)(g_sys_call_table + __NR_##name));    \
+		disable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));  \
+		g_sys_call_table[HK_NR_##name] = &sys_##name##_hook;           \
+		enable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));   \
 		return 0;                                                      \
 	}
 
 #define UNREG_DEFINE(name)                                                     \
-	static int __unhook_##name(void)                                        \
+	static int __unhook_##name(void)                                       \
 	{                                                                      \
+		if (HK_NR_##name == HK_NR_UNDEFINED) {                         \
+			return -ENOSYS;                                        \
+		}                                                              \
 		if (!g_sys_call_table) {                                       \
 			return -EPERM;                                         \
 		}                                                              \
@@ -56,9 +63,9 @@ extern unsigned long *g_sys_call_table;
 		if (!hk_sys_##name) {                                          \
 			return -EPERM;                                         \
 		}                                                              \
-		disable_wp((unsigned long)(g_sys_call_table + __NR_##name));   \
-		g_sys_call_table[__NR_##name] = hk_sys_##name;                 \
-		enable_wp((unsigned long)(g_sys_call_table + __NR_##name));    \
+		disable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));  \
+		g_sys_call_table[HK_NR_##name] = hk_sys_##name;                \
+		enable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));   \
 		return 0;                                                      \
 	}
 
@@ -94,8 +101,8 @@ extern unsigned long *g_sys_call_table;
 #ifndef REG_HOOK
 #define REG_HOOK(name)                                                         \
 	do {                                                                   \
-		if (__hook_##name()) {                                        \
-			LOG("__hook_" STR(name) " failed");                   \
+		if (__hook_##name()) {                                         \
+			LOG("__hook_" STR(name) " failed");                    \
 		}                                                              \
 	} while (0)
 #endif
@@ -103,8 +110,8 @@ extern unsigned long *g_sys_call_table;
 #ifndef UNREG_HOOK
 #define UNREG_HOOK(name)                                                       \
 	do {                                                                   \
-		if (__unhook_##name()) {                                        \
-			LOG("__unhook_" STR(name) " failed");                   \
+		if (__unhook_##name()) {                                       \
+			LOG("__unhook_" STR(name) " failed");                  \
 		}                                                              \
 	} while (0)
 #endif
