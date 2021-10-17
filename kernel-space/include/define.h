@@ -1,8 +1,8 @@
 #ifndef HACKERNEL_DEFINE_H
 #define HACKERNEL_DEFINE_H
 
-#include <asm-generic/unistd.h>
 #include <generated/autoconf.h>
+#include <linux/syscalls.h>
 #include <linux/version.h>
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 7, 0)

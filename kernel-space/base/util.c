@@ -4,7 +4,6 @@
 #include <linux/mount.h>
 #include <linux/namei.h>
 #include <linux/statfs.h>
-#include <linux/syscalls.h>
 
 unsigned long *g_sys_call_table = NULL;
 
