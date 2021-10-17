@@ -3,7 +3,6 @@
 
 #include "define.h"
 #include "util.h"
-#include <generated/autoconf.h>
 #include <linux/kernel.h>
 
 extern unsigned long *g_sys_call_table;
@@ -34,9 +33,11 @@ extern unsigned long *g_sys_call_table;
 	static int __hook_##name(void)                                         \
 	{                                                                      \
 		if (HK_NR_##name == HK_NR_UNDEFINED) {                         \
+			LOG("undefined system call: " STR(name));              \
 			return -ENOSYS;                                        \
 		}                                                              \
 		if (!g_sys_call_table) {                                       \
+			LOG("g_sys_call_table is not initialized");            \
 			return -EPERM;                                         \
 		}                                                              \
                                                                                \
@@ -101,18 +102,14 @@ extern unsigned long *g_sys_call_table;
 #ifndef REG_HOOK
 #define REG_HOOK(name)                                                         \
 	do {                                                                   \
-		if (__hook_##name()) {                                         \
-			LOG("__hook_" STR(name) " failed");                    \
-		}                                                              \
+		__hook_##name();                                               \
 	} while (0)
 #endif
 
 #ifndef UNREG_HOOK
 #define UNREG_HOOK(name)                                                       \
 	do {                                                                   \
-		if (__unhook_##name()) {                                       \
-			LOG("__unhook_" STR(name) " failed");                  \
-		}                                                              \
+		__unhook_##name();                                             \
 	} while (0)
 #endif
 

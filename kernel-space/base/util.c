@@ -455,12 +455,71 @@ void disable_wp(unsigned long addr)
 #endif
 
 #if defined(CONFIG_ARM64)
+#include <asm/pgtable-types.h>
+#include <asm/pgtable.h>
+
+static int get_kern_addr_ptep(unsigned long addr, pte_t **ptepp)
+{
+	pgd_t *pgdp;
+	p4d_t *p4dp;
+	pud_t *pudp, pud;
+	pmd_t *pmdp, pmd;
+	pte_t *ptep, pte;
+
+	addr = arch_kasan_reset_tag(addr);
+	if ((((long)addr) >> VA_BITS) != -1UL)
+		return 0;
+
+	pgdp = (init_mm_ptr->pgd +
+		(((addr) >> PGDIR_SHIFT) & (PTRS_PER_PGD - 1)));
+	if (pgd_none(READ_ONCE(*pgdp)))
+		return 0;
+
+	p4dp = p4d_offset(pgdp, addr);
+	if (p4d_none(READ_ONCE(*p4dp)))
+		return 0;
+
+	pudp = pud_offset(p4dp, addr);
+	pud = READ_ONCE(*pudp);
+	if (pud_none(pud))
+		return 0;
+
+	if (pud_sect(pud))
+		return pfn_valid(pud_pfn(pud));
+
+	pmdp = pmd_offset(pudp, addr);
+	pmd = READ_ONCE(*pmdp);
+	if (pmd_none(pmd))
+		return 0;
+
+	if (pmd_sect(pmd))
+		return pfn_valid(pmd_pfn(pmd));
+
+	ptep = pte_offset_kernel(pmdp, addr);
+	*ptepp = ptep;
+	pte = *ptep;
+	if (pte_none(pte))
+		return 0;
+
+	return pfn_valid(pte_pfn(pte));
+}
+
 void enable_wp(unsigned long addr)
 {
+	pte_t *ptep;
+	if (!get_kern_addr_ptep(addr, &ptep))
+		return;
+	set_pte(ptep, pte_wrprotect(*ptep));
+	flush_tlb_all();
 }
 
 void disable_wp(unsigned long addr)
 {
+	pte_t *ptep;
+	if (!get_kern_addr_ptep(addr, &ptep))
+		return;
+	set_pte(ptep, pte_mkwrite(*ptep));
+	flush_tlb_all();
 }
 #endif
 

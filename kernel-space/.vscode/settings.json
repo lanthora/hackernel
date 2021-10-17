@@ -76,7 +76,10 @@
 		"version.h": "c",
 		"mount.h": "c",
 		"random": "c",
-		"unistd32.h": "c"
+		"unistd32.h": "c",
+		"pgtable-types.h": "c",
+		"pgtable.h": "c",
+		"autoconf.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
