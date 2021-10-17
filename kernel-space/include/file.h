@@ -47,8 +47,8 @@ struct file_perm_node {
 };
 
 int file_perm_set_path(const char *path, file_perm_t perm);
-int enable_file_protect(void);
-int disable_file_protect(void);
+int file_protect_enable(void);
+int file_protect_disable(void);
 int file_protect_init(void);
 int file_protect_destory(void);
 

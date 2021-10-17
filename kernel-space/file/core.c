@@ -475,7 +475,7 @@ HOOK_DEFINE4(mknodat, int, dfd, char __user *, filename, umode_t, mode,
 	return 0;
 }
 
-int enable_file_protect(void)
+int file_protect_enable(void)
 {
 	REG_HOOK(open);
 	REG_HOOK(openat);
@@ -496,7 +496,7 @@ int enable_file_protect(void)
 	return 0;
 }
 
-int disable_file_protect(void)
+int file_protect_disable(void)
 {
 	UNREG_HOOK(open);
 	UNREG_HOOK(openat);
@@ -525,5 +525,5 @@ int file_protect_init(void)
 
 int file_protect_destory(void)
 {
-	return disable_file_protect();
+	return file_protect_disable();
 }

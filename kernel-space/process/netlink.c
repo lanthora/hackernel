@@ -107,12 +107,12 @@ int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		goto out;
 	}
 	case PROCESS_PROTECT_ENABLE: {
-		code = enable_process_protect();
+		code = process_protect_enable();
 		goto response;
 	}
 
 	case PROCESS_PROTECT_DISABLE: {
-		code = disable_process_protect();
+		code = process_protect_disable();
 		goto response;
 	}
 	default: {

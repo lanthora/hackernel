@@ -107,11 +107,11 @@ int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	type = nla_get_u8(info->attrs[NET_A_OP_TYPE]);
 	switch (type) {
 	case NET_PROTECT_ENABLE:
-		code = enable_net_protect();
+		code = net_protect_enable();
 		goto response;
 
 	case NET_PROTECT_DISABLE:
-		code = disable_net_protect();
+		code = net_protect_disable();
 		goto response;
 	case NET_PROTECT_INSERT:
 		code = net_protect_info_to_policy(info, &policy);

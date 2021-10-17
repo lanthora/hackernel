@@ -294,7 +294,7 @@ HOOK_DEFINE2(kill, pid_t, pid, int, sig)
 	return 0;
 }
 
-int enable_process_protect(void)
+int process_protect_enable(void)
 {
 	REG_HOOK(execve);
 	REG_HOOK(execveat);
@@ -302,7 +302,7 @@ int enable_process_protect(void)
 	return 0;
 }
 
-int disable_process_protect(void)
+int process_protect_disable(void)
 {
 	UNREG_HOOK(execve);
 	UNREG_HOOK(execveat);
@@ -318,5 +318,5 @@ int process_protect_init()
 
 int process_protect_destory()
 {
-	return disable_process_protect();
+	return process_protect_disable();
 }

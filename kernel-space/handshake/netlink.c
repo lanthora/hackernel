@@ -32,7 +32,7 @@ int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 		goto response;
 	}
 
-	init_tgid(nla_get_s32(info->attrs[HANDSHAKE_A_SYS_SERVICE_TGID]));
+	tgid_init(nla_get_s32(info->attrs[HANDSHAKE_A_SYS_SERVICE_TGID]));
 
 response:
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);

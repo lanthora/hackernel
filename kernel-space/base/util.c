@@ -391,7 +391,7 @@ unsigned long get_ino(const char *name)
 }
 
 static struct mm_struct *init_mm_ptr = NULL;
-static void init_init_mm_ptr(void)
+static void init_mm_ptr_init(void)
 {
 	init_mm_ptr = (struct mm_struct *)hk_kallsyms_lookup_name("init_mm");
 	LOG("init_mm: [%lx]", (unsigned long)init_mm_ptr);
@@ -525,19 +525,19 @@ void disable_wp(unsigned long addr)
 #ifdef CONFIG_KALLSYMS_LOOKUP_NAME
 kallsyms_lookup_name_t hk_kallsyms_lookup_name;
 static struct kprobe hk_kp = { .symbol_name = "kallsyms_lookup_name" };
-static void init_hk_kallsyms_lookup_name(void)
+static void hk_kallsyms_lookup_name_init(void)
 {
 	register_kprobe(&hk_kp);
 	hk_kallsyms_lookup_name = (kallsyms_lookup_name_t)hk_kp.addr;
 	unregister_kprobe(&hk_kp);
 }
 #else
-static void init_hk_kallsyms_lookup_name(void)
+static void hk_kallsyms_lookup_name_init(void)
 {
 }
 #endif
 
-int init_sys_call_table(void)
+int sys_call_table_init(void)
 {
 	unsigned long syscall_kernel;
 	syscall_kernel = hk_kallsyms_lookup_name("sys_call_table");
@@ -547,7 +547,7 @@ int init_sys_call_table(void)
 
 void util_init(void)
 {
-	init_hk_kallsyms_lookup_name();
-	init_init_mm_ptr();
-	init_sys_call_table();
+	hk_kallsyms_lookup_name_init();
+	init_mm_ptr_init();
+	sys_call_table_init();
 }

@@ -109,11 +109,11 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	type = nla_get_u8(info->attrs[FILE_A_OP_TYPE]);
 	switch (type) {
 	case FILE_PROTECT_ENABLE: {
-		code = enable_file_protect();
+		code = file_protect_enable();
 		goto response;
 	}
 	case FILE_PROTECT_DISABLE: {
-		code = disable_file_protect();
+		code = file_protect_disable();
 		goto response;
 	}
 	case FILE_PROTECT_SET: {

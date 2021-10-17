@@ -278,7 +278,7 @@ static const struct nf_hook_ops net_policy_ops[] = {
 
 static bool hooked = false;
 static DEFINE_RWLOCK(nf_lock);
-int enable_net_protect(void)
+int net_protect_enable(void)
 {
 	write_lock(&nf_lock);
 	if (!hooked) {
@@ -290,7 +290,7 @@ int enable_net_protect(void)
 	return 0;
 }
 
-int disable_net_protect(void)
+int net_protect_disable(void)
 {
 	write_lock(&nf_lock);
 	if (hooked) {
@@ -310,5 +310,5 @@ int net_protect_init(void)
 
 int net_protect_destory(void)
 {
-	return disable_net_protect();
+	return net_protect_disable();
 }

@@ -106,8 +106,8 @@ struct hknf_buff {
 int net_policy_insert(struct net_policy_t *policy);
 int net_policy_delete(policy_id_t id);
 
-int enable_net_protect(void);
-int disable_net_protect(void);
+int net_protect_enable(void);
+int net_protect_disable(void);
 int net_protect_init(void);
 int net_protect_destory(void);
 

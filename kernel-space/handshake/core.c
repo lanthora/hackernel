@@ -27,7 +27,7 @@ lastout:
 	return 0;
 }
 
-void init_tgid(pid_t pid)
+void tgid_init(pid_t pid)
 {
 	if (g_service_tgid == pid)
 		return;
