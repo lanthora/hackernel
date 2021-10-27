@@ -122,11 +122,11 @@ extern unsigned long *g_sys_call_table;
 #endif
 
 #if defined(CONFIG_ARM64)
-#define SC_ARG_i (regs->regs[1])
-#define SC_ARG_ii (regs->regs[2])
-#define SC_ARG_iii (regs->regs[3])
-#define SC_ARG_iiii (regs->regs[4])
-#define SC_ARG_iiiii (regs->regs[5])
+#define SC_ARG_i (regs->regs[0])
+#define SC_ARG_ii (regs->regs[1])
+#define SC_ARG_iii (regs->regs[2])
+#define SC_ARG_iiii (regs->regs[3])
+#define SC_ARG_iiiii (regs->regs[4])
 #endif
 
 #endif
