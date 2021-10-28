@@ -52,4 +52,5 @@ Mkfile.old
 dkms.conf
 
 # CMake Build files
-/build
+/user-space/build/*
+!.gitkeep
