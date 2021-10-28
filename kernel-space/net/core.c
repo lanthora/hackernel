@@ -114,7 +114,7 @@ static int net_policy_tcp_header_only(const struct hknf_buff *buff,
 				      const struct net_policy_t *policy)
 {
 	struct iphdr *iph;
-	if (!(FLAG_TCP_HEADER_ONLY_MASK & policy->flags))
+	if (!(FLAG_TCP_HEADER_ONLY & policy->flags))
 		return NET_POLICY_CONTINUE;
 
 	iph = ip_hdr(buff->skb);
@@ -129,7 +129,7 @@ static int net_policy_tcp_handshake_only(const struct hknf_buff *buff,
 {
 	struct tcphdr *tcph;
 
-	if (!(FLAG_TCP_HANDSHAKE_MASK & policy->flags))
+	if (!(FLAG_TCP_HANDSHAKE & policy->flags))
 		return NET_POLICY_CONTINUE;
 
 	tcph = tcp_hdr(buff->skb);
@@ -214,9 +214,9 @@ static int net_policy_bound(const struct hknf_buff *buff,
 {
 	switch (buff->state->hook) {
 	case NF_INET_PRE_ROUTING:
-		return FLAG_INBOUND_MASK & policy->flags;
+		return FLAG_INBOUND & policy->flags;
 	case NF_INET_POST_ROUTING:
-		return FLAG_OUTBOUND_MASK & policy->flags;
+		return FLAG_OUTBOUND & policy->flags;
 	}
 	return NET_POLICY_MISS;
 }

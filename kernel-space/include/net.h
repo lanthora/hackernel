@@ -93,10 +93,10 @@ struct net_policy_t {
 	s32 flags;
 };
 
-#define FLAG_INBOUND_MASK (1U << 0)
-#define FLAG_OUTBOUND_MASK (1U << 1)
-#define FLAG_TCP_HANDSHAKE_MASK (1U << 2)
-#define FLAG_TCP_HEADER_ONLY_MASK (1U << 3)
+#define FLAG_INBOUND (1U << 0)
+#define FLAG_OUTBOUND (1U << 1)
+#define FLAG_TCP_HANDSHAKE (1U << 2)
+#define FLAG_TCP_HEADER_ONLY (1U << 3)
 
 struct hknf_buff {
 	const struct sk_buff *skb;

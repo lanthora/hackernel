@@ -32,10 +32,10 @@ void SigHandler(int sig) {
 #define FILE_PROTECT 1
 #define NET_PROTECT 1
 
-#define FLAG_INBOUND_MASK (1U << 0)
-#define FLAG_OUTBOUND_MASK (1U << 1)
-#define FLAG_TCP_HANDSHAKE_MASK (1U << 2)
-#define FLAG_TCP_HEADER_ONLY_MASK (1U << 3)
+#define FLAG_INBOUND (1U << 0)
+#define FLAG_OUTBOUND (1U << 1)
+#define FLAG_TCP_HANDSHAKE (1U << 2)
+#define FLAG_TCP_HEADER_ONLY (1U << 3)
 
 int main() {
   int error;
@@ -85,7 +85,7 @@ int main() {
 
   policy.id = 0;
   policy.priority = 0;
-  policy.flags = FLAG_INBOUND_MASK;
+  policy.flags = FLAG_INBOUND;
   policy.response = NET_POLICY_ACCEPT;
   NetPolicyInsert(policy);
 
@@ -93,7 +93,7 @@ int main() {
   policy.port.src.end = 22;
   policy.port.dst.begin = 0;
   policy.port.dst.end = UINT16_MAX;
-  policy.flags = FLAG_OUTBOUND_MASK;
+  policy.flags = FLAG_OUTBOUND;
   policy.response = NET_POLICY_ACCEPT;
   NetPolicyInsert(policy);
 
@@ -104,7 +104,7 @@ int main() {
   policy.port.dst.end = UINT16_MAX;
   policy.id = 1;
   policy.priority = 1;
-  policy.flags = FLAG_OUTBOUND_MASK | FLAG_TCP_HEADER_ONLY_MASK;
+  policy.flags = FLAG_OUTBOUND | FLAG_TCP_HEADER_ONLY;
   policy.response = NET_POLICY_ACCEPT;
   NetPolicyInsert(policy);
 
@@ -113,7 +113,7 @@ int main() {
   policy.addr.src.end = ntohl(inet_addr("127.0.0.1"));
   policy.addr.dst.begin = ntohl(inet_addr("127.0.0.1"));
   policy.addr.dst.end = ntohl(inet_addr("127.0.0.1"));
-  policy.flags = FLAG_INBOUND_MASK | FLAG_OUTBOUND_MASK;
+  policy.flags = FLAG_INBOUND | FLAG_OUTBOUND;
   NetPolicyInsert(policy);
 
   // docker
@@ -121,7 +121,7 @@ int main() {
   policy.addr.src.end = ntohl(inet_addr("172.17.255.255"));
   policy.addr.dst.begin = ntohl(inet_addr("172.17.0.0"));
   policy.addr.dst.end = ntohl(inet_addr("172.17.255.255"));
-  policy.flags = FLAG_INBOUND_MASK | FLAG_OUTBOUND_MASK;
+  policy.flags = FLAG_INBOUND | FLAG_OUTBOUND;
   NetPolicyInsert(policy);
 
   // disable others
@@ -131,7 +131,7 @@ int main() {
   policy.addr.dst.end = ntohl(inet_addr("255.255.255.255"));
   policy.id = 2;
   policy.priority = 2;
-  policy.flags = FLAG_OUTBOUND_MASK;
+  policy.flags = FLAG_OUTBOUND;
   policy.response = NET_POLICY_DROP;
   NetPolicyInsert(policy);
 #endif
