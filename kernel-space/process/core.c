@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #include "netlink.h"
 #include "process.h"
 #include "syscall.h"

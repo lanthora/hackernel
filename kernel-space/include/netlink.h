@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef HACKERNEL_NETLINK_KERNEL_SPACE
 #define HACKERNEL_NETLINK_KERNEL_SPACE
 

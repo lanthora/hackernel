@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #include "file.h"
 #include <linux/binfmts.h>
 #include <linux/dcache.h>

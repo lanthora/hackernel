@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef HACKERNEL_FILE_H
 #define HACKERNEL_FILE_H
 

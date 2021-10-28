@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #include "util.h"
 #include <linux/binfmts.h>
 #include <linux/fs_struct.h>

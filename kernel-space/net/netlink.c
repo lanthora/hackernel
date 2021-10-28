@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #include "netlink.h"
 #include "handshake.h"
 #include "net.h"
