@@ -16,12 +16,33 @@
 
 通过netfilter实现简易防火墙,目前添加的一条有趣的规则是:根据TCP报文是否包含有效载荷进行过滤.
 
-## 运行环境
+## 构建项目
 
-* 架构:X86_64/ARM/ARM64
-* 内核版本:Linux5.10及以上
+### 环境
+
+* 架构: X86_64/ARM/ARM64
+* 内核版本: Linux5.10及以上
+
+### 内核模块
+
+```bash
+cd kernel-space
+make
+insmod hackernel.ko
+```
+
+### 用户态程序
+
+```bash
+cd user-space/build
+cmake ../
+make
+./hackernel
+```
 
 ## 计划
+
+~~项目随缘,想到什么做什么,做到哪里算哪里.写上个计划假装很正式~~
 
 - [ ] 实现与内核通信的守护进程
 
