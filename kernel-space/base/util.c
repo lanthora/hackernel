@@ -395,7 +395,6 @@ static struct mm_struct *init_mm_ptr = NULL;
 static void init_mm_ptr_init(void)
 {
 	init_mm_ptr = (struct mm_struct *)hk_kallsyms_lookup_name("init_mm");
-	LOG("init_mm: [%lx]", (unsigned long)init_mm_ptr);
 }
 
 #if defined(CONFIG_X86)
