@@ -79,7 +79,10 @@
 		"unistd32.h": "c",
 		"pgtable-types.h": "c",
 		"pgtable.h": "c",
-		"autoconf.h": "c"
+		"autoconf.h": "c",
+		"functional": "cpp",
+		"type_traits": "cpp",
+		"define.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

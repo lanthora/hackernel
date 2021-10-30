@@ -2,6 +2,7 @@
 #include "net.h"
 #include "netlink.h"
 #include "util.h"
+#include "watchdog.h"
 #include <linux/bitmap.h>
 #include <linux/gfp.h>
 #include <linux/ip.h>
@@ -246,6 +247,9 @@ static response_t net_policy_hook(void *priv, struct sk_buff *skb,
 	response_t response = NET_POLICY_ACCEPT;
 	struct net_policy_t *policy = NULL;
 	struct hknf_buff buff = { .skb = skb, .state = state };
+
+	if (!conn_check_living())
+		return response;
 
 	read_lock(&policys_lock);
 	list_for_each_entry (policy, &policys, list) {

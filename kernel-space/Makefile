@@ -12,7 +12,9 @@ hackernel-objs :=\
 	file/core.o \
 	file/netlink.o \
 	net/core.o \
-	net/netlink.o
+	net/netlink.o \
+	watchdog/core.o \
+	watchdog/watchdog.o \
 
 ccflags-y += $(HACKERNEL_MODULE_CFLAGS)
 ccflags-y += -I$(src)/include

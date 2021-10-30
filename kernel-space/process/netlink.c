@@ -2,6 +2,7 @@
 #include "netlink.h"
 #include "handshake.h"
 #include "process.h"
+#include "watchdog.h"
 
 extern struct genl_family genl_family;
 extern pid_t g_service_tgid;
@@ -72,6 +73,8 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 
 	g_portid = 0;
 	g_service_tgid = 0;
+	conn_check_set_dead();
+
 	LOG("genlmsg_unicast failed error=[%d]", error);
 
 out:

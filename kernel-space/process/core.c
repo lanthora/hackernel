@@ -3,6 +3,7 @@
 #include "process.h"
 #include "syscall.h"
 #include "util.h"
+#include "watchdog.h"
 #include <linux/binfmts.h>
 #include <linux/gfp.h>
 #include <linux/list.h>
@@ -215,7 +216,7 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 	int error = 0;
 	process_perm_t perm = PROCESS_INVAILD;
 
-	if (!g_portid)
+	if (!conn_check_living())
 		goto out;
 
 	msg = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);

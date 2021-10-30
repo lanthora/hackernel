@@ -1,7 +1,7 @@
 #include "syscall.h"
+#include "watchdog.h"
 
 pid_t g_service_tgid;
-
 extern u32 g_portid;
 
 int hackernel_heartbeat_check(u32 portid)
@@ -24,6 +24,7 @@ portidout:
 	g_portid = portid;
 lastout:
 	last = jiffies;
+	conn_check_set_alive();
 	return 0;
 }
 
