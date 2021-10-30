@@ -7,7 +7,7 @@
 #include <thread>
 
 void SigHandler(int sig) {
-    LOG("received signal, exit now");
+    LOG("received signal=[%d], exit now", sig);
     FileProtectDisable();
     ProcessProtectDisable();
     DisableNetProtect();
@@ -27,8 +27,12 @@ void SigHandler(int sig) {
 int main() {
     int error;
 
-    signal(SIGINT, SigHandler);
-    signal(SIGTERM, SigHandler);
+    struct sigaction act;
+    act.sa_handler = SigHandler;
+    sigfillset(&act.sa_mask);
+    act.sa_flags = 0;
+    sigaction(SIGINT, &act, NULL);
+    sigaction(SIGTERM, &act, NULL);
 
     error = NetlinkServerInit();
     if (error) {
