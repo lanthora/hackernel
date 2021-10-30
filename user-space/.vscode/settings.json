@@ -72,7 +72,11 @@
                 "genetlink.h": "c",
                 "msg.h": "c",
                 "mngt.h": "c",
-                "netlink.h": "c"
+                "netlink.h": "c",
+                "command.h": "c",
+                "exclusive.h": "c",
+                "file.h": "c",
+                "util.h": "c"
         },
         "editor.tabSize": 2
 }
