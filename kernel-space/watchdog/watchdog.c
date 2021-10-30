@@ -11,8 +11,7 @@ static int watchdog_kthread(void *data)
 	}
 	while (!kthread_should_stop()) {
 		sleep_jiffies(dog->timeout);
-		if (time_is_after_jiffies(dog->last + dog->timeout)) {
-			LOG("watch dog bark");
+		if (time_is_before_jiffies(dog->last + dog->timeout)) {
 			dog->bark();
 		}
 	}

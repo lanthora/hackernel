@@ -10,7 +10,7 @@
 #define sleep_jiffies(timeout)                                                 \
 	do {                                                                   \
 		long tmp = (long)timeout;                                      \
-		while (tmp > 0)                                                \
+		while (tmp > 0 && !kthread_should_stop())                      \
 			tmp = schedule_timeout(tmp);                           \
 	} while (0);
 #endif
