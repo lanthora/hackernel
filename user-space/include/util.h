@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 
+#if defined(DEBUG)
 #define LOG(fmt, arg...)                                                                                          \
     do {                                                                                                          \
         time_t now = time(NULL);                                                                                  \
@@ -12,6 +13,9 @@
                t->tm_hour, t->tm_min, t->tm_sec, __FILE__, __LINE__, ##arg);                                      \
         fflush(stdout);                                                                                           \
     } while (0)
+#else
+#define LOG(fmt, arg...)
+#endif
 
 int KernelModuleInsert(const char* filename);
 int KernelModuleRemove(const char* modulename);

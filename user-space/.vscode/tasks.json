@@ -15,6 +15,9 @@
     {
       "label": "build:make",
       "command": "make",
+      "args":[
+        "-j"
+      ],
       "options": {
         "cwd": "${workspaceFolder}/build/"
       }

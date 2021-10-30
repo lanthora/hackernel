@@ -13,6 +13,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-g")
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O2")
 
+if (CMAKE_BUILD_TYPE MATCHES "Debug")
+add_definitions(-DDEBUG)
+endif()
+
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
 target_link_libraries(${PROJECT_NAME} nl-3)
