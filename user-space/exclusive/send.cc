@@ -35,3 +35,7 @@ int HeartbeatHelper(int interval) {
 int HeartbeatStart() {
     return HeartbeatHelper(1);
 }
+
+int Handshake() {
+    return HeartbeatHelper(0);
+}
