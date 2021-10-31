@@ -81,8 +81,6 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 		goto out;
 	}
 
-	g_portid = 0;
-	g_service_tgid = 0;
 	conn_check_set_dead();
 
 	LOG("genlmsg_unicast failed error=[%d]", error);

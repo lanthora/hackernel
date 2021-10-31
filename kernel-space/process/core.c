@@ -261,6 +261,9 @@ static int self_protect(pid_t nr, int sig)
 	struct task_struct *task;
 	struct pid *pid;
 
+	if (!conn_check_living())
+		return 0;
+
 	if (nr <= 0)
 		return 0;
 	pid = find_get_pid(nr);
