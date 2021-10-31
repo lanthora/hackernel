@@ -10,10 +10,9 @@ static int watchdog_kthread(void *data)
 		return 0;
 	}
 	while (!kthread_should_stop()) {
-		sleep_jiffies(dog->timeout);
-		if (time_is_before_jiffies(dog->last + dog->timeout)) {
+		if (time_is_before_jiffies(dog->last + dog->timeout))
 			dog->bark();
-		}
+		schedule_timeout_interruptible(dog->timeout);
 	}
 	return 0;
 }
@@ -27,7 +26,7 @@ void watchdog_feed(struct watchdog *dog)
 
 void watchdog_start(struct watchdog *dog)
 {
-	dog->task = kthread_run(watchdog_kthread, dog, "watchdog_kthread");
+	dog->task = kthread_run(watchdog_kthread, dog, "hk_wdog");
 	if (IS_ERR_OR_NULL(dog->task)) {
 		LOG("watchdog_kthread create failed");
 		dog->task = NULL;

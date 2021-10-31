@@ -6,15 +6,6 @@
 #include <linux/kthread.h>
 #include <linux/sched.h>
 
-#ifndef sleep_jiffies
-#define sleep_jiffies(timeout)                                                 \
-	do {                                                                   \
-		long tmp = (long)timeout;                                      \
-		while (tmp > 0 && !kthread_should_stop())                      \
-			tmp = schedule_timeout(tmp);                           \
-	} while (0);
-#endif
-
 struct watchdog {
 	unsigned long last;
 	unsigned long timeout;
