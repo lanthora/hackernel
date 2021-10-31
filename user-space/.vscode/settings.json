@@ -76,7 +76,9 @@
                 "command.h": "c",
                 "exclusive.h": "c",
                 "file.h": "c",
-                "util.h": "c"
+                "util.h": "c",
+                "optional": "cpp",
+                "ranges": "cpp"
         },
         "editor.tabSize": 2
 }

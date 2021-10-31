@@ -13,6 +13,19 @@
       "externalConsole": false,
       "MIMode": "gdb",
       "preLaunchTask": "build:debug"
+    },
+    {
+      "name": "RELEASE",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/build/hackerneld",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${fileDirname}",
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "preLaunchTask": "build:release"
     }
   ]
 }
