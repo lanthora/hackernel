@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 */
-#ifndef HACKERNEL_NETLINK_KERNEL_SPACE
-#define HACKERNEL_NETLINK_KERNEL_SPACE
+#ifndef HACKERNEL_NETLINK_H
+#define HACKERNEL_NETLINK_H
 
 #include <linux/skbuff.h>
 #include <net/genetlink.h>
