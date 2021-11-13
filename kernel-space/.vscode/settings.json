@@ -82,11 +82,32 @@
 		"autoconf.h": "c",
 		"functional": "cpp",
 		"type_traits": "cpp",
-		"define.h": "c"
+		"define.h": "c",
+		"skbuff.h": "c",
+		"dma-mapping.h": "c",
+		"scatterlist.h": "c",
+		"io.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
 	"C_Cpp.clang_format_sortIncludes": true,
 	"C_Cpp.dimInactiveRegions": false,
-	"editor.tabSize": 8
+	"editor.tabSize": 8,
+	"C_Cpp.intelliSenseEngine": "Default",
+	"[shellscript]": {
+		"files.eol": "\n"
+	},
+	"C_Cpp.default.includePath": [
+		"/usr/src/linux/include",
+		"/usr/src/linux/arch/x86/include",
+		"/usr/src/linux/arch/x86/include/generated",
+		"/usr/src/linux-aarch64/include",
+		"/usr/src/linux-aarch64/arch/arm64/include",
+		"/usr/src/linux-aarch64/arch/arm64/include/generated",
+		"${workspaceFolder}/include",
+	],
+	"C_Cpp.default.defines": [
+		"MODULE",
+		"__KERNEL__"
+	]
 }
