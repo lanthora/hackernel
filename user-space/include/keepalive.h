@@ -1,5 +1,5 @@
-#ifndef HACKERNEL_EXCLUSIVE_H
-#define HACKERNEL_EXCLUSIVE_H
+#ifndef HACKERNEL_KEEPALIVE_H
+#define HACKERNEL_KEEPALIVE_H
 
 #include "util.h"
 #include <netlink/genl/mngt.h>
@@ -16,7 +16,7 @@ enum {
 #define HANDSHAKE_A_MAX (__HANDSHAKE_A_MAX - 1)
 
 
-int ExclusiveHandler(struct nl_cache_ops* unused, struct genl_cmd* genl_cmd, struct genl_info* genl_info, void* arg);
+int KeepAliveHandler(struct nl_cache_ops* unused, struct genl_cmd* genl_cmd, struct genl_info* genl_info, void* arg);
 
 
 int Handshake();

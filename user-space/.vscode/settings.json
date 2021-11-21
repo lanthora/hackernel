@@ -74,7 +74,7 @@
                 "mngt.h": "c",
                 "netlink.h": "c",
                 "command.h": "c",
-                "exclusive.h": "c",
+                "keepalive.h": "c",
                 "file.h": "c",
                 "util.h": "c",
                 "optional": "cpp",

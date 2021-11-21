@@ -1,5 +1,5 @@
 #include "netlink.h"
-#include "exclusive.h"
+#include "keepalive.h"
 #include "file.h"
 #include "net.h"
 #include "process.h"
@@ -62,7 +62,7 @@ static struct genl_cmd hackernel_genl_cmds[] = {
         .c_name = "HACKERNEL_C_HANDSHAKE",
         .c_maxattr = HANDSHAKE_A_MAX,
         .c_attr_policy = handshake_policy,
-        .c_msg_parser = &ExclusiveHandler,
+        .c_msg_parser = &KeepAliveHandler,
     },
     {
         .c_id = HACKERNEL_C_PROCESS_PROTECT,
