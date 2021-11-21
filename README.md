@@ -46,3 +46,6 @@ make
 
 - [ ] 实现与内核通信的守护进程
 
+## 技术架构图
+
+![](docs/images/hackernel.svg)
