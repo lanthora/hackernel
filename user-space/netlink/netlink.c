@@ -1,6 +1,6 @@
 #include "netlink.h"
-#include "keepalive.h"
 #include "file.h"
+#include "keepalive.h"
 #include "net.h"
 #include "process.h"
 #include "syscall.h"
@@ -196,7 +196,7 @@ int NetlinkServerStart(void) {
     return 0;
 }
 
-int StopNetlinkServer(void) {
+int NetlinkServerStop(void) {
     running = 0;
     return 0;
 }

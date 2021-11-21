@@ -63,6 +63,6 @@ int NetPolicyDelete(NetPolicyId id) {
 int NetProtectEnable() {
     return NetProtectStatusUpdate(NET_PROTECT_ENABLE);
 }
-int DisableNetProtect() {
+int NetProtectDisable() {
     return NetProtectStatusUpdate(NET_PROTECT_DISABLE);
 }

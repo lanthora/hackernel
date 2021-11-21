@@ -1,18 +1,22 @@
-#include "keepalive.h"
 #include "file.h"
+#include "keepalive.h"
 #include "net.h"
 #include "process.h"
 #include <arpa/inet.h>
 #include <signal.h>
 #include <thread>
 
-void SigHandler(int sig) {
-    LOG("received signal=[%d], exit now", sig);
+static void Shutdown() {
     FileProtectDisable();
     ProcessProtectDisable();
-    DisableNetProtect();
+    NetProtectDisable();
     HeartbeatStop();
-    StopNetlinkServer();
+    NetlinkServerStop();
+}
+
+static void SigHandler(int sig) {
+    LOG("received signal=[%d], exit now", sig);
+    Shutdown();
 }
 
 #define PROCESS_PROTECT 1

@@ -67,7 +67,7 @@ int NetPolicyInsert(const struct NetPolicy *policy);
 int NetPolicyDelete(NetPolicyId id);
 
 int NetProtectEnable();
-int DisableNetProtect(void);
+int NetProtectDisable(void);
 
 enum {
     NET_A_UNSPEC,
@@ -99,7 +99,7 @@ enum {
 
 int NetlinkServerInit(void);
 int NetlinkServerStart(void);
-int StopNetlinkServer(void);
+int NetlinkServerStop(void);
 
 EXTERN_C_END
 
