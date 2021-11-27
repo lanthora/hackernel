@@ -30,8 +30,8 @@ enum {
 int ProcessProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
                           void *arg);
 
-int ProcessProtectEnable();
-int ProcessProtectDisable();
+int ProcessProtectEnable(void);
+int ProcessProtectDisable(void);
 ProcessPerm ProcessPermCheck(char *cmd);
 int ProcessPermReply(ProcessPermId id, ProcessPerm perm);
 

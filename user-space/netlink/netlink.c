@@ -93,12 +93,12 @@ static struct genl_ops hackernel_genl_ops = {
     .o_ncmds = ARRAY_SIZE(hackernel_genl_cmds),
 };
 
-int NetlinkServerInit() {
+void NetlinkServerInit() {
     int error;
 
     if (g_nl_sock) {
         LOG("Generic Netlink has been inited");
-        return 0;
+        return;
     }
 
     g_nl_sock = nl_socket_alloc();
@@ -151,16 +151,16 @@ int NetlinkServerInit() {
 
     // 内核收到消息会自动回复确认
     nl_socket_disable_auto_ack(g_nl_sock);
-    return 0;
+    return;
 
 errout:
     LOG("Generic Netlink init failed");
-    return -1;
+    exit(1);
 }
 
 static int running = 0;
 
-int NetlinkServerStart(void) {
+int NetlinkServerStart() {
     int error;
 
     struct pollfd fds = {
@@ -196,7 +196,7 @@ int NetlinkServerStart(void) {
     return 0;
 }
 
-int NetlinkServerStop(void) {
+int NetlinkServerStop() {
     running = 0;
     return 0;
 }

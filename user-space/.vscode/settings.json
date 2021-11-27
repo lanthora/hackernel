@@ -78,7 +78,8 @@
                 "file.h": "c",
                 "util.h": "c",
                 "optional": "cpp",
-                "ranges": "cpp"
+                "ranges": "cpp",
+                "net.h": "c"
         },
         "editor.tabSize": 2
 }

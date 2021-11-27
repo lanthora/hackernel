@@ -66,7 +66,7 @@ struct NetPolicy {
 int NetPolicyInsert(const struct NetPolicy *policy);
 int NetPolicyDelete(NetPolicyId id);
 
-int NetProtectEnable();
+int NetProtectEnable(void);
 int NetProtectDisable(void);
 
 enum {
@@ -97,7 +97,9 @@ enum {
 };
 #define NET_A_MAX (__NET_A_MAX - 1)
 
-int NetlinkServerInit(void);
+// 初始化用来接收内核消息的服务,初始化失败退出进程
+// 初始化成功后内核就有能力把消息放到缓冲区
+void NetlinkServerInit(void);
 int NetlinkServerStart(void);
 int NetlinkServerStop(void);
 

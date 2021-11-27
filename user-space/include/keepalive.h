@@ -6,7 +6,6 @@
 
 EXTERN_C_BEGIN
 
-
 enum {
     HANDSHAKE_A_UNSPEC,
     HANDSHAKE_A_STATUS_CODE,
@@ -15,13 +14,10 @@ enum {
 };
 #define HANDSHAKE_A_MAX (__HANDSHAKE_A_MAX - 1)
 
-
 int KeepAliveHandler(struct nl_cache_ops* unused, struct genl_cmd* genl_cmd, struct genl_info* genl_info, void* arg);
 
-
-int Handshake();
-int HeartbeatStart();
-void HeartbeatStop();
+int HeartbeatStart(void);
+void HeartbeatStop(void);
 
 EXTERN_C_END
 

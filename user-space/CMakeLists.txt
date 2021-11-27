@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.18.4)
 
-set(PROJECT_NAME hackerneld)
+set(PROJECT_NAME hackernel)
 project(${PROJECT_NAME})
 
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -31,11 +31,13 @@ add_subdirectory(keepalive)
 add_subdirectory(file)
 add_subdirectory(process)
 add_subdirectory(net)
+add_subdirectory(ipc)
 
 target_link_libraries(${PROJECT_NAME} netlink)
 target_link_libraries(${PROJECT_NAME} keepalive)
 target_link_libraries(${PROJECT_NAME} file)
 target_link_libraries(${PROJECT_NAME} process)
 target_link_libraries(${PROJECT_NAME} net)
+target_link_libraries(${PROJECT_NAME} ipc)
 
 
