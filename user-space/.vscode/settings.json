@@ -81,5 +81,9 @@
                 "ranges": "cpp",
                 "net.h": "c"
         },
-        "editor.tabSize": 2
+        "editor.tabSize": 2,
+        "C_Cpp.default.includePath":[               
+                "/usr/include/libnl3",
+                "${workspaceFolder}/include"
+        ]
 }
