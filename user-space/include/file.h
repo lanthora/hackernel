@@ -8,6 +8,8 @@ EXTERN_C_BEGIN
 
 enum {
     FILE_A_UNSPEC,
+    FILE_A_SESSION,
+
     FILE_A_STATUS_CODE,
     FILE_A_OP_TYPE,
     FILE_A_NAME,

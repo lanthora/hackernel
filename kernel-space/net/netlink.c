@@ -8,23 +8,21 @@ extern struct genl_family genl_family;
 
 struct nla_policy net_policy[NET_A_MAX + 1] = {
 	[NET_A_STATUS_CODE] = { .type = NLA_S32 },
+	[NET_A_SESSION] = { .type = NLA_S32 },
+
 	[NET_A_OP_TYPE] = { .type = NLA_U8 },
 	[NET_A_ID] = { .type = NLA_S32 },
 	[NET_A_PRIORITY] = { .type = NLA_S8 },
-
 	[NET_A_ADDR_SRC_BEGIN] = { .type = NLA_U32 },
 	[NET_A_ADDR_SRC_END] = { .type = NLA_U32 },
 	[NET_A_ADDR_DST_BEGIN] = { .type = NLA_U32 },
 	[NET_A_ADDR_DST_END] = { .type = NLA_U32 },
-
 	[NET_A_PORT_SRC_BEGIN] = { .type = NLA_U16 },
 	[NET_A_PORT_SRC_END] = { .type = NLA_U16 },
 	[NET_A_PORT_DST_BEGIN] = { .type = NLA_U16 },
 	[NET_A_PORT_DST_END] = { .type = NLA_U16 },
-
 	[NET_A_PROTOCOL_BEGIN] = { .type = NLA_U8 },
 	[NET_A_PROTOCOL_END] = { .type = NLA_U8 },
-
 	[NET_A_RESPONSE] = { .type = NLA_U32 },
 	[NET_A_FLAGS] = { .type = NLA_S32 },
 };
@@ -96,6 +94,7 @@ int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	struct sk_buff *reply = NULL;
 	void *head = NULL;
 	u8 type;
+	s32 session;
 
 	if (g_portid != info->snd_portid)
 		return -EPERM;
@@ -145,6 +144,15 @@ response:
 	if (unlikely(!head)) {
 		LOG("genlmsg_put_reply failed");
 		goto errout;
+	}
+
+	if (info->attrs[NET_A_SESSION]) {
+		session = nla_get_s32(info->attrs[NET_A_SESSION]);
+		error = nla_put_s32(reply, NET_A_SESSION, session);
+		if (unlikely(error)) {
+			LOG("nla_put_s32 failed");
+			goto errout;
+		}
 	}
 
 	error = nla_put_u32(reply, NET_A_OP_TYPE, type);
