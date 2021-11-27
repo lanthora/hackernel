@@ -20,11 +20,9 @@ public:
     void NewMessage(std::string message);
     void StartToConsume();
     void AddHandler(std::function<bool(const std::string&)> new_handler);
-
+    void Stop();
 private:
-    void WaitAndPopMessage(std::string& message);
-    bool ExitHandler(const std::string& message);
-    bool DefaultHandler(const std::string& message);
+    int WaitAndPopMessage(std::string& message);
 
 private:
     std::shared_ptr<Broadcaster> bind_broadcaster_;
@@ -37,11 +35,14 @@ private:
 
 class Broadcaster : public std::enable_shared_from_this<Broadcaster> {
 public:
+    static Broadcaster &GetInstance();
     void AddReceiver(std::shared_ptr<Receiver> receiver);
+    void DelReceiver(std::shared_ptr<Receiver> receiver);
     void Notify(std::string message);
     void ExitAllReceiver();
 
 private:
+    Broadcaster() {}
     std::list<std::weak_ptr<Receiver>> receivers_;
     std::mutex receivers_mutex_;
 };
