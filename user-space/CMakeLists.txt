@@ -19,10 +19,6 @@ endif()
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
-target_link_libraries(${PROJECT_NAME} nl-3)
-target_link_libraries(${PROJECT_NAME} nl-genl-3)
-target_link_libraries(${PROJECT_NAME} pthread)
-
 target_include_directories(${PROJECT_NAME} PRIVATE "/usr/include/libnl3")
 include_directories("/usr/include/libnl3")
 
@@ -40,4 +36,7 @@ target_link_libraries(${PROJECT_NAME} process)
 target_link_libraries(${PROJECT_NAME} net)
 target_link_libraries(${PROJECT_NAME} ipc)
 
+target_link_libraries(${PROJECT_NAME} nl-3)
+target_link_libraries(${PROJECT_NAME} nl-genl-3)
+target_link_libraries(${PROJECT_NAME} pthread)
 
