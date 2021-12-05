@@ -1,20 +1,11 @@
 #ifndef HACKERNEL_FILE_H
 #define HACKERNEL_FILE_H
 
-#include "util.h"
+#include "file/define.h"
+#include "hackernel/util.h"
 #include <netlink/genl/mngt.h>
 
-enum {
-    FILE_A_UNSPEC,
-    FILE_A_SESSION,
-
-    FILE_A_STATUS_CODE,
-    FILE_A_OP_TYPE,
-    FILE_A_NAME,
-    FILE_A_PERM,
-    __FILE_A_MAX,
-};
-#define FILE_A_MAX (__FILE_A_MAX - 1)
+namespace hackernel {
 
 int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg);
 
@@ -33,5 +24,7 @@ int FileProtectSet(const char *path, FilePerm perm);
 #define FLAG_FILE_READ_ONLY (FLAG_FILE_WRITE_DISABLE | FLAG_FILE_READ_WRITE)
 #define FLAG_RILE_WRITE_ONLY (FLAG_FILE_READ_DISABLE | FLAG_FILE_READ_WRITE)
 #define FLAG_FILE_ALL_DISABLE (-1)
+
+};  // namespace hackernel
 
 #endif

@@ -1,5 +1,5 @@
-#ifndef HACKERNEL_BROADCASTER_H
-#define HACKERNEL_BROADCASTER_H
+#ifndef HACKERNEL_COMMON_BROADCASTER_H
+#define HACKERNEL_COMMON_BROADCASTER_H
 
 #include <condition_variable>
 #include <functional>
@@ -21,6 +21,7 @@ public:
     void StartToConsume();
     void AddHandler(std::function<bool(const std::string&)> new_handler);
     void Stop();
+
 private:
     int WaitAndPopMessage(std::string& message);
 
@@ -35,7 +36,7 @@ private:
 
 class Broadcaster : public std::enable_shared_from_this<Broadcaster> {
 public:
-    static Broadcaster &GetInstance();
+    static Broadcaster& GetInstance();
     void AddReceiver(std::shared_ptr<Receiver> receiver);
     void DelReceiver(std::shared_ptr<Receiver> receiver);
     void Notify(std::string message);

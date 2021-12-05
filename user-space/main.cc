@@ -1,12 +1,14 @@
-#include "file.h"
-#include "ipc.h"
-#include "keepalive.h"
-#include "net.h"
-#include "netlink.h"
-#include "process.h"
+#include "hackernel/file.h"
+#include "hackernel/heartbeat.h"
+#include "hackernel/ipc.h"
+#include "hackernel/net.h"
+#include "hackernel/process.h"
+#include "hknl/netlink.h"
 #include <arpa/inet.h>
 #include <signal.h>
 #include <thread>
+
+using namespace hackernel;
 
 static void Shutdown() {
     IpcStop();

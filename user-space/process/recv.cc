@@ -1,6 +1,8 @@
-#include "process.h"
+#include "hackernel/process.h"
 #include <algorithm>
 #include <string>
+
+namespace hackernel {
 
 int ProcessProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
                           void *arg) {
@@ -37,3 +39,5 @@ int ProcessProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd
     }
     return 0;
 }
+
+};  // namespace hackernel

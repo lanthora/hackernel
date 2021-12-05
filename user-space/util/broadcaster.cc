@@ -1,4 +1,4 @@
-#include "broadcaster.h"
+#include "hackernel/broadcaster.h"
 
 void Receiver::SetBroadcaster(std::shared_ptr<Broadcaster> broadcaster) {
     this->bind_broadcaster_ = broadcaster;

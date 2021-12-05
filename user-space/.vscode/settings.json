@@ -65,25 +65,10 @@
                 "thread": "cpp",
                 "cinttypes": "cpp",
                 "typeinfo": "cpp",
-                "family.h": "c",
-                "netfwd": "cpp",
-                "stdio.h": "c",
-                "*.inc": "cpp",
-                "genetlink.h": "c",
-                "msg.h": "c",
-                "mngt.h": "c",
-                "netlink.h": "c",
-                "command.h": "c",
-                "keepalive.h": "c",
-                "file.h": "c",
-                "util.h": "c",
-                "optional": "cpp",
-                "ranges": "cpp",
-                "net.h": "c"
         },
         "editor.tabSize": 2,
         "C_Cpp.default.includePath":[               
                 "/usr/include/libnl3",
-                "${workspaceFolder}/include"
+                "${workspaceFolder}"
         ]
 }

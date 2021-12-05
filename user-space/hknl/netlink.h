@@ -1,7 +1,7 @@
-#ifndef HACKERNEL_NETLINK_USER_SPACE
-#define HACKERNEL_NETLINK_USER_SPACE
+#ifndef HACKERNEL_NLSERVER_NETLINK_H
+#define HACKERNEL_NLSERVER_NETLINK_H
 
-#include "util.h"
+#include "hackernel/util.h"
 
 EXTERN_C_BEGIN
 
@@ -21,11 +21,8 @@ enum {
 };
 #define HACKERNEL_C_MAX (__HACKERNEL_C_MAX - 1)
 
-extern struct nl_sock *g_nl_sock;
-extern int g_fam_id;
-
-// 初始化用来接收内核消息的服务,初始化失败退出进程
-// 初始化成功后内核就有能力把消息放到缓冲区
+int NetlinkGetFamilyID();
+struct nl_sock *NetlinkGetNlSock();
 void NetlinkServerInit(void);
 int NetlinkServerStart(void);
 int NetlinkServerStop(void);

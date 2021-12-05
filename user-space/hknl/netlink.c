@@ -1,11 +1,10 @@
-#include "netlink.h"
-#include "file.h"
-#include "keepalive.h"
-#include "net.h"
-#include "process.h"
-#include "syscall.h"
-#include "util.h"
-#include "wrapper.h"
+#include "hknl/netlink.h"
+#include "file/define.h"
+#include "hackernel/util.h"
+#include "heartbeat/define.h"
+#include "hknl/wrapper.h"
+#include "net/define.h"
+#include "process/define.h"
 #include <linux/genetlink.h>
 #include <netlink/attr.h>
 #include <netlink/errno.h>
@@ -16,8 +15,16 @@
 #include <netlink/msg.h>
 #include <stdio.h>
 
-struct nl_sock *g_nl_sock = NULL;
-int g_fam_id = 0;
+static struct nl_sock *nl_sock = NULL;
+static int fam_id = 0;
+
+int NetlinkGetFamilyID() {
+    return fam_id;
+}
+
+struct nl_sock *NetlinkGetNlSock() {
+    return nl_sock;
+}
 
 static struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1] = {
     [HANDSHAKE_A_STATUS_CODE] = {.type = NLA_S32},
@@ -54,7 +61,7 @@ static struct genl_cmd hackernel_genl_cmds[] = {
         .c_name = "HACKERNEL_C_HANDSHAKE",
         .c_maxattr = HANDSHAKE_A_MAX,
         .c_attr_policy = handshake_policy,
-        .c_msg_parser = &keepalive_handler,
+        .c_msg_parser = &heartbeat_handler,
     },
     {
         .c_id = HACKERNEL_C_PROCESS_PROTECT,
@@ -88,18 +95,18 @@ static struct genl_ops hackernel_genl_ops = {
 void NetlinkServerInit() {
     int error;
 
-    if (g_nl_sock) {
+    if (nl_sock) {
         LOG("Generic Netlink has been inited");
         return;
     }
 
-    g_nl_sock = nl_socket_alloc();
-    if (!g_nl_sock) {
+    nl_sock = nl_socket_alloc();
+    if (!nl_sock) {
         LOG("Netlink Socket memory alloc failed");
         goto errout;
     }
 
-    error = genl_connect(g_nl_sock);
+    error = genl_connect(nl_sock);
     if (error) {
         LOG("Generic Netlink connect failed");
         goto errout;
@@ -107,13 +114,13 @@ void NetlinkServerInit() {
 
     // 缓冲区大小设置为4MB
     const int buff_size = 4 * 1024 * 1024;
-    error = nl_socket_set_buffer_size(g_nl_sock, buff_size, buff_size);
+    error = nl_socket_set_buffer_size(nl_sock, buff_size, buff_size);
     if (error) {
         LOG("nl_socket_set_buffer_size failed");
         goto errout;
     }
 
-    error = genl_ops_resolve(g_nl_sock, &hackernel_genl_ops);
+    error = genl_ops_resolve(nl_sock, &hackernel_genl_ops);
     if (error) {
         LOG("Resolve a single Generic Netlink family failed");
         goto errout;
@@ -124,25 +131,25 @@ void NetlinkServerInit() {
         LOG("Generic Netlink Register failed");
         goto errout;
     }
-    g_fam_id = hackernel_genl_ops.o_id;
+    fam_id = hackernel_genl_ops.o_id;
 
-    error = nl_socket_modify_cb(g_nl_sock, NL_CB_VALID, NL_CB_CUSTOM, genl_handle_msg, NULL);
+    error = nl_socket_modify_cb(nl_sock, NL_CB_VALID, NL_CB_CUSTOM, genl_handle_msg, NULL);
     if (error) {
         LOG("Generic Netlink modify callback failed");
         goto errout;
     }
 
-    error = nl_socket_set_nonblocking(g_nl_sock);
+    error = nl_socket_set_nonblocking(nl_sock);
     if (error) {
         LOG("Generic Netlink set noblocking failed");
         goto errout;
     }
 
     // 应用层收到消息会检查当前期待收到的seq与上次发送的seq是否一致
-    nl_socket_disable_seq_check(g_nl_sock);
+    nl_socket_disable_seq_check(nl_sock);
 
     // 内核收到消息会自动回复确认
-    nl_socket_disable_auto_ack(g_nl_sock);
+    nl_socket_disable_auto_ack(nl_sock);
     return;
 
 errout:
@@ -156,7 +163,7 @@ int NetlinkServerStart() {
     int error;
 
     struct pollfd fds = {
-        .fd = nl_socket_get_fd(g_nl_sock),
+        .fd = nl_socket_get_fd(NetlinkGetNlSock()),
         .events = POLLIN,
     };
 
@@ -175,15 +182,15 @@ int NetlinkServerStart() {
             break;
         }
 
-        error = nl_recvmsgs_default(g_nl_sock);
+        error = nl_recvmsgs_default(NetlinkGetNlSock());
         if (error) {
             LOG("error=[%d] msg=[%s]", error, nl_geterror(error));
             exit(1);
         }
     }
 
-    nl_close(g_nl_sock);
-    nl_socket_free(g_nl_sock);
+    nl_close(NetlinkGetNlSock());
+    nl_socket_free(NetlinkGetNlSock());
 
     return 0;
 }

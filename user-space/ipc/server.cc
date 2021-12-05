@@ -1,9 +1,11 @@
-#include "file.h"
-#include "ipc.h"
-#include "keepalive.h"
-#include "net.h"
-#include "process.h"
+#include "hackernel/file.h"
+#include "hackernel/heartbeat.h"
+#include "hackernel/ipc.h"
+#include "hackernel/net.h"
+#include "hackernel/process.h"
 #include <arpa/inet.h>
+
+namespace hackernel {
 
 #define PROCESS_PROTECT 1
 #define FILE_PROTECT 1
@@ -98,3 +100,5 @@ void IpcStop() {
     LOG("IPC Server Stop");
     return;
 }
+
+};  // namespace hackernel

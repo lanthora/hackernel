@@ -1,4 +1,6 @@
-#include "net.h"
+#include "hackernel/net.h"
+
+namespace hackernel {
 
 int NetProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
     u_int8_t type;
@@ -19,3 +21,5 @@ int NetProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, st
     }
     return 0;
 }
+
+};  // namespace hackernel

@@ -1,13 +1,15 @@
 #ifndef HACKERNEL_IPC_H
 #define HACKERNEL_IPC_H
 
-#include "util.h"
+#include "hackernel/util.h"
+
+namespace hackernel {
 
 int IpcStart(void);
 void IpcStop(void);
 
-class Session{
+class Session {};
 
-};
+};  // namespace hackernel
 
 #endif

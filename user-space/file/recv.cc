@@ -1,4 +1,7 @@
-#include "file.h"
+#include "file/define.h"
+#include "hackernel/file.h"
+
+namespace hackernel {
 
 int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
     u_int8_t type;
@@ -28,3 +31,5 @@ int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
 
     return 0;
 }
+
+};  // namespace hackernel
