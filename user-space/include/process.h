@@ -4,8 +4,6 @@
 #include "util.h"
 #include <netlink/genl/mngt.h>
 
-EXTERN_C_BEGIN
-
 typedef int ProcessPermID;
 typedef int32_t ProcessPerm;
 
@@ -36,7 +34,5 @@ int ProcessProtectEnable(void);
 int ProcessProtectDisable(void);
 ProcessPerm ProcessPermCheck(char *cmd);
 int ProcessPermReply(ProcessPermID id, ProcessPerm perm);
-
-EXTERN_C_END
 
 #endif

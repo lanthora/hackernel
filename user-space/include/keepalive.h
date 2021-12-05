@@ -4,8 +4,6 @@
 #include "util.h"
 #include <netlink/genl/mngt.h>
 
-EXTERN_C_BEGIN
-
 enum {
     HANDSHAKE_A_UNSPEC,
     HANDSHAKE_A_STATUS_CODE,
@@ -18,7 +16,5 @@ int KeepAliveHandler(struct nl_cache_ops* unused, struct genl_cmd* genl_cmd, str
 
 int HeartbeatStart(void);
 void HeartbeatStop(void);
-
-EXTERN_C_END
 
 #endif

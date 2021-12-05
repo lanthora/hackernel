@@ -3,11 +3,11 @@
 
 #include "util.h"
 
-EXTERN_C_BEGIN
-
 int IpcStart(void);
 void IpcStop(void);
 
-EXTERN_C_END
+class Session{
+
+};
 
 #endif

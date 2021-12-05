@@ -4,8 +4,6 @@
 #include "util.h"
 #include <netlink/genl/mngt.h>
 
-EXTERN_C_BEGIN
-
 enum {
     FILE_A_UNSPEC,
     FILE_A_SESSION,
@@ -35,7 +33,5 @@ int FileProtectSet(const char *path, FilePerm perm);
 #define FLAG_FILE_READ_ONLY (FLAG_FILE_WRITE_DISABLE | FLAG_FILE_READ_WRITE)
 #define FLAG_RILE_WRITE_ONLY (FLAG_FILE_READ_DISABLE | FLAG_FILE_READ_WRITE)
 #define FLAG_FILE_ALL_DISABLE (-1)
-
-EXTERN_C_END
 
 #endif

@@ -4,7 +4,6 @@
 #include "util.h"
 #include <netlink/genl/mngt.h>
 
-EXTERN_C_BEGIN
 
 typedef uint32_t NetAddr;
 typedef uint16_t NetPort;
@@ -99,6 +98,6 @@ enum {
 #define FLAG_NET_ONLY_CHECK_NEW_TCP (1U << 2)
 #define FLAG_NET_ONLY_ALLOW_TCP_HEADER (1U << 3)
 
-EXTERN_C_END
+
 
 #endif

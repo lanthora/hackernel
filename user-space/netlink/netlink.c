@@ -5,6 +5,7 @@
 #include "process.h"
 #include "syscall.h"
 #include "util.h"
+#include "wrapper.h"
 #include <linux/genetlink.h>
 #include <netlink/attr.h>
 #include <netlink/errno.h>
@@ -53,28 +54,28 @@ static struct genl_cmd hackernel_genl_cmds[] = {
         .c_name = "HACKERNEL_C_HANDSHAKE",
         .c_maxattr = HANDSHAKE_A_MAX,
         .c_attr_policy = handshake_policy,
-        .c_msg_parser = &KeepAliveHandler,
+        .c_msg_parser = &keepalive_handler,
     },
     {
         .c_id = HACKERNEL_C_PROCESS_PROTECT,
         .c_name = "HACKERNEL_C_PROCESS_PROTECT",
         .c_maxattr = PROCESS_A_MAX,
         .c_attr_policy = process_policy,
-        .c_msg_parser = &ProcessProtectHandler,
+        .c_msg_parser = &process_protect_handler,
     },
     {
         .c_id = HACKERNEL_C_FILE_PROTECT,
         .c_name = "HACKERNEL_C_FILE_PROTECT",
         .c_maxattr = FILE_A_MAX,
         .c_attr_policy = file_policy,
-        .c_msg_parser = &FileProtectHandler,
+        .c_msg_parser = &file_protect_handler,
     },
     {
         .c_id = HACKERNEL_C_NET_PROTECT,
         .c_name = "HACKERNEL_C_NET_PROTECT",
         .c_maxattr = NET_A_MAX,
         .c_attr_policy = net_policy,
-        .c_msg_parser = &NetProtectHandler,
+        .c_msg_parser = &net_protect_handler,
     },
 };
 
