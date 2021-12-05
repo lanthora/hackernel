@@ -1,6 +1,10 @@
 #ifndef HACKERNEL_NET_DEFINE_H
 #define HACKERNEL_NET_DEFINE_H
 
+#include "hackernel/util.h"
+
+EXTERN_C_BEGIN
+
 enum {
     NET_A_UNSPEC,
     NET_A_SESSION,
@@ -25,5 +29,7 @@ enum {
     __NET_A_MAX,
 };
 #define NET_A_MAX (__NET_A_MAX - 1)
+
+EXTERN_C_END
 
 #endif

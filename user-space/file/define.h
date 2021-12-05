@@ -1,6 +1,10 @@
 #ifndef HACKERNEL_FILE_DEFINE_H
 #define HACKERNEL_FILE_DEFINE_H
 
+#include "hackernel/util.h"
+
+EXTERN_C_BEGIN
+
 enum {
     FILE_A_UNSPEC,
     FILE_A_SESSION,
@@ -12,5 +16,7 @@ enum {
     __FILE_A_MAX,
 };
 #define FILE_A_MAX (__FILE_A_MAX - 1)
+
+EXTERN_C_END
 
 #endif

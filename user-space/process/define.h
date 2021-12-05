@@ -1,5 +1,10 @@
-#ifndef HACKERNEL_CPROCESS_H
-#define HACKERNEL_CPROCESS_H
+#ifndef HACKERNEL_PROCESS_DEFINE_H
+#define HACKERNEL_PROCESS_DEFINE_H
+
+#include "hackernel/util.h"
+
+EXTERN_C_BEGIN
+
 enum {
     PROCESS_A_UNSPEC,
     PROCESS_A_SESSION,
@@ -12,4 +17,7 @@ enum {
     __PROCESS_A_MAX,
 };
 #define PROCESS_A_MAX (__PROCESS_A_MAX - 1)
+
+EXTERN_C_END
+
 #endif

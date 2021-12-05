@@ -1,6 +1,10 @@
 #ifndef HACKERNEL_KEEPALIVE_DEFINE_H
 #define HACKERNEL_KEEPALIVE_DEFINE_H
 
+#include "hackernel/util.h"
+
+EXTERN_C_BEGIN
+
 enum {
     HANDSHAKE_A_UNSPEC,
     HANDSHAKE_A_STATUS_CODE,
@@ -8,5 +12,7 @@ enum {
     __HANDSHAKE_A_MAX,
 };
 #define HANDSHAKE_A_MAX (__HANDSHAKE_A_MAX - 1)
+
+EXTERN_C_END
 
 #endif
