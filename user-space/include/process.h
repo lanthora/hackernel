@@ -6,7 +6,7 @@
 
 EXTERN_C_BEGIN
 
-typedef int ProcessPermId;
+typedef int ProcessPermID;
 typedef int32_t ProcessPerm;
 
 enum { PROCESS_PROTECT_UNSPEC, PROCESS_PROTECT_REPORT, PROCESS_PROTECT_ENABLE, PROCESS_PROTECT_DISABLE };
@@ -35,7 +35,7 @@ int ProcessProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd
 int ProcessProtectEnable(void);
 int ProcessProtectDisable(void);
 ProcessPerm ProcessPermCheck(char *cmd);
-int ProcessPermReply(ProcessPermId id, ProcessPerm perm);
+int ProcessPermReply(ProcessPermID id, ProcessPerm perm);
 
 EXTERN_C_END
 

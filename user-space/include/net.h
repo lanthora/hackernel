@@ -94,12 +94,6 @@ enum {
 };
 #define NET_A_MAX (__NET_A_MAX - 1)
 
-// 初始化用来接收内核消息的服务,初始化失败退出进程
-// 初始化成功后内核就有能力把消息放到缓冲区
-void NetlinkServerInit(void);
-int NetlinkServerStart(void);
-int NetlinkServerStop(void);
-
 #define FLAG_NET_INBOUND (1U << 0)
 #define FLAG_NET_OUTBOUND (1U << 1)
 #define FLAG_NET_ONLY_CHECK_NEW_TCP (1U << 2)

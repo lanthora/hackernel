@@ -24,6 +24,12 @@ enum {
 extern struct nl_sock *g_nl_sock;
 extern int g_fam_id;
 
+// 初始化用来接收内核消息的服务,初始化失败退出进程
+// 初始化成功后内核就有能力把消息放到缓冲区
+void NetlinkServerInit(void);
+int NetlinkServerStart(void);
+int NetlinkServerStop(void);
+
 EXTERN_C_END
 
 #endif

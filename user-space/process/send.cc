@@ -27,7 +27,7 @@ ProcessPerm ProcessPermCheck(char *cmd) {
     return perm;
 }
 
-int ProcessPermReply(ProcessPermId id, ProcessPerm perm) {
+int ProcessPermReply(ProcessPermID id, ProcessPerm perm) {
     struct nl_msg *message = NULL;
 
     message = nlmsg_alloc();

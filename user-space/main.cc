@@ -2,6 +2,7 @@
 #include "ipc.h"
 #include "keepalive.h"
 #include "net.h"
+#include "netlink.h"
 #include "process.h"
 #include <arpa/inet.h>
 #include <signal.h>
