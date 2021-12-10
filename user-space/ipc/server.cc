@@ -1,15 +1,27 @@
+#include "hackernel/broadcaster.h"
 #include "hackernel/file.h"
 #include "hackernel/heartbeat.h"
 #include "hackernel/ipc.h"
 #include "hackernel/net.h"
 #include "hackernel/process.h"
 #include <arpa/inet.h>
+#include <thread>
 
 namespace hackernel {
 
 #define PROCESS_PROTECT 1
 #define FILE_PROTECT 1
 #define NET_PROTECT 1
+
+void IpcTest() {
+    std::shared_ptr<Receiver> ipc_broadcast_receiver = std::make_shared<Receiver>();
+    ipc_broadcast_receiver->AddHandler([](const std::string &msg) {
+        std::cout << msg << std::endl;
+        return true;
+    });
+    Broadcaster::GetInstance().AddReceiver(ipc_broadcast_receiver);
+    ipc_broadcast_receiver->StartToConsume();
+}
 
 int IpcStart() {
     LOG("IPC Server Start");
@@ -94,11 +106,13 @@ int IpcStart() {
     policy.response = NET_POLICY_DROP;
     NetPolicyInsert(&policy);
 #endif
+
+    std::thread ipc_thread(IpcTest);
+    ipc_thread.join();
     return 0;
 }
 void IpcStop() {
     LOG("IPC Server Stop");
     return;
 }
-
 };  // namespace hackernel

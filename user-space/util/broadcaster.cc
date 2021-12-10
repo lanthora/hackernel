@@ -1,6 +1,6 @@
 #include "hackernel/broadcaster.h"
 
-void Receiver::SetBroadcaster(std::shared_ptr<Broadcaster> broadcaster) {
+void Receiver::SetBroadcaster(std::weak_ptr<Broadcaster> broadcaster) {
     this->bind_broadcaster_ = broadcaster;
 }
 
@@ -52,36 +52,26 @@ Broadcaster& Broadcaster::GetInstance() {
 }
 
 void Broadcaster::AddReceiver(std::shared_ptr<Receiver> receiver) {
-    receiver->SetBroadcaster(shared_from_this());
+    receiver->SetBroadcaster(weak_from_this());
     const std::lock_guard<std::mutex> lock(receivers_mutex_);
     receivers_.push_back(receiver);
 }
 
-void Broadcaster::DelReceiver(std::shared_ptr<Receiver> receiver){
+void Broadcaster::DelReceiver(std::shared_ptr<Receiver> receiver) {
     const std::lock_guard<std::mutex> lock(receivers_mutex_);
     receivers_.remove(receiver);
 }
 
-
 void Broadcaster::Notify(std::string message) {
     const std::lock_guard<std::mutex> lock(receivers_mutex_);
-    for (auto& receiver : receivers_) {
-        auto recv = receiver.lock();
-        if (!recv) {
-            continue;
-        }
-        recv->NewMessage(message);
-    }
+    for (auto& receiver : receivers_)
+        receiver->NewMessage(message);
 }
 
 void Broadcaster::ExitAllReceiver() {
     const std::lock_guard<std::mutex> lock(receivers_mutex_);
-    for (auto& receiver : receivers_) {
-        auto recv = receiver.lock();
-        if (!recv) {
-            continue;
-        }
-        recv->Stop();
-    }
+    for (auto& receiver : receivers_)
+        receiver->Stop();
+
     receivers_.clear();
 }

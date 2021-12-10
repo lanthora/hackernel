@@ -65,6 +65,8 @@
                 "thread": "cpp",
                 "cinttypes": "cpp",
                 "typeinfo": "cpp",
+                "hash_map": "cpp",
+                "netfwd": "cpp"
         },
         "editor.tabSize": 2,
         "C_Cpp.default.includePath":[               

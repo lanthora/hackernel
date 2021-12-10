@@ -1,3 +1,4 @@
+#include "hackernel/broadcaster.h"
 #include "hackernel/file.h"
 #include "hackernel/heartbeat.h"
 #include "hackernel/ipc.h"
@@ -11,6 +12,7 @@
 using namespace hackernel;
 
 static void Shutdown() {
+    Broadcaster::GetInstance().ExitAllReceiver();
     IpcStop();
     FileProtectDisable();
     ProcessProtectDisable();
@@ -27,7 +29,7 @@ static void SigHandler(int sig) {
 static void RegSigHandler() {
     struct sigaction act;
     act.sa_handler = SigHandler;
-    sigfillset(&act.sa_mask);
+    sigemptyset(&act.sa_mask);
     act.sa_flags = 0;
     sigaction(SIGINT, &act, NULL);
     sigaction(SIGTERM, &act, NULL);
@@ -37,11 +39,9 @@ int main() {
     RegSigHandler();
     NetlinkServerInit();
 
-    // 由于NetlinkServerInit已经初始化好了Netlink接收缓冲区,
-    // 先启动发送消息的线程还是先启动接收消息的线程都不会影响程序正常运行
-    // 所以这三个线程的启动顺序无关紧要
-    std::thread netlink_thread(NetlinkServerStart);
+    Handshake();
     std::thread heartbeat_thread(HeartbeatStart);
+    std::thread netlink_thread(NetlinkServerStart);
     std::thread ipc_thread(IpcStart);
 
     netlink_thread.join();

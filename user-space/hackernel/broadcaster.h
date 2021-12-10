@@ -16,7 +16,7 @@ class Receiver;
 
 class Receiver {
 public:
-    void SetBroadcaster(std::shared_ptr<Broadcaster> broadcaster);
+    void SetBroadcaster(std::weak_ptr<Broadcaster> broadcaster);
     void NewMessage(std::string message);
     void StartToConsume();
     void AddHandler(std::function<bool(const std::string&)> new_handler);
@@ -26,7 +26,7 @@ private:
     int WaitAndPopMessage(std::string& message);
 
 private:
-    std::shared_ptr<Broadcaster> bind_broadcaster_;
+    std::weak_ptr<Broadcaster> bind_broadcaster_;
     std::queue<std::string> message_queue_;
     std::mutex message_queue_mutex_;
     std::condition_variable signal_;
@@ -44,7 +44,7 @@ public:
 
 private:
     Broadcaster() {}
-    std::list<std::weak_ptr<Receiver>> receivers_;
+    std::list<std::shared_ptr<Receiver>> receivers_;
     std::mutex receivers_mutex_;
 };
 

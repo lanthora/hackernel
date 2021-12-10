@@ -1,3 +1,4 @@
+#include "hackernel/broadcaster.h"
 #include "hackernel/process.h"
 #include <algorithm>
 #include <string>
@@ -22,12 +23,10 @@ int ProcessProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd
         name = nla_get_string(genl_info->attrs[PROCESS_A_NAME]);
         msg.assign(name);
 
-        std::for_each(msg.begin(), msg.end(), [](char &c) {
-            if (c == 0x1F)
-                c = '#';
-        });
-
+        // 测试用,后续需要添加session和其他必要信息
+        Broadcaster::GetInstance().Notify(msg);
         LOG("process: id=[%d] name=[%s]", id, msg.data());
+
         error = ProcessPermReply(id, ProcessPermCheck(name));
         if (error)
             LOG("reply_process_perm failed");
