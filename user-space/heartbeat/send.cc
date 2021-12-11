@@ -42,4 +42,4 @@ int HeartbeatWait() {
     return HeartbeatHelper(1);
 }
 
-};  // namespace hackernel
+}; // namespace hackernel

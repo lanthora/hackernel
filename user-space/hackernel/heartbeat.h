@@ -7,11 +7,11 @@
 
 namespace hackernel {
 
-int HeartbeatHandler(struct nl_cache_ops* unused, struct genl_cmd* genl_cmd, struct genl_info* genl_info, void* arg);
+int HeartbeatHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg);
 int HeartbeatWait(void);
 void HeartbeatExitNotify(void);
 int Handshake(void);
 
-};  // namespace hackernel
+}; // namespace hackernel
 
 #endif

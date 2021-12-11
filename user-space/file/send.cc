@@ -40,4 +40,4 @@ int FileProtectSet(const char *path, FilePerm perm) {
     return 0;
 }
 
-};  // namespace hackernel
+}; // namespace hackernel

@@ -20,11 +20,14 @@ enum { PROCESS_PROTECT_UNSPEC, PROCESS_PROTECT_REPORT, PROCESS_PROTECT_ENABLE, P
 int ProcessProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
                           void *arg);
 
-int ProcessProtectEnable(void);
-int ProcessProtectDisable(void);
+int ProcessProtectEnable();
+int ProcessProtectDisable();
+int ProcessProtectEnable(int32_t session);
+int ProcessProtectDisable(int32_t session);
+
 ProcessPerm ProcessPermCheck(char *cmd);
 int ProcessPermReply(ProcessPermID id, ProcessPerm perm);
 
-};  // namespace hackernel
+}; // namespace hackernel
 
 #endif

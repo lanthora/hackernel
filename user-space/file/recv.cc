@@ -32,4 +32,4 @@ int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
     return 0;
 }
 
-};  // namespace hackernel
+}; // namespace hackernel

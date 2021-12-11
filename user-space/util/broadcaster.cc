@@ -18,7 +18,7 @@ void Receiver::ConsumeWait() {
         if (PopMessageWait(message))
             continue;
 
-        for (const auto& handler : handlers_)
+        for (const auto &handler : handlers_)
             handler(message);
     }
 }
@@ -27,11 +27,11 @@ void Receiver::ExitNotify() {
     running_ = false;
 }
 
-void Receiver::AddHandler(std::function<bool(const std::string&)> new_handler) {
+void Receiver::AddHandler(std::function<bool(const std::string &)> new_handler) {
     handlers_.push_back(new_handler);
 }
 
-int Receiver::PopMessageWait(std::string& message) {
+int Receiver::PopMessageWait(std::string &message) {
     using namespace std::chrono_literals;
 
     std::unique_lock<std::mutex> lock(message_queue_mutex_);
@@ -46,7 +46,7 @@ int Receiver::PopMessageWait(std::string& message) {
     return 0;
 }
 
-Broadcaster& Broadcaster::GetInstance() {
+Broadcaster &Broadcaster::GetInstance() {
     static Broadcaster instance;
     return instance;
 }
@@ -64,13 +64,13 @@ void Broadcaster::DelReceiver(std::shared_ptr<Receiver> receiver) {
 
 void Broadcaster::Notify(std::string message) {
     const std::lock_guard<std::mutex> lock(receivers_mutex_);
-    for (auto& receiver : receivers_)
+    for (auto &receiver : receivers_)
         receiver->NewMessage(message);
 }
 
 void Broadcaster::ExitAllReceiver() {
     const std::lock_guard<std::mutex> lock(receivers_mutex_);
-    for (auto& receiver : receivers_)
+    for (auto &receiver : receivers_)
         receiver->ExitNotify();
 
     receivers_.clear();

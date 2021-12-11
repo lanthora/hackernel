@@ -120,4 +120,4 @@ void IpcExitNotify() {
     ipc_broadcast_receiver->ExitNotify();
     return;
 }
-};  // namespace hackernel
+}; // namespace hackernel

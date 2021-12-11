@@ -24,6 +24,7 @@ int ProcessProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd
         msg.assign(name);
 
         // 测试用,后续需要添加session和其他必要信息
+        // process.report://
         Broadcaster::GetInstance().Notify(msg);
         LOG("process: id=[%d] name=[%s]", id, msg.data());
 
@@ -39,4 +40,4 @@ int ProcessProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd
     return 0;
 }
 
-};  // namespace hackernel
+}; // namespace hackernel
