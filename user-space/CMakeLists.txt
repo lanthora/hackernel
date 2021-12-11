@@ -19,7 +19,6 @@ endif()
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 20)
 
-target_include_directories(${PROJECT_NAME} PRIVATE "/usr/include/libnl3")
 include_directories("/usr/include/libnl3")
 
 add_subdirectory(hknl)
