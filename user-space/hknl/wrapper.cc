@@ -6,7 +6,7 @@
 
 int process_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
                             void *arg) {
-    return hackernel::ProcessProtectHandler(unused, genl_cmd, genl_info, arg);
+    return hackernel::ProcProtectHandler(unused, genl_cmd, genl_info, arg);
 }
 int file_protect_handler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
                          void *arg) {

@@ -7,7 +7,7 @@
 
 namespace hackernel {
 
-int ProcessProtectStatusUpdate(int32_t session, uint8_t status) {
+int ProcProtectStatusUpdate(int32_t session, uint8_t status) {
     struct nl_msg *message = NULL;
 
     message = nlmsg_alloc();
@@ -20,26 +20,26 @@ int ProcessProtectStatusUpdate(int32_t session, uint8_t status) {
     return 0;
 }
 
-int ProcessProtectEnable() {
-    return ProcessProtectEnable(SYSTEM_SESSION_ID);
+int ProcProtectEnable() {
+    return ProcProtectEnable(SYSTEM_SESSION_ID);
 }
-int ProcessProtectDisable() {
-    return ProcessProtectDisable(SYSTEM_SESSION_ID);
-}
-
-int ProcessProtectEnable(int32_t session) {
-    return ProcessProtectStatusUpdate(session, PROCESS_PROTECT_ENABLE);
-}
-int ProcessProtectDisable(int32_t session) {
-    return ProcessProtectStatusUpdate(session, PROCESS_PROTECT_DISABLE);
+int ProcProtectDisable() {
+    return ProcProtectDisable(SYSTEM_SESSION_ID);
 }
 
-ProcessPerm ProcessPermCheck(char *cmd) {
-    ProcessPerm perm = PROCESS_ACCEPT;
+int ProcProtectEnable(int32_t session) {
+    return ProcProtectStatusUpdate(session, PROCESS_PROTECT_ENABLE);
+}
+int ProcProtectDisable(int32_t session) {
+    return ProcProtectStatusUpdate(session, PROCESS_PROTECT_DISABLE);
+}
+
+ProcPerm ProcPermCheck(char *cmd) {
+    ProcPerm perm = PROCESS_ACCEPT;
     return perm;
 }
 
-int ProcessPermReply(ProcessPermID id, ProcessPerm perm) {
+int ProcPermReply(ProcPermID id, ProcPerm perm) {
     struct nl_msg *message = NULL;
 
     message = nlmsg_alloc();

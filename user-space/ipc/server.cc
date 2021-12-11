@@ -5,6 +5,7 @@
 #include "hackernel/net.h"
 #include "hackernel/process.h"
 #include <arpa/inet.h>
+#include <nlohmann/json.hpp>
 #include <thread>
 
 namespace hackernel {
@@ -17,7 +18,7 @@ int IpcTest() {
     LOG("IPC Server Start");
 
 #if PROCESS_PROTECT
-    ProcessProtectEnable();
+    ProcProtectEnable();
 #endif
 
 #if FILE_PROTECT
@@ -107,7 +108,10 @@ int IpcWait() {
 
     ipc_broadcast_receiver = std::make_shared<Receiver>();
     ipc_broadcast_receiver->AddHandler([](const std::string &msg) {
-        std::cout << msg << std::endl;
+        nlohmann::json report = nlohmann::json::parse(msg);
+        if (report["type"] != "proc::report")
+            return false;
+        std::cout << std::string(report["cmd"]) << std::endl;
         return true;
     });
     Broadcaster::GetInstance().AddReceiver(ipc_broadcast_receiver);

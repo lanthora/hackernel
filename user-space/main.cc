@@ -17,7 +17,7 @@ static void Shutdown() {
 
     // 关闭内核中的功能模块
     FileProtectDisable();
-    ProcessProtectDisable();
+    ProcProtectDisable();
     NetProtectDisable();
 
     // 关闭心跳,断开与内核的通信

@@ -1,14 +1,22 @@
 #include "hackernel/broadcaster.h"
 #include "hackernel/process.h"
 #include <algorithm>
+#include <nlohmann/json.hpp>
 #include <string>
 
 namespace hackernel {
 
-int ProcessProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
-                          void *arg) {
+static int ProcReportJsonGen(const std::string &cmd, std::string &msg) {
+    nlohmann::json report;
+    report["type"] = "proc::report";
+    report["cmd"] = cmd;
+    msg = report.dump();
+    return 0;
+}
+
+int ProcProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
     u_int8_t type = nla_get_u8(genl_info->attrs[PROCESS_A_OP_TYPE]);
-    int error, id, code;
+    int error, id, code, session;
     char *name;
     std::string msg;
 
@@ -21,14 +29,12 @@ int ProcessProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd
     case PROCESS_PROTECT_REPORT:
         id = nla_get_s32(genl_info->attrs[PROCESS_A_ID]);
         name = nla_get_string(genl_info->attrs[PROCESS_A_NAME]);
-        msg.assign(name);
+        LOG("process: id=[%d] name=[%s]", id, name);
 
-        // 测试用,后续需要添加session和其他必要信息
-        // process.report://
+        ProcReportJsonGen(name, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("process: id=[%d] name=[%s]", id, msg.data());
 
-        error = ProcessPermReply(id, ProcessPermCheck(name));
+        error = ProcPermReply(id, ProcPermCheck(name));
         if (error)
             LOG("reply_process_perm failed");
 
