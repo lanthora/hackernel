@@ -21,3 +21,8 @@
 |build|构建的目录,推荐在这个目录下用cmake编译|-|
 
 上述风险中,除了文件系统损坏需要通过提前备份文件,其他问题都可以通过关闭内核模块解决.
+
+## 依赖
+
+* [nlohmann-json](https://github.com/nlohmann/json)
+* [libnl](https://www.infradead.org/~tgr/libnl/doc/api/index.html#main_intro)
