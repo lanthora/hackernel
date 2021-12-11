@@ -18,12 +18,12 @@ class Receiver {
 public:
     void SetBroadcaster(std::weak_ptr<Broadcaster> broadcaster);
     void NewMessage(std::string message);
-    void StartToConsume();
+    void ConsumeWait();
     void AddHandler(std::function<bool(const std::string&)> new_handler);
-    void Stop();
+    void ExitNotify();
 
 private:
-    int WaitAndPopMessage(std::string& message);
+    int PopMessageWait(std::string& message);
 
 private:
     std::weak_ptr<Broadcaster> bind_broadcaster_;

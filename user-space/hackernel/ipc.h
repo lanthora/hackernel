@@ -5,8 +5,8 @@
 
 namespace hackernel {
 
-int IpcStart(void);
-void IpcStop(void);
+int IpcWait(void);
+void IpcExitNotify(void);
 
 class Session {};
 

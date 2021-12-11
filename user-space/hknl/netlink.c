@@ -159,7 +159,7 @@ errout:
 
 static int running = 0;
 
-int NetlinkServerStart() {
+int NetlinkWait() {
     int error;
 
     struct pollfd fds = {
@@ -195,7 +195,7 @@ int NetlinkServerStart() {
     return 0;
 }
 
-int NetlinkServerStop() {
+int NetlinkExitNotify() {
     running = 0;
     return 0;
 }

@@ -10,12 +10,12 @@ void Receiver::NewMessage(std::string message) {
     signal_.notify_one();
 }
 
-void Receiver::StartToConsume() {
+void Receiver::ConsumeWait() {
     std::string message;
 
     running_ = true;
     while (running_) {
-        if (WaitAndPopMessage(message))
+        if (PopMessageWait(message))
             continue;
 
         for (const auto& handler : handlers_)
@@ -23,7 +23,7 @@ void Receiver::StartToConsume() {
     }
 }
 
-void Receiver::Stop() {
+void Receiver::ExitNotify() {
     running_ = false;
 }
 
@@ -31,7 +31,7 @@ void Receiver::AddHandler(std::function<bool(const std::string&)> new_handler) {
     handlers_.push_back(new_handler);
 }
 
-int Receiver::WaitAndPopMessage(std::string& message) {
+int Receiver::PopMessageWait(std::string& message) {
     using namespace std::chrono_literals;
 
     std::unique_lock<std::mutex> lock(message_queue_mutex_);
@@ -71,7 +71,7 @@ void Broadcaster::Notify(std::string message) {
 void Broadcaster::ExitAllReceiver() {
     const std::lock_guard<std::mutex> lock(receivers_mutex_);
     for (auto& receiver : receivers_)
-        receiver->Stop();
+        receiver->ExitNotify();
 
     receivers_.clear();
 }

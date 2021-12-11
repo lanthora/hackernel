@@ -10,20 +10,10 @@
 namespace hackernel {
 
 #define PROCESS_PROTECT 1
-#define FILE_PROTECT 1
-#define NET_PROTECT 1
+#define FILE_PROTECT 0
+#define NET_PROTECT 0
 
-void IpcTest() {
-    std::shared_ptr<Receiver> ipc_broadcast_receiver = std::make_shared<Receiver>();
-    ipc_broadcast_receiver->AddHandler([](const std::string &msg) {
-        std::cout << msg << std::endl;
-        return true;
-    });
-    Broadcaster::GetInstance().AddReceiver(ipc_broadcast_receiver);
-    ipc_broadcast_receiver->StartToConsume();
-}
-
-int IpcStart() {
+int IpcTest() {
     LOG("IPC Server Start");
 
 #if PROCESS_PROTECT
@@ -107,12 +97,27 @@ int IpcStart() {
     NetPolicyInsert(&policy);
 #endif
 
-    std::thread ipc_thread(IpcTest);
-    ipc_thread.join();
     return 0;
 }
-void IpcStop() {
-    LOG("IPC Server Stop");
+
+std::shared_ptr<Receiver> ipc_broadcast_receiver;
+
+int IpcWait() {
+    IpcTest();
+
+    ipc_broadcast_receiver = std::make_shared<Receiver>();
+    ipc_broadcast_receiver->AddHandler([](const std::string &msg) {
+        std::cout << msg << std::endl;
+        return true;
+    });
+    Broadcaster::GetInstance().AddReceiver(ipc_broadcast_receiver);
+    ipc_broadcast_receiver->ConsumeWait();
+    return 0;
+}
+
+void IpcExitNotify() {
+    LOG("IPC Server Exit");
+    ipc_broadcast_receiver->ExitNotify();
     return;
 }
 };  // namespace hackernel

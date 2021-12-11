@@ -8,7 +8,7 @@ namespace hackernel {
 
 static int running = 0;
 
-void HeartbeatStop() {
+void HeartbeatExitNotify() {
     running = 0;
 }
 
@@ -34,11 +34,11 @@ int HeartbeatHelper(int interval) {
     return 0;
 }
 
-int Handshake(){
+int Handshake() {
     return HeartbeatHelper(0);
 }
 
-int HeartbeatStart() {
+int HeartbeatWait() {
     return HeartbeatHelper(1);
 }
 

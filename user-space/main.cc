@@ -12,13 +12,17 @@
 using namespace hackernel;
 
 static void Shutdown() {
-    Broadcaster::GetInstance().ExitAllReceiver();
-    IpcStop();
+    // 停止接受外部用户输入
+    IpcExitNotify();
+
+    // 关闭内核中的功能模块
     FileProtectDisable();
     ProcessProtectDisable();
     NetProtectDisable();
-    HeartbeatStop();
-    NetlinkServerStop();
+
+    // 关闭心跳,断开与内核的通信
+    HeartbeatExitNotify();
+    NetlinkExitNotify();
 }
 
 static void SigHandler(int sig) {
@@ -40,9 +44,9 @@ int main() {
     NetlinkServerInit();
 
     Handshake();
-    std::thread heartbeat_thread(HeartbeatStart);
-    std::thread netlink_thread(NetlinkServerStart);
-    std::thread ipc_thread(IpcStart);
+    std::thread heartbeat_thread(HeartbeatWait);
+    std::thread netlink_thread(NetlinkWait);
+    std::thread ipc_thread(IpcWait);
 
     netlink_thread.join();
     heartbeat_thread.join();

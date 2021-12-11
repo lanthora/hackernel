@@ -24,8 +24,8 @@ enum {
 int NetlinkGetFamilyID();
 struct nl_sock *NetlinkGetNlSock();
 void NetlinkServerInit(void);
-int NetlinkServerStart(void);
-int NetlinkServerStop(void);
+int NetlinkWait(void);
+int NetlinkExitNotify(void);
 
 EXTERN_C_END
 
