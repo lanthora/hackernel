@@ -18,7 +18,7 @@ public:
     void NewMessage(std::string message);
     void ConsumeWait();
     void AddHandler(std::function<bool(const std::string &)> new_handler);
-    void ExitNotify();
+    void Exit();
 
 private:
     int PopMessageWait(std::string &message);

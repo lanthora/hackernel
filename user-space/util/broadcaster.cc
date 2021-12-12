@@ -26,7 +26,7 @@ void Receiver::ConsumeWait() {
     }
 }
 
-void Receiver::ExitNotify() {
+void Receiver::Exit() {
     running_ = false;
 }
 
@@ -74,7 +74,7 @@ void Broadcaster::Notify(std::string message) {
 void Broadcaster::ExitAllReceiver() {
     const std::lock_guard<std::mutex> lock(receivers_mutex_);
     for (auto &receiver : receivers_)
-        receiver->ExitNotify();
+        receiver->Exit();
 
     receivers_.clear();
 }

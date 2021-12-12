@@ -20,7 +20,7 @@ int DispatcherWait() {
 }
 
 void DispatcherExit() {
-    dispatcher->ExitNotify();
+    dispatcher->Exit();
 }
 
 }; // namespace hackernel
