@@ -1,4 +1,5 @@
 #include "hackernel/broadcaster.h"
+#include "hackernel/dispatcher.h"
 #include "hackernel/file.h"
 #include "hackernel/heartbeat.h"
 #include "hackernel/ipc.h"
@@ -13,7 +14,8 @@ using namespace hackernel;
 
 static void Shutdown() {
     // 停止接受外部用户输入
-    IpcExitNotify();
+    IpcExit();
+    DispatcherExit();
 
     // 关闭内核中的功能模块
     FileProtectDisable();
@@ -46,10 +48,13 @@ int main() {
     Handshake();
     std::thread heartbeat_thread(HeartbeatWait);
     std::thread netlink_thread(NetlinkWait);
+    std::thread dispatcher_thread(DispatcherWait);
     std::thread ipc_thread(IpcWait);
 
     netlink_thread.join();
     heartbeat_thread.join();
+    dispatcher_thread.join();
     ipc_thread.join();
+
     return 0;
 }

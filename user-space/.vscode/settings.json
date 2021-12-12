@@ -72,7 +72,8 @@
                 "codecvt": "cpp",
                 "forward_list": "cpp",
                 "iomanip": "cpp",
-                "valarray": "cpp"
+                "valarray": "cpp",
+                "shared_mutex": "cpp"
         },
         "editor.tabSize": 2,
         "C_Cpp.default.includePath":[               

@@ -2,16 +2,17 @@
 #define HACKERNEL_IPC_H
 
 #include "hackernel/util.h"
+#include <map>
+#include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <stdint.h>
+#include <sys/un.h>
 
 namespace hackernel {
 
-const int32_t SYSTEM_SESSION_ID = 0;
-
-int IpcWait(void);
-void IpcExitNotify(void);
-
-class Session {};
+int IpcWait();
+void IpcExit();
 
 }; // namespace hackernel
 

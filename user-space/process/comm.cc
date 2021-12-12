@@ -25,10 +25,10 @@ int ProcProtectStatusUpdate(int32_t session, uint8_t status) {
 }
 
 int ProcProtectEnable() {
-    return ProcProtectEnable(SYSTEM_SESSION_ID);
+    return ProcProtectEnable(0);
 }
 int ProcProtectDisable() {
-    return ProcProtectDisable(SYSTEM_SESSION_ID);
+    return ProcProtectDisable(0);
 }
 
 int ProcProtectEnable(int32_t session) {

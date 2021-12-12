@@ -101,70 +101,14 @@ int IpcTest() {
     return 0;
 }
 
-std::shared_ptr<Receiver> ipc_broadcast_receiver;
-
-static int StringSplit(std::string text, const std::string &delimiter, std::vector<std::string> &output) {
-    size_t pos = 0;
-    output.clear();
-    while ((pos = text.find(delimiter)) != std::string::npos) {
-        output.push_back(text.substr(0, pos));
-        text.erase(0, pos + delimiter.length());
-    }
-    if (text.size()) {
-        output.push_back(text);
-    }
-    return 0;
-}
-
-static bool ProcReport(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
-    if (doc["type"] != "kernel::proc::report")
-        return false;
-
-    std::vector<std::string> detal;
-    StringSplit(std::string(doc["cmd"]), "\37", detal);
-    std::cout << "kernel::proc::report, workdir=[" << detal[0] << "] path=[" << detal[1] << "] argv=[" << detal[2];
-    for (int i = 3; i < detal.size(); ++i) {
-        std::cout << " " << detal[i];
-    }
-    std::cout << "]" << std::endl;
-
-    return true;
-}
-
-static bool ProcStatus(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
-    if (doc["type"] == "kernel::proc::enable") {
-        std::cout << "kernel::proc::enable, ";
-        std::cout << "session=[" << doc["session"] << "] ";
-        std::cout << "code=[" << doc["code"] << "] ";
-        std::cout << std::endl;
-        return true;
-    }
-    if (doc["type"] == "kernel::proc::disable") {
-        std::cout << "kernel::proc::disable, ";
-        std::cout << "session=[" << doc["session"] << "] ";
-        std::cout << "code=[" << doc["code"] << "] ";
-        std::cout << std::endl;
-        return true;
-    }
-    return false;
-}
-
 int IpcWait() {
     IpcTest();
 
-    ipc_broadcast_receiver = std::make_shared<Receiver>();
-    ipc_broadcast_receiver->AddHandler(ProcReport);
-    ipc_broadcast_receiver->AddHandler(ProcStatus);
-    Broadcaster::GetInstance().AddReceiver(ipc_broadcast_receiver);
-    ipc_broadcast_receiver->ConsumeWait();
     return 0;
 }
 
-void IpcExitNotify() {
+void IpcExit() {
     LOG("IPC Server Exit");
-    ipc_broadcast_receiver->ExitNotify();
     return;
 }
 }; // namespace hackernel
