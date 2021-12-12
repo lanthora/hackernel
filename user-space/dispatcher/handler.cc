@@ -1,8 +1,9 @@
 #include "hackernel/dispatcher.h"
+#include "hackernel/process.h"
+#include <iostream>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <vector>
-#include <iostream>
 
 namespace hackernel {
 
@@ -25,7 +26,7 @@ bool KernelProcReport(const std::string &msg) {
         return false;
 
     std::vector<std::string> detal;
-    StringSplit(std::string(doc["cmd"]), "\37", detal);
+    StringSplit(std::string(doc["cmd"]), "\u001f", detal);
     std::cout << "kernel::proc::report, workdir=[" << detal[0] << "] path=[" << detal[1] << "] argv=[" << detal[2];
     for (int i = 3; i < detal.size(); ++i) {
         std::cout << " " << detal[i];
@@ -35,23 +36,24 @@ bool KernelProcReport(const std::string &msg) {
     return true;
 }
 
-bool KernelProcStatus(const std::string &msg) {
+bool UserProcEnable(const std::string &msg) {
     nlohmann::json doc = nlohmann::json::parse(msg);
-    if (doc["type"] == "kernel::proc::enable") {
-        std::cout << "kernel::proc::enable, ";
-        std::cout << "session=[" << doc["session"] << "] ";
-        std::cout << "code=[" << doc["code"] << "] ";
-        std::cout << std::endl;
-        return true;
-    }
+    if (doc["type"] != "user::proc::enable")
+        return false;
 
-    if (doc["type"] == "kernel::proc::disable") {
-        std::cout << "kernel::proc::disable, ";
-        std::cout << "session=[" << doc["session"] << "] ";
-        std::cout << "code=[" << doc["code"] << "] ";
-        std::cout << std::endl;
-        return true;
-    }
-    return false;
+    int32_t session = doc["session"].is_number_integer() ? int32_t(doc["session"]) : 0;
+    ProcProtectEnable(session);
+    return true;
 }
-};
+
+bool UserProcDisable(const std::string &msg) {
+    nlohmann::json doc = nlohmann::json::parse(msg);
+    if (doc["type"] != "user::proc::disable")
+        return false;
+
+    int32_t session = doc["session"].is_number_integer() ? int32_t(doc["session"]) : 0;
+    ProcProtectDisable(session);
+    return true;
+}
+
+}; // namespace hackernel

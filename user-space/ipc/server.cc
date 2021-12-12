@@ -18,7 +18,10 @@ int IpcTest() {
     LOG("IPC Server Start");
 
 #if PROCESS_PROTECT
-    ProcProtectEnable();
+    nlohmann::json doc;
+    doc["session"] = 0;
+    doc["type"] = "user::proc::enable";
+    Broadcaster::GetInstance().Notify(doc.dump());
 #endif
 
 #if FILE_PROTECT
