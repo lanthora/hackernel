@@ -68,7 +68,11 @@
                 "hash_map": "cpp",
                 "netfwd": "cpp",
                 "optional": "cpp",
-                "ranges": "cpp"
+                "ranges": "cpp",
+                "codecvt": "cpp",
+                "forward_list": "cpp",
+                "iomanip": "cpp",
+                "valarray": "cpp"
         },
         "editor.tabSize": 2,
         "C_Cpp.default.includePath":[               

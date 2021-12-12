@@ -16,6 +16,7 @@ int ProcProtectStatusUpdate(int32_t session, uint8_t status) {
     message = nlmsg_alloc();
     genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_PROCESS_PROTECT,
                 HACKERNEL_FAMLY_VERSION);
+    nla_put_s32(message, PROCESS_A_SESSION, session);
     nla_put_u8(message, PROCESS_A_OP_TYPE, status);
 
     nl_send_auto(NetlinkGetNlSock(), message);
@@ -57,10 +58,28 @@ int ProcPermReply(ProcPermID id, ProcPerm perm) {
 }
 
 static int ProcReportJsonGen(const std::string &cmd, std::string &msg) {
-    nlohmann::json report;
-    report["type"] = "proc::report";
-    report["cmd"] = cmd;
-    msg = report.dump();
+    nlohmann::json doc;
+    doc["type"] = "kernel::proc::report";
+    doc["cmd"] = cmd;
+    msg = doc.dump();
+    return 0;
+}
+
+static int ProcEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+    nlohmann::json doc;
+    doc["type"] = "kernel::proc::enable";
+    doc["session"] = session;
+    doc["code"] = code;
+    msg = doc.dump();
+    return 0;
+}
+
+static int ProcDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+    nlohmann::json doc;
+    doc["type"] = "kernel::proc::disable";
+    doc["session"] = session;
+    doc["code"] = code;
+    msg = doc.dump();
     return 0;
 }
 
@@ -72,14 +91,25 @@ int ProcProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
 
     switch (type) {
     case PROCESS_PROTECT_ENABLE:
+        session = nla_get_s32(genl_info->attrs[PROCESS_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[PROCESS_A_STATUS_CODE]);
-        LOG("process ctl enable response code=[%d]", code);
+        ProcEnableJsonGen(session, code, msg);
+        Broadcaster::GetInstance().Notify(msg);
+        LOG("kernel::proc::enable, session=[%d] code=[%d]", session, code);
+        break;
+
+    case PROCESS_PROTECT_DISABLE:
+        session = nla_get_s32(genl_info->attrs[PROCESS_A_SESSION]);
+        code = nla_get_s32(genl_info->attrs[PROCESS_A_STATUS_CODE]);
+        ProcDisableJsonGen(session, code, msg);
+        Broadcaster::GetInstance().Notify(msg);
+        LOG("kernel::proc::disable, session=[%d] code=[%d]", session, code);
         break;
 
     case PROCESS_PROTECT_REPORT:
         id = nla_get_s32(genl_info->attrs[PROCESS_A_ID]);
         name = nla_get_string(genl_info->attrs[PROCESS_A_NAME]);
-        LOG("process: id=[%d] name=[%s]", id, name);
+        LOG("kernel::proc::report, id=[%d] name=[%s]", id, name);
 
         ProcReportJsonGen(name, msg);
         Broadcaster::GetInstance().Notify(msg);

@@ -18,8 +18,11 @@ void Receiver::ConsumeWait() {
         if (PopMessageWait(message))
             continue;
 
-        for (const auto &handler : handlers_)
-            handler(message);
+        for (const auto &handler : handlers_) {
+            if (handler(message)) {
+                break;
+            }
+        }
     }
 }
 

@@ -117,18 +117,38 @@ static int StringSplit(std::string text, const std::string &delimiter, std::vect
 }
 
 static bool ProcReport(const std::string &msg) {
-    nlohmann::json report = nlohmann::json::parse(msg);
-    if (report["type"] == "proc::report") {
-        std::vector<std::string> detal;
-        StringSplit(std::string(report["cmd"]), "\37", detal);
-        std::cout << "workspace=[" << detal[0] << "], path=[" << detal[1] << "], argv=[" << detal[2];
-        for (int i = 3; i < detal.size(); ++i) {
-            std::cout << " " << detal[i];
-        }
-        std::cout << "]" << std::endl;
+    nlohmann::json doc = nlohmann::json::parse(msg);
+    if (doc["type"] != "kernel::proc::report")
+        return false;
+
+    std::vector<std::string> detal;
+    StringSplit(std::string(doc["cmd"]), "\37", detal);
+    std::cout << "kernel::proc::report, workdir=[" << detal[0] << "] path=[" << detal[1] << "] argv=[" << detal[2];
+    for (int i = 3; i < detal.size(); ++i) {
+        std::cout << " " << detal[i];
     }
+    std::cout << "]" << std::endl;
 
     return true;
+}
+
+static bool ProcStatus(const std::string &msg) {
+    nlohmann::json doc = nlohmann::json::parse(msg);
+    if (doc["type"] == "kernel::proc::enable") {
+        std::cout << "kernel::proc::enable, ";
+        std::cout << "session=[" << doc["session"] << "] ";
+        std::cout << "code=[" << doc["code"] << "] ";
+        std::cout << std::endl;
+        return true;
+    }
+    if (doc["type"] == "kernel::proc::disable") {
+        std::cout << "kernel::proc::disable, ";
+        std::cout << "session=[" << doc["session"] << "] ";
+        std::cout << "code=[" << doc["code"] << "] ";
+        std::cout << std::endl;
+        return true;
+    }
+    return false;
 }
 
 int IpcWait() {
@@ -136,6 +156,7 @@ int IpcWait() {
 
     ipc_broadcast_receiver = std::make_shared<Receiver>();
     ipc_broadcast_receiver->AddHandler(ProcReport);
+    ipc_broadcast_receiver->AddHandler(ProcStatus);
     Broadcaster::GetInstance().AddReceiver(ipc_broadcast_receiver);
     ipc_broadcast_receiver->ConsumeWait();
     return 0;
