@@ -28,7 +28,7 @@ private:
     std::queue<std::string> message_queue_;
     std::mutex message_queue_mutex_;
     std::condition_variable signal_;
-    bool running_;
+    bool running_ = false;
     std::list<std::function<bool(const std::string &)>> handlers_;
 };
 

@@ -5,6 +5,8 @@ void Receiver::SetBroadcaster(std::weak_ptr<Broadcaster> broadcaster) {
 }
 
 void Receiver::NewMessage(std::string message) {
+    if (!running_)
+        return;
     const std::lock_guard<std::mutex> lock(message_queue_mutex_);
     message_queue_.push(message);
     signal_.notify_one();
