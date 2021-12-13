@@ -3,6 +3,7 @@
 
 #include "broadcaster.h"
 #include "hackernel/util.h"
+#include <memory>
 #include <string>
 
 namespace hackernel {
@@ -12,21 +13,17 @@ void IpcExit();
 
 class IpcServer {
 public:
-    IpcServer GetInstance();
+    static IpcServer &GetInstance();
     int Init();
 
     // 需要开两个线程,receiver_消费线程和socket接收消息的线程
     int StartWait();
 
-    int Stop(){
-        running_ = false;
-        receiver_.Exit();
-        return 0;
-    }
+    int Stop();
 
 private:
     IpcServer() {}
-    Receiver receiver_;
+    std::shared_ptr<Receiver> receiver_;
     bool running_;
 };
 

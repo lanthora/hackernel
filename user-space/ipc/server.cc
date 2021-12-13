@@ -5,10 +5,50 @@
 #include "hackernel/net.h"
 #include "hackernel/process.h"
 #include <arpa/inet.h>
+#include <iostream>
 #include <nlohmann/json.hpp>
 #include <thread>
 
 namespace hackernel {
+
+IpcServer &IpcServer::GetInstance() {
+    static IpcServer instance;
+    return instance;
+}
+int IpcServer::Init() {
+    receiver_ = std::make_shared<Receiver>();
+    receiver_->AddHandler([](const std::string &msg) {
+        nlohmann::json doc = nlohmann::json::parse(msg);
+        if (doc["type"] == "kernel::proc::enable") {
+            // TODO: 根据session字段发送给对应客户端
+            std::cout << msg << std::endl;
+            return true;
+        }
+        if (doc["type"] == "kernel::proc::disable") {
+            std::cout << msg << std::endl;
+            return true;
+        }
+        return false;
+    });
+    Broadcaster::GetInstance().AddReceiver(receiver_);
+    return 0;
+}
+
+// 需要开两个线程,receiver_消费线程和socket接收消息的线程
+int IpcServer::StartWait() {
+    std::thread receiver_thread([&]() { receiver_->ConsumeWait(); });
+
+    // TODO: Unix Domain Socket的服务线程也要在这里开
+
+    receiver_thread.join();
+    return 0;
+}
+
+int IpcServer::Stop() {
+    running_ = false;
+    receiver_->Exit();
+    return 0;
+}
 
 #define PROCESS_PROTECT 1
 #define FILE_PROTECT 0
@@ -105,13 +145,16 @@ int IpcTest() {
 }
 
 int IpcWait() {
+    IpcServer::GetInstance().Init();
     IpcTest();
+    IpcServer::GetInstance().StartWait();
 
     return 0;
 }
 
 void IpcExit() {
     LOG("IPC Server Exit");
+    IpcServer::GetInstance().Stop();
     return;
 }
 }; // namespace hackernel
