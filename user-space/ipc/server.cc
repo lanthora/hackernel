@@ -34,13 +34,17 @@ int IpcServer::Init() {
     return 0;
 }
 
+int IpcServer::UnixDomainSocketWait() {
+    return 0;
+}
+
 // 需要开两个线程,receiver_消费线程和socket接收消息的线程
 int IpcServer::StartWait() {
     std::thread receiver_thread([&]() { receiver_->ConsumeWait(); });
-
-    // TODO: Unix Domain Socket的服务线程也要在这里开
+    std::thread uds_thread([&]() { UnixDomainSocketWait(); });
 
     receiver_thread.join();
+    uds_thread.join();
     return 0;
 }
 

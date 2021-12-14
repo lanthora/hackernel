@@ -25,6 +25,9 @@ private:
     IpcServer() {}
     std::shared_ptr<Receiver> receiver_;
     bool running_;
+
+private:
+    int UnixDomainSocketWait();
 };
 
 }; // namespace hackernel
