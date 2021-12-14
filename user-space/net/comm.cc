@@ -1,7 +1,10 @@
+#include "hackernel/broadcaster.h"
 #include "hackernel/net.h"
 #include "hknl/netlink.h"
 #include <netlink/genl/genl.h>
 #include <netlink/msg.h>
+#include <nlohmann/json.hpp>
+#include <string>
 
 namespace hackernel {
 
@@ -69,18 +72,80 @@ int NetProtectDisable() {
     return NetProtectStatusUpdate(NET_PROTECT_DISABLE);
 }
 
+int NetEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+    nlohmann::json doc;
+    doc["type"] = "kernel::net::enable";
+    doc["session"] = session;
+    doc["code"] = code;
+    msg = doc.dump();
+    return 0;
+}
+
+int NetDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+    nlohmann::json doc;
+    doc["type"] = "kernel::net::disable";
+    doc["session"] = session;
+    doc["code"] = code;
+    msg = doc.dump();
+    return 0;
+}
+
+int NetInsertJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+    nlohmann::json doc;
+    doc["type"] = "kernel::net::insert";
+    doc["session"] = session;
+    doc["code"] = code;
+    msg = doc.dump();
+    return 0;
+}
+
+int NetDeleteJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+    nlohmann::json doc;
+    doc["type"] = "kernel::net::delete";
+    doc["session"] = session;
+    doc["code"] = code;
+    msg = doc.dump();
+    return 0;
+}
+
 int NetProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
     u_int8_t type;
     int code;
+    int32_t session;
+    std::string msg;
 
     type = nla_get_u8(genl_info->attrs[NET_A_OP_TYPE]);
     switch (type) {
     case NET_PROTECT_ENABLE:
-    case NET_PROTECT_DISABLE:
-    case NET_PROTECT_INSERT:
-    case NET_PROTECT_DELETE:
+        session = nla_get_s32(genl_info->attrs[NET_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
-        LOG("net ctrl response code=[%d]", code);
+        NetEnableJsonGen(session, code, msg);
+        Broadcaster::GetInstance().Notify(msg);
+        LOG("kernel::net::enable, session=[%d] code=[%d]", session, code);
+        break;
+
+    case NET_PROTECT_DISABLE:
+        session = nla_get_s32(genl_info->attrs[NET_A_SESSION]);
+        code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
+        NetDisableJsonGen(session, code, msg);
+        Broadcaster::GetInstance().Notify(msg);
+        LOG("kernel::net::disable, session=[%d] code=[%d]", session, code);
+        break;
+
+    case NET_PROTECT_INSERT:
+        session = nla_get_s32(genl_info->attrs[NET_A_SESSION]);
+        code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
+        NetInsertJsonGen(session, code, msg);
+        Broadcaster::GetInstance().Notify(msg);
+        LOG("kernel::net::insert, session=[%d] code=[%d]", session, code);
+        break;
+
+    case NET_PROTECT_DELETE:
+        session = nla_get_s32(genl_info->attrs[NET_A_SESSION]);
+        code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
+        NetDeleteJsonGen(session, code, msg);
+        Broadcaster::GetInstance().Notify(msg);
+        LOG("kernel::net::delete, session=[%d] code=[%d]", session, code);
         break;
 
     default:

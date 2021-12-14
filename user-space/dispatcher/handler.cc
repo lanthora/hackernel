@@ -28,7 +28,7 @@ bool KernelProcReport(const std::string &msg) {
     std::vector<std::string> detal;
     StringSplit(std::string(doc["cmd"]), "\u001f", detal);
     std::cout << "kernel::proc::report, workdir=[" << detal[0] << "] path=[" << detal[1] << "] argv=[" << detal[2];
-    for (int i = 3; i < detal.size(); ++i) {
+    for (size_t i = 3; i < detal.size(); ++i) {
         std::cout << " " << detal[i];
     }
     std::cout << "]" << std::endl;
