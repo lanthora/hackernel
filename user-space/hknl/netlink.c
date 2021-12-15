@@ -13,6 +13,7 @@
 #include <netlink/genl/genl.h>
 #include <netlink/genl/mngt.h>
 #include <netlink/msg.h>
+#include <stdbool.h>
 #include <stdio.h>
 
 static struct nl_sock *nl_sock = NULL;
@@ -154,10 +155,10 @@ void NetlinkServerInit() {
 
 errout:
     LOG("Generic Netlink init failed");
-    exit(1);
+    Shutdown();
 }
 
-static int running = 0;
+static bool running = false;
 
 int NetlinkWait() {
     int error;
@@ -167,7 +168,9 @@ int NetlinkWait() {
         .events = POLLIN,
     };
 
-    running = 1;
+    ThreadNameUpdate("netlink");
+
+    running = GlobalRunningGet();
     while (running) {
         const int nfds = 1;
         const int timeout = 100;
@@ -185,7 +188,7 @@ int NetlinkWait() {
         error = nl_recvmsgs_default(NetlinkGetNlSock());
         if (error) {
             LOG("error=[%d] msg=[%s]", error, nl_geterror(error));
-            exit(1);
+            Shutdown();
         }
     }
 
@@ -195,7 +198,7 @@ int NetlinkWait() {
     return 0;
 }
 
-int NetlinkExitNotify() {
-    running = 0;
+int NetlinkExit() {
+    running = false;
     return 0;
 }

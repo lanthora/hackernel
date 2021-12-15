@@ -1,4 +1,5 @@
 #include "hackernel/broadcaster.h"
+#include "hackernel/util.h"
 
 void Receiver::SetBroadcaster(std::weak_ptr<Broadcaster> broadcaster) {
     this->bind_broadcaster_ = broadcaster;
@@ -15,7 +16,7 @@ void Receiver::NewMessage(std::string message) {
 void Receiver::ConsumeWait() {
     std::string message;
 
-    running_ = true;
+    running_ = GlobalRunningGet();
     while (running_) {
         if (PopMessageWait(message))
             continue;

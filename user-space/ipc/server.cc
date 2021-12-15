@@ -7,7 +7,10 @@
 #include <arpa/inet.h>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include <thread>
+#include <unistd.h>
 
 namespace hackernel {
 
@@ -40,8 +43,14 @@ int IpcServer::UnixDomainSocketWait() {
 
 // 需要开两个线程,receiver_消费线程和socket接收消息的线程
 int IpcServer::StartWait() {
-    std::thread receiver_thread([&]() { receiver_->ConsumeWait(); });
-    std::thread uds_thread([&]() { UnixDomainSocketWait(); });
+    std::thread receiver_thread([&]() {
+        ThreadNameUpdate("ipc-recevier");
+        receiver_->ConsumeWait();
+    });
+    std::thread uds_thread([&]() {
+        ThreadNameUpdate("ipc-socket");
+        UnixDomainSocketWait();
+    });
 
     receiver_thread.join();
     uds_thread.join();
@@ -50,7 +59,8 @@ int IpcServer::StartWait() {
 
 int IpcServer::Stop() {
     running_ = false;
-    receiver_->Exit();
+    if (receiver_)
+        receiver_->Exit();
     return 0;
 }
 
@@ -59,7 +69,7 @@ int IpcServer::Stop() {
 #define NET_PROTECT 0
 
 int IpcTest() {
-    LOG("IPC Server Start");
+    LOG("IpcTest Start");
 
 #if PROCESS_PROTECT
     nlohmann::json doc;
@@ -157,7 +167,7 @@ int IpcWait() {
 }
 
 void IpcExit() {
-    LOG("IPC Server Exit");
+    LOG("IpcExit Exit");
     IpcServer::GetInstance().Stop();
     return;
 }

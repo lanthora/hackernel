@@ -67,6 +67,8 @@ struct NetPolicy {
 int NetPolicyInsert(const struct NetPolicy *policy);
 int NetPolicyDelete(NetPolicyId id);
 
+int NetProtectEnable(int32_t session);
+int NetProtectDisable(int32_t session);
 int NetProtectEnable(void);
 int NetProtectDisable(void);
 

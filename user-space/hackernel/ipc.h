@@ -23,7 +23,7 @@ public:
 
 private:
     IpcServer() {}
-    std::shared_ptr<Receiver> receiver_;
+    std::shared_ptr<Receiver> receiver_ = nullptr;
     bool running_;
 
 private:

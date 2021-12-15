@@ -9,7 +9,7 @@
 namespace hackernel {
 
 // 在这里面构造netlink协议包,发送到内核
-static int NetProtectStatusUpdate(uint8_t status) {
+static int NetProtectStatusUpdate(int32_t session, uint8_t status) {
     struct nl_msg *message;
 
     message = nlmsg_alloc();
@@ -65,11 +65,18 @@ int NetPolicyDelete(NetPolicyId id) {
     return 0;
 }
 
+int NetProtectEnable(int32_t session) {
+    return NetProtectStatusUpdate(session, NET_PROTECT_ENABLE);
+}
+int NetProtectDisable(int32_t session) {
+    return NetProtectStatusUpdate(session, NET_PROTECT_DISABLE);
+}
+
 int NetProtectEnable() {
-    return NetProtectStatusUpdate(NET_PROTECT_ENABLE);
+    return NetProtectEnable(0);
 }
 int NetProtectDisable() {
-    return NetProtectStatusUpdate(NET_PROTECT_DISABLE);
+    return NetProtectDisable(0);
 }
 
 int NetEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {

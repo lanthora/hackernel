@@ -25,7 +25,7 @@ int NetlinkGetFamilyID();
 struct nl_sock *NetlinkGetNlSock();
 void NetlinkServerInit(void);
 int NetlinkWait(void);
-int NetlinkExitNotify(void);
+int NetlinkExit(void);
 
 EXTERN_C_END
 

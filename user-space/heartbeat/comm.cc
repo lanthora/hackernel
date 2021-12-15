@@ -1,15 +1,17 @@
 #include "hackernel/heartbeat.h"
 #include "hknl/netlink.h"
+#include <chrono>
 #include <netlink/genl/genl.h>
 #include <netlink/msg.h>
+#include <thread>
 #include <unistd.h>
 
 namespace hackernel {
 
-static int running = 0;
+static bool running = false;
 
-void HeartbeatExitNotify() {
-    running = 0;
+void HeartbeatExit() {
+    running = false;
 }
 
 int HeartbeatHelper(int interval) {
@@ -20,7 +22,7 @@ int HeartbeatHelper(int interval) {
     if (running)
         return -1;
 
-    running = interval;
+    running = interval ? GlobalRunningGet() : 0;
     do {
         msg = nlmsg_alloc();
         genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_HANDSHAKE,
@@ -28,7 +30,7 @@ int HeartbeatHelper(int interval) {
         nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_TGID, tgid);
         nl_send_auto(NetlinkGetNlSock(), msg);
         nlmsg_free(msg);
-        sleep(interval);
+        std::this_thread::sleep_for(std::chrono::milliseconds(interval));
     } while (running);
 
     return 0;
@@ -39,7 +41,8 @@ int Handshake() {
 }
 
 int HeartbeatWait() {
-    return HeartbeatHelper(1);
+    ThreadNameUpdate("heartbeat");
+    return HeartbeatHelper(100);
 }
 
 int HeartbeatHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
@@ -47,7 +50,7 @@ int HeartbeatHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, str
     if (code) {
         LOG("handshake response code=[%d]", code);
         LOG("handshake failed. exit");
-        exit(1);
+        Shutdown();
     }
 
     return 0;

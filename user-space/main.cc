@@ -12,7 +12,17 @@
 
 using namespace hackernel;
 
-static void Shutdown() {
+static bool running = true;
+
+bool GlobalRunningGet() {
+    return running;
+}
+
+void Shutdown() {
+    if (!running)
+        return;
+    running = false;
+
     // 停止接受外部用户输入
     IpcExit();
     DispatcherExit();
@@ -23,8 +33,8 @@ static void Shutdown() {
     NetProtectDisable();
 
     // 关闭心跳,断开与内核的通信
-    HeartbeatExitNotify();
-    NetlinkExitNotify();
+    HeartbeatExit();
+    NetlinkExit();
 }
 
 static void SigHandler(int sig) {
@@ -42,6 +52,7 @@ static void RegSigHandler() {
 }
 
 int main() {
+    ThreadNameUpdate("main");
     RegSigHandler();
     NetlinkServerInit();
 
