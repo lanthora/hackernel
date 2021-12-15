@@ -192,7 +192,7 @@ static process_perm_t process_protect_status(char *msg)
 
 	error = process_protect_report_to_userspace(id, msg);
 	if (error) {
-		LOG("process_protect_report_to_userspace failed");
+		LOG("report to userspace failed");
 		goto out;
 	}
 

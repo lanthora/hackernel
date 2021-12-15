@@ -3,6 +3,7 @@
 #include "handshake.h"
 #include "process.h"
 #include "watchdog.h"
+#include <linux/binfmts.h>
 
 extern struct genl_family genl_family;
 extern pid_t g_service_tgid;
@@ -25,7 +26,7 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 	int errcnt;
 	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
 
-	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+	skb = genlmsg_new(MAX_ARG_STRLEN, GFP_KERNEL);
 
 	if ((!skb)) {
 		LOG("genlmsg_new failed");
@@ -54,7 +55,7 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 
 	error = nla_put_string(skb, PROCESS_A_NAME, cmd);
 	if (error) {
-		LOG("nla_put_string failed");
+		LOG("nla_put_string failed. errno=[%d]", error);
 		goto errout;
 	}
 	genlmsg_end(skb, head);

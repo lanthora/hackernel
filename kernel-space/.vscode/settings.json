@@ -86,7 +86,8 @@
 		"skbuff.h": "c",
 		"dma-mapping.h": "c",
 		"scatterlist.h": "c",
-		"io.h": "c"
+		"io.h": "c",
+		"string.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,
