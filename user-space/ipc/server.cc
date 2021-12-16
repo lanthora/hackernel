@@ -5,10 +5,14 @@
 #include "hackernel/net.h"
 #include "hackernel/process.h"
 #include <arpa/inet.h>
+#include <errno.h>
 #include <iostream>
 #include <nlohmann/json.hpp>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/socket.h>
-#include <sys/un.h>
+#include <sys/types.h>
 #include <thread>
 #include <unistd.h>
 
@@ -18,9 +22,10 @@ IpcServer &IpcServer::GetInstance() {
     static IpcServer instance;
     return instance;
 }
+
 int IpcServer::Init() {
     receiver_ = std::make_shared<Receiver>();
-    receiver_->AddHandler([](const std::string &msg) {
+    receiver_->AddHandler([&](const std::string &msg) {
         nlohmann::json doc = nlohmann::json::parse(msg);
         if (doc["type"] == "kernel::proc::enable") {
             // TODO: 根据session字段发送给对应客户端
@@ -34,10 +39,6 @@ int IpcServer::Init() {
         return false;
     });
     Broadcaster::GetInstance().AddReceiver(receiver_);
-    return 0;
-}
-
-int IpcServer::UnixDomainSocketWait() {
     return 0;
 }
 
@@ -66,6 +67,73 @@ int IpcServer::Stop() {
     if (receiver_)
         receiver_->Exit();
     return 0;
+}
+
+int IpcServer::SendMsgToClient(session_t id, const std::string &msg) {
+    std::cout << id << " " << msg << std::endl;
+    return 0;
+}
+
+int IpcServer::UnixDomainSocketWait() {
+    // session_t id;
+    // int error = 0;
+    int rc;
+    socklen_t addr_len;
+    int bytes_rec = 0;
+    struct sockaddr_un server_sockaddr;
+    char buf[1024];
+    memset(&server_sockaddr, 0, sizeof(struct sockaddr_un));
+    memset(buf, 0, 1024);
+    std::shared_ptr<struct sockaddr> peer_sock;
+    const char *SOCK_PATH = "/tmp/hackernel.sock";
+
+    server_sock = socket(AF_UNIX, SOCK_DGRAM, 0);
+    if (server_sock == -1) {
+        LOG("unix domain socket create failed");
+        goto errout;
+    }
+
+    struct timeval tv;
+    tv.tv_sec = 0;
+    tv.tv_usec = 100000;
+    if (setsockopt(server_sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+        LOG("unix domain socket set timeout failed");
+        goto errout;
+    }
+
+    server_sockaddr.sun_family = AF_UNIX;
+    strcpy(server_sockaddr.sun_path, SOCK_PATH);
+    addr_len = sizeof(server_sockaddr);
+    unlink(SOCK_PATH);
+    rc = bind(server_sock, (struct sockaddr *)&server_sockaddr, addr_len);
+    if (rc == -1) {
+        LOG("unix domain socket bind failed");
+        goto errout;
+    }
+
+    running_ = GlobalRunningGet();
+    while (running_) {
+        peer_sock = std::make_shared<struct sockaddr>();
+        // id = SessionCache::GenSessionID();
+        bytes_rec = recvfrom(server_sock, buf, 1024, 0, peer_sock.get(), &addr_len);
+        if (bytes_rec == -1) {
+            if (errno == EAGAIN)
+                continue;
+
+            LOG("recvfrom errno=[%d]", errno);
+            goto errout;
+        }
+        LOG("received=[%s]", buf);
+        sendto(server_sock, buf, strlen(buf), 0, peer_sock.get(), addr_len);
+    }
+
+    close(server_sock);
+    return 0;
+
+errout:
+    close(server_sock);
+    Shutdown();
+    return -1;
 }
 
 #define PROCESS_PROTECT 1
@@ -180,4 +248,5 @@ void IpcExit() {
     IpcServer::GetInstance().Stop();
     return;
 }
+
 }; // namespace hackernel

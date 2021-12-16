@@ -10,7 +10,7 @@ add_executable(${PROJECT_NAME} ${DIR_SRCS})
 set(CMAKE_C_FLAGS "-fmacro-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/=")
 set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -std=c++20 -Wall -Werror")
 
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-g")
+set(CMAKE_CXX_FLAGS_DEBUG_INIT "-g -fsanitize=address")
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O2")
 
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
