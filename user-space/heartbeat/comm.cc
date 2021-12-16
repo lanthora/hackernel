@@ -42,7 +42,10 @@ int Handshake() {
 
 int HeartbeatWait() {
     ThreadNameUpdate("heartbeat");
-    return HeartbeatHelper(100);
+    LOG("heartbeat enter");
+    int error = HeartbeatHelper(100);
+    LOG("heartbeat exit");
+    return error;
 }
 
 int HeartbeatHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {

@@ -45,11 +45,15 @@ int IpcServer::UnixDomainSocketWait() {
 int IpcServer::StartWait() {
     std::thread receiver_thread([&]() {
         ThreadNameUpdate("ipc-recevier");
+        LOG("ipc-recevier enter");
         receiver_->ConsumeWait();
+        LOG("ipc-recevier exit");
     });
     std::thread uds_thread([&]() {
         ThreadNameUpdate("ipc-socket");
+        LOG("ipc-socket enter");
         UnixDomainSocketWait();
+        LOG("ipc-socket exit");
     });
 
     receiver_thread.join();
@@ -72,10 +76,15 @@ int IpcTest() {
     LOG("IpcTest Start");
 
 #if PROCESS_PROTECT
+    // 测试过程中, 广播发送成功后处理广播的线程还没开始工作, 造成整个进程阻塞的假象, 实际上所有线程都在正常工作,
+    // 只是命令没有下发给内核
     nlohmann::json doc;
     doc["session"] = 0;
     doc["type"] = "user::proc::enable";
     Broadcaster::GetInstance().Notify(doc.dump());
+
+    // 所以在这里补一个函数调用, 确保命令能下发成功. 在现实的使用场景中, 用户下发的命令会收到响应以判断命令是否下发成功
+    ProcProtectEnable();
 #endif
 
 #if FILE_PROTECT

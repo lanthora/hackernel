@@ -17,7 +17,9 @@ int DispatcherWait() {
     dispatcher->AddHandler(UserProcEnable);
     dispatcher->AddHandler(UserProcDisable);
     Broadcaster::GetInstance().AddReceiver(dispatcher);
+    LOG("dispatcher enter");
     dispatcher->ConsumeWait();
+    LOG("dispatcher exit");
     return 0;
 }
 

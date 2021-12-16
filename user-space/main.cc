@@ -19,6 +19,7 @@ bool GlobalRunningGet() {
 }
 
 void Shutdown() {
+    LOG("shutdown");
     if (!running)
         return;
     running = false;

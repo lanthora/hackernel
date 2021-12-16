@@ -169,7 +169,7 @@ int NetlinkWait() {
     };
 
     ThreadNameUpdate("netlink");
-
+    LOG("netlink enter");
     running = GlobalRunningGet();
     while (running) {
         const int nfds = 1;
@@ -191,7 +191,7 @@ int NetlinkWait() {
             Shutdown();
         }
     }
-
+    LOG("netlink exit");
     nl_close(NetlinkGetNlSock());
     nl_socket_free(NetlinkGetNlSock());
 
