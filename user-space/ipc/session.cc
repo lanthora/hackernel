@@ -2,44 +2,39 @@
 
 namespace hackernel {
 
-SessionCache::SessionCache() {}
+ConnCache::ConnCache() {}
 
-SessionCache &SessionCache::GetInstance() {
-    static SessionCache cache;
+ConnCache &ConnCache::GetInstance() {
+    static ConnCache cache;
     return cache;
 }
 
-int SessionCache::SetCapacity(size_t capacity) {
+int ConnCache::SetCapacity(size_t capacity) {
     lru_capacity_ = capacity;
     return 0;
 }
 
-size_t SessionCache::GenSessionID() {
-    static std::atomic<size_t> id(0);
-    return id++;
-}
-
-int SessionCache::Get(session_t key, conn_t &val) {
+int ConnCache::Get(const Session &key, UserConn &value) {
     lru_map::iterator lru_map_it = lru_map_.find(key);
     if (lru_map_it == lru_map_.end())
         return -1;
 
-    std::pair<session_t, conn_t> lru_element = *(lru_map_it->second);
+    std::pair<Session, UserConn> lru_element = *(lru_map_it->second);
     lru_list_.erase(lru_map_it->second);
     lru_list_.push_front(move(lru_element));
     lru_map_[key] = lru_list_.begin();
-    val = lru_element.second;
+    value = lru_element.second;
     return 0;
 }
 
-int SessionCache::Put(session_t key, conn_t value) {
+int ConnCache::Put(const Session &key, const UserConn &value) {
     lru_map::iterator lru_map_it = lru_map_.find(key);
 
     if (lru_map_it != lru_map_.end()) {
         lru_list_.erase(lru_map_it->second);
     }
 
-    std::pair<session_t, conn_t> lru_element(key, value);
+    std::pair<Session, UserConn> lru_element(key, value);
     lru_list_.push_front(move(lru_element));
 
     lru_map_[key] = lru_list_.begin();

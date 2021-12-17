@@ -4,9 +4,14 @@
 #include "hackernel/ipc.h"
 #include "hackernel/net.h"
 #include "hackernel/process.h"
+#include <algorithm>
 #include <arpa/inet.h>
+#include <cctype>
+#include <ctype.h>
 #include <errno.h>
+#include <functional>
 #include <iostream>
+#include <locale>
 #include <nlohmann/json.hpp>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,12 +33,11 @@ int IpcServer::Init() {
     receiver_->AddHandler([&](const std::string &msg) {
         nlohmann::json doc = nlohmann::json::parse(msg);
         if (doc["type"] == "kernel::proc::enable") {
-            // TODO: 根据session字段发送给对应客户端
-            std::cout << msg << std::endl;
+            SendMsgToClient(doc["session"], msg);
             return true;
         }
         if (doc["type"] == "kernel::proc::disable") {
-            std::cout << msg << std::endl;
+            SendMsgToClient(doc["session"], msg);
             return true;
         }
         return false;
@@ -42,7 +46,6 @@ int IpcServer::Init() {
     return 0;
 }
 
-// 需要开两个线程,receiver_消费线程和socket接收消息的线程
 int IpcServer::StartWait() {
     std::thread receiver_thread([&]() {
         ThreadNameUpdate("ipc-recevier");
@@ -50,7 +53,7 @@ int IpcServer::StartWait() {
         receiver_->ConsumeWait();
         LOG("ipc-recevier exit");
     });
-    std::thread uds_thread([&]() {
+    std::thread socket_thread([&]() {
         ThreadNameUpdate("ipc-socket");
         LOG("ipc-socket enter");
         UnixDomainSocketWait();
@@ -58,7 +61,7 @@ int IpcServer::StartWait() {
     });
 
     receiver_thread.join();
-    uds_thread.join();
+    socket_thread.join();
     return 0;
 }
 
@@ -69,74 +72,82 @@ int IpcServer::Stop() {
     return 0;
 }
 
-int IpcServer::SendMsgToClient(session_t id, const std::string &msg) {
-    std::cout << id << " " << msg << std::endl;
+int IpcServer::SendMsgToClient(Session id, const std::string &msg) {
+    UserConn conn;
+    if (ConnCache::GetInstance().Get(id, conn))
+        return -1;
+
+    sendto(socket_, msg.data(), msg.size(), 0, conn.first.get(), conn.second);
     return 0;
 }
 
 int IpcServer::UnixDomainSocketWait() {
-    // session_t id;
-    // int error = 0;
-    int rc;
-    socklen_t addr_len;
-    int bytes_rec = 0;
-    struct sockaddr_un server_sockaddr;
-    char buf[1024];
-    memset(&server_sockaddr, 0, sizeof(struct sockaddr_un));
-    memset(buf, 0, 1024);
-    std::shared_ptr<struct sockaddr> peer_sock;
     const char *SOCK_PATH = "/tmp/hackernel.sock";
+    const struct timeval tv { .tv_sec = 0, .tv_usec = 100000 };
+    const int BUFFER_SIZE = 1024;
 
-    server_sock = socket(AF_UNIX, SOCK_DGRAM, 0);
-    if (server_sock == -1) {
+    char buffer[BUFFER_SIZE];
+    struct sockaddr_un server;
+
+    socket_ = socket(AF_UNIX, SOCK_DGRAM, 0);
+    if (socket_ == -1) {
         LOG("unix domain socket create failed");
         goto errout;
     }
 
-    struct timeval tv;
-    tv.tv_sec = 0;
-    tv.tv_usec = 100000;
-    if (setsockopt(server_sock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
+    if (setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         LOG("unix domain socket set timeout failed");
         goto errout;
     }
 
-    server_sockaddr.sun_family = AF_UNIX;
-    strcpy(server_sockaddr.sun_path, SOCK_PATH);
-    addr_len = sizeof(server_sockaddr);
+    server.sun_family = AF_UNIX;
+    strcpy(server.sun_path, SOCK_PATH);
     unlink(SOCK_PATH);
-    rc = bind(server_sock, (struct sockaddr *)&server_sockaddr, addr_len);
-    if (rc == -1) {
+    if (bind(socket_, (struct sockaddr *)&server, sizeof(server)) == -1) {
         LOG("unix domain socket bind failed");
         goto errout;
     }
 
     running_ = GlobalRunningGet();
     while (running_) {
-        peer_sock = std::make_shared<struct sockaddr>();
-        // id = SessionCache::GenSessionID();
-        bytes_rec = recvfrom(server_sock, buf, 1024, 0, peer_sock.get(), &addr_len);
-        if (bytes_rec == -1) {
+        socklen_t len;
+        UserID client = std::make_shared<struct sockaddr>();
+        int size = recvfrom(socket_, buffer, BUFFER_SIZE, 0, client.get(), &len);
+        if (size == -1) {
             if (errno == EAGAIN)
                 continue;
 
             LOG("recvfrom errno=[%d]", errno);
             goto errout;
         }
-        LOG("received=[%s]", buf);
-        sendto(server_sock, buf, strlen(buf), 0, peer_sock.get(), addr_len);
+
+        while (size > 0 && isspace(buffer[size - 1]))
+            buffer[--size] = 0;
+
+        nlohmann::json doc = nlohmann::json::parse(buffer);
+        if (!doc.is_object()) {
+            LOG("invalid request, msg=[%s]", buffer);
+            continue;
+        }
+
+        Session session = id_++;
+        UserConn conn(client, len);
+        ConnCache::GetInstance().Put(session, conn);
+
+        doc["session"] = session;
+        Broadcaster::GetInstance().Notify(doc.dump());
     }
 
-    close(server_sock);
+    close(socket_);
     return 0;
 
 errout:
-    close(server_sock);
+    close(socket_);
     Shutdown();
     return -1;
 }
 
-#define PROCESS_PROTECT 1
+#define PROCESS_PROTECT 0
 #define FILE_PROTECT 0
 #define NET_PROTECT 0
 
