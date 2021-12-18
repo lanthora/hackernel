@@ -20,10 +20,10 @@ int ConnCache::Get(const Session &key, UserConn &value) {
         return -1;
 
     std::pair<Session, UserConn> lru_element = *(lru_map_it->second);
+    value = lru_element.second;
     lru_list_.erase(lru_map_it->second);
     lru_list_.push_front(move(lru_element));
     lru_map_[key] = lru_list_.begin();
-    value = lru_element.second;
     return 0;
 }
 
