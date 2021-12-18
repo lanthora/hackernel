@@ -9,11 +9,11 @@
 namespace hackernel {
 
 int FileProtectEnable() {
-    return FileProtectStatusUpdate(0, FILE_PROTECT_ENABLE);
+    return FileProtectEnable(0);
 }
 
 int FileProtectDisable() {
-    return FileProtectStatusUpdate(0, FILE_PROTECT_DISABLE);
+    return FileProtectDisable(0);
 }
 
 int FileProtectSet(const char *path, FilePerm perm) {
