@@ -6,13 +6,15 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/un.h>
 #include <unordered_map>
 
 namespace hackernel {
 
 typedef int32_t Session;
-typedef std::shared_ptr<struct sockaddr> UserID;
+typedef std::shared_ptr<struct sockaddr_un> UserID;
 typedef int UserIDSize;
 typedef std::pair<UserID, UserIDSize> UserConn;
 

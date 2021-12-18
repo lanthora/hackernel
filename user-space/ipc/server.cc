@@ -4,20 +4,13 @@
 #include "hackernel/ipc.h"
 #include "hackernel/net.h"
 #include "hackernel/process.h"
-#include <algorithm>
 #include <arpa/inet.h>
 #include <cctype>
 #include <ctype.h>
 #include <errno.h>
 #include <functional>
 #include <iostream>
-#include <locale>
 #include <nlohmann/json.hpp>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <sys/types.h>
 #include <thread>
 #include <unistd.h>
 
@@ -74,10 +67,15 @@ int IpcServer::Stop() {
 
 int IpcServer::SendMsgToClient(Session id, const std::string &msg) {
     UserConn conn;
+    socklen_t len;
+    struct sockaddr *peer;
+
     if (ConnCache::GetInstance().Get(id, conn))
         return -1;
 
-    sendto(socket_, msg.data(), msg.size(), 0, conn.first.get(), conn.second);
+    peer = (struct sockaddr *)conn.first.get();
+    len = conn.second;
+    sendto(socket_, msg.data(), msg.size(), 0, peer, len);
     return 0;
 }
 
@@ -108,29 +106,39 @@ int IpcServer::UnixDomainSocketWait() {
         goto errout;
     }
 
+    socklen_t len;
+    struct sockaddr_un peer;
     running_ = GlobalRunningGet();
     while (running_) {
-        socklen_t len;
-        UserID client = std::make_shared<struct sockaddr>();
-        int size = recvfrom(socket_, buffer, BUFFER_SIZE, 0, client.get(), &len);
+        len = sizeof(peer);
+        int size = recvfrom(socket_, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&peer, &len);
         if (size == -1) {
-            if (errno == EAGAIN)
+            if (errno == EAGAIN || errno == EINTR)
                 continue;
 
-            LOG("recvfrom errno=[%d]", errno);
+            // 未知类型错误,退出程序
+            LOG("recvfrom errno=[%d] errmsg=[%s]", errno, strerror(errno));
             goto errout;
         }
 
         while (size > 0 && isspace(buffer[size - 1]))
             buffer[--size] = 0;
 
-        nlohmann::json doc = nlohmann::json::parse(buffer);
+        nlohmann::json doc;
+        try {
+            doc = nlohmann::json::parse(buffer);
+        } catch (nlohmann::json::parse_error &ex) {
+            LOG("parse error, buffer=[%s]", buffer);
+            continue;
+        }
+
         if (!doc.is_object()) {
-            LOG("invalid request, msg=[%s]", buffer);
+            LOG("invalid request, buffer=[%s]", buffer);
             continue;
         }
 
         Session session = id_++;
+        UserID client = std::make_shared<struct sockaddr_un>(peer);
         UserConn conn(client, len);
         ConnCache::GetInstance().Put(session, conn);
 
