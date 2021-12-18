@@ -151,7 +151,7 @@ response:
 		}
 	}
 
-	error = nla_put_u32(reply, PROCESS_A_OP_TYPE, PROCESS_PROTECT_ENABLE);
+	error = nla_put_u32(reply, PROCESS_A_OP_TYPE, type);
 	if (unlikely(error)) {
 		LOG("nla_put_s32 failed");
 		goto errout;
