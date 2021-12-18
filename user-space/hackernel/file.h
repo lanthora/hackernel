@@ -12,11 +12,13 @@ int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
 enum { FILE_PROTECT_UNSPEC, FILE_PROTECT_REPORT, FILE_PROTECT_ENABLE, FILE_PROTECT_DISABLE, FILE_PROTECT_SET };
 
 typedef int32_t FilePerm;
-int FileProtectEnable(int32_t session);
-int FileProtectDisable(int32_t session);
 int FileProtectEnable();
 int FileProtectDisable();
 int FileProtectSet(const char *path, FilePerm perm);
+
+int FileProtectEnable(int32_t session);
+int FileProtectDisable(int32_t session);
+int FileProtectSet(int32_t session, const char *path, FilePerm perm);
 
 #define FLAG_FILE_READ_DISABLE (1U << 0)
 #define FLAG_FILE_WRITE_DISABLE (1U << 1)

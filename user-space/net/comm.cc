@@ -8,25 +8,50 @@
 
 namespace hackernel {
 
-// 在这里面构造netlink协议包,发送到内核
+int NetProtectEnable() {
+    return NetProtectEnable(0);
+}
+int NetProtectDisable() {
+    return NetProtectDisable(0);
+}
+
+int NetPolicyInsert(const NetPolicy *policy) {
+    return NetPolicyInsert(0, policy);
+}
+
+int NetPolicyDelete(NetPolicyId id) {
+    return NetPolicyDelete(0, id);
+}
+
 static int NetProtectStatusUpdate(int32_t session, uint8_t status) {
     struct nl_msg *message;
 
     message = nlmsg_alloc();
     genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_NET_PROTECT,
                 HACKERNEL_FAMLY_VERSION);
+    nla_put_s32(message, NET_A_SESSION, session);
     nla_put_u8(message, NET_A_OP_TYPE, status);
     nl_send_auto(NetlinkGetNlSock(), message);
 
     return 0;
 }
 
-int NetPolicyInsert(const NetPolicy *policy) {
+int NetProtectEnable(int32_t session) {
+    return NetProtectStatusUpdate(session, NET_PROTECT_ENABLE);
+}
+
+int NetProtectDisable(int32_t session) {
+    return NetProtectStatusUpdate(session, NET_PROTECT_DISABLE);
+}
+
+int NetPolicyInsert(int32_t session, const NetPolicy *policy) {
     struct nl_msg *message;
 
     message = nlmsg_alloc();
     genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_NET_PROTECT,
                 HACKERNEL_FAMLY_VERSION);
+
+    nla_put_s32(message, NET_A_SESSION, session);
     nla_put_u8(message, NET_A_OP_TYPE, NET_PROTECT_INSERT);
 
     nla_put_s32(message, NET_A_ID, policy->id);
@@ -52,12 +77,14 @@ int NetPolicyInsert(const NetPolicy *policy) {
 
     return 0;
 }
-int NetPolicyDelete(NetPolicyId id) {
+
+int NetPolicyDelete(int32_t session, NetPolicyId id) {
     struct nl_msg *message;
 
     message = nlmsg_alloc();
     genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_NET_PROTECT,
                 HACKERNEL_FAMLY_VERSION);
+    nla_put_s32(message, NET_A_SESSION, session);
     nla_put_u8(message, NET_A_OP_TYPE, NET_PROTECT_DELETE);
     nla_put_u32(message, NET_A_ID, id);
     nl_send_auto(NetlinkGetNlSock(), message);
@@ -65,21 +92,7 @@ int NetPolicyDelete(NetPolicyId id) {
     return 0;
 }
 
-int NetProtectEnable(int32_t session) {
-    return NetProtectStatusUpdate(session, NET_PROTECT_ENABLE);
-}
-int NetProtectDisable(int32_t session) {
-    return NetProtectStatusUpdate(session, NET_PROTECT_DISABLE);
-}
-
-int NetProtectEnable() {
-    return NetProtectEnable(0);
-}
-int NetProtectDisable() {
-    return NetProtectDisable(0);
-}
-
-int NetEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int NetEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::enable";
     doc["session"] = session;
@@ -88,7 +101,7 @@ int NetEnableJsonGen(const int32_t &session, const int32_t &code, std::string &m
     return 0;
 }
 
-int NetDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int NetDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::disable";
     doc["session"] = session;
@@ -97,7 +110,7 @@ int NetDisableJsonGen(const int32_t &session, const int32_t &code, std::string &
     return 0;
 }
 
-int NetInsertJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int NetInsertJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::insert";
     doc["session"] = session;
@@ -106,7 +119,7 @@ int NetInsertJsonGen(const int32_t &session, const int32_t &code, std::string &m
     return 0;
 }
 
-int NetDeleteJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int NetDeleteJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::delete";
     doc["session"] = session;

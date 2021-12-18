@@ -64,13 +64,15 @@ struct NetPolicy {
     int flags;
 };
 
+int NetProtectEnable();
+int NetProtectDisable();
 int NetPolicyInsert(const struct NetPolicy *policy);
 int NetPolicyDelete(NetPolicyId id);
 
 int NetProtectEnable(int32_t session);
 int NetProtectDisable(int32_t session);
-int NetProtectEnable(void);
-int NetProtectDisable(void);
+int NetPolicyInsert(int32_t session, const struct NetPolicy *policy);
+int NetPolicyDelete(int32_t session, NetPolicyId id);
 
 #define FLAG_NET_INBOUND (1U << 0)
 #define FLAG_NET_OUTBOUND (1U << 1)

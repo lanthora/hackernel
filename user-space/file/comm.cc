@@ -8,6 +8,18 @@
 
 namespace hackernel {
 
+int FileProtectEnable() {
+    return FileProtectStatusUpdate(0, FILE_PROTECT_ENABLE);
+}
+
+int FileProtectDisable() {
+    return FileProtectStatusUpdate(0, FILE_PROTECT_DISABLE);
+}
+
+int FileProtectSet(const char *path, FilePerm perm) {
+    return FileProtectSet(0, path, perm);
+}
+
 static int FileProtectStatusUpdate(int32_t session, uint8_t status) {
     struct nl_msg *message;
 
@@ -29,20 +41,13 @@ int FileProtectDisable(int32_t session) {
     return FileProtectStatusUpdate(session, FILE_PROTECT_DISABLE);
 }
 
-int FileProtectEnable() {
-    return FileProtectStatusUpdate(0, FILE_PROTECT_ENABLE);
-}
-
-int FileProtectDisable() {
-    return FileProtectStatusUpdate(0, FILE_PROTECT_DISABLE);
-}
-
-int FileProtectSet(const char *path, FilePerm perm) {
+int FileProtectSet(int32_t session, const char *path, FilePerm perm) {
     struct nl_msg *message;
 
     message = nlmsg_alloc();
     genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_FILE_PROTECT,
                 HACKERNEL_FAMLY_VERSION);
+    nla_put_s32(message, FILE_A_SESSION, session);
     nla_put_u8(message, FILE_A_OP_TYPE, FILE_PROTECT_SET);
     nla_put_string(message, FILE_A_NAME, path);
     nla_put_s32(message, FILE_A_PERM, perm);
@@ -51,7 +56,7 @@ int FileProtectSet(const char *path, FilePerm perm) {
     return 0;
 }
 
-int FileEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int FileEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::enable";
     doc["session"] = session;
@@ -60,7 +65,7 @@ int FileEnableJsonGen(const int32_t &session, const int32_t &code, std::string &
     return 0;
 }
 
-int FileDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int FileDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::disable";
     doc["session"] = session;
@@ -69,7 +74,7 @@ int FileDisableJsonGen(const int32_t &session, const int32_t &code, std::string 
     return 0;
 }
 
-int FileSetJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int FileSetJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::set";
     doc["session"] = session;
@@ -78,7 +83,7 @@ int FileSetJsonGen(const int32_t &session, const int32_t &code, std::string &msg
     return 0;
 }
 
-int FileReportJsonGen(const char *name, FilePerm perm, std::string &msg) {
+static int FileReportJsonGen(const char *name, FilePerm perm, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::report";
     doc["name"] = name;

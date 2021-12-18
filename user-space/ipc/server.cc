@@ -16,6 +16,10 @@
 
 namespace hackernel {
 
+extern bool KernelProcReport(const std::string &msg);
+extern bool KernelProcEnable(const std::string &msg);
+extern bool KernelProcDisable(const std::string &msg);
+
 IpcServer &IpcServer::GetInstance() {
     static IpcServer instance;
     return instance;
@@ -23,18 +27,9 @@ IpcServer &IpcServer::GetInstance() {
 
 int IpcServer::Init() {
     receiver_ = std::make_shared<Receiver>();
-    receiver_->AddHandler([&](const std::string &msg) {
-        nlohmann::json doc = nlohmann::json::parse(msg);
-        if (doc["type"] == "kernel::proc::enable") {
-            SendMsgToClient(doc["session"], msg);
-            return true;
-        }
-        if (doc["type"] == "kernel::proc::disable") {
-            SendMsgToClient(doc["session"], msg);
-            return true;
-        }
-        return false;
-    });
+    receiver_->AddHandler(KernelProcReport);
+    receiver_->AddHandler(KernelProcEnable);
+    receiver_->AddHandler(KernelProcDisable);
     Broadcaster::GetInstance().AddReceiver(receiver_);
     return 0;
 }
@@ -116,7 +111,6 @@ int IpcServer::UnixDomainSocketWait() {
             if (errno == EAGAIN || errno == EINTR)
                 continue;
 
-            // 未知类型错误,退出程序
             LOG("recvfrom errno=[%d] errmsg=[%s]", errno, strerror(errno));
             goto errout;
         }
@@ -155,24 +149,11 @@ errout:
     return -1;
 }
 
-#define PROCESS_PROTECT 0
 #define FILE_PROTECT 0
 #define NET_PROTECT 0
 
 int IpcTest() {
     LOG("IpcTest Start");
-
-#if PROCESS_PROTECT
-    // 测试过程中, 广播发送成功后处理广播的线程还没开始工作, 造成整个进程阻塞的假象, 实际上所有线程都在正常工作,
-    // 只是命令没有下发给内核
-    nlohmann::json doc;
-    doc["session"] = 0;
-    doc["type"] = "user::proc::enable";
-    Broadcaster::GetInstance().Notify(doc.dump());
-
-    // 所以在这里补一个函数调用, 确保命令能下发成功. 在现实的使用场景中, 用户下发的命令会收到响应以判断命令是否下发成功
-    ProcProtectEnable();
-#endif
 
 #if FILE_PROTECT
     FileProtectEnable();
