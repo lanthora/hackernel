@@ -20,6 +20,16 @@ extern bool KernelProcReport(const std::string &msg);
 extern bool KernelProcEnable(const std::string &msg);
 extern bool KernelProcDisable(const std::string &msg);
 
+extern bool KernelFileReport(const std::string &msg);
+extern bool KernelFileSet(const std::string &msg);
+extern bool KernelFileEnable(const std::string &msg);
+extern bool KernelFileDisable(const std::string &msg);
+
+extern bool KernelNetInsert(const std::string &msg);
+extern bool KernelNetDelete(const std::string &msg);
+extern bool KernelNetEnable(const std::string &msg);
+extern bool KernelNetDisable(const std::string &msg);
+
 IpcServer &IpcServer::GetInstance() {
     static IpcServer instance;
     return instance;
@@ -27,9 +37,19 @@ IpcServer &IpcServer::GetInstance() {
 
 int IpcServer::Init() {
     receiver_ = std::make_shared<Receiver>();
+
     receiver_->AddHandler(KernelProcReport);
     receiver_->AddHandler(KernelProcEnable);
     receiver_->AddHandler(KernelProcDisable);
+    receiver_->AddHandler(KernelFileReport);
+    receiver_->AddHandler(KernelFileSet);
+    receiver_->AddHandler(KernelFileEnable);
+    receiver_->AddHandler(KernelFileDisable);
+    receiver_->AddHandler(KernelNetInsert);
+    receiver_->AddHandler(KernelNetDelete);
+    receiver_->AddHandler(KernelNetEnable);
+    receiver_->AddHandler(KernelNetDisable);
+
     Broadcaster::GetInstance().AddReceiver(receiver_);
     return 0;
 }
