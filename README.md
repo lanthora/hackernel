@@ -1,4 +1,4 @@
-# Hack Kernel 
+# Hack Kernel
 
 尝试在内核层面做些有趣的事情.
 
@@ -42,8 +42,10 @@ vscode打开[服务程序目录](user-space/)后,F5编译运行.
 # 连接 AF_UNIX,SOCK_DGRAM 类型的服务端
 nc -uU /tmp/hackernel.sock
 
-# 发送json字符串
-{"type":"user::proc::enable"}
+# 开启文件保护
+{"type":"user::file::enable"}
+# 禁止 /etc/fstab 文件写入,删除,移动
+{"type":"user::file::set","path":"/etc/fstab","perm":14}
 ```
 
 ## 计划
@@ -55,4 +57,3 @@ nc -uU /tmp/hackernel.sock
 ## Licence
 
 [GPL-2.0](https://spdx.org/licenses/GPL-2.0-or-later.html)
-
