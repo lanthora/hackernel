@@ -4,13 +4,16 @@
 #include "broadcaster.h"
 #include "hackernel/util.h"
 #include <list>
+#include <map>
 #include <memory>
+#include <mutex>
 #include <nlohmann/json.hpp>
 #include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/un.h>
 #include <unordered_map>
+#include <vector>
 
 namespace hackernel {
 
@@ -41,6 +44,7 @@ private:
     lru_list lru_list_;
     lru_map lru_map_;
     size_t lru_capacity_ = 1;
+    std::mutex lru_lock_;
     ConnCache();
 
 public:
@@ -57,12 +61,17 @@ public:
     int StartWait();
     int Stop();
     int SendMsgToClient(Session id, const std::string &msg);
+    int MsgSub(std::string section, const UserConn &user);
+    int MsgUnsub(std::string section, const UserConn &user);
+    int SendMsgToSubscriber(std::string section, const std::string &msg);
 
 private:
     IpcServer() {}
     std::shared_ptr<Receiver> receiver_ = nullptr;
     bool running_;
     int socket_;
+    std::map<std::string, std::list<UserConn>> sub_;
+    std::mutex sub_lock_;
     std::atomic<Session> id_ = SYSTEM_SESSION;
 
 private:

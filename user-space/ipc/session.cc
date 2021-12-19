@@ -15,6 +15,8 @@ int ConnCache::SetCapacity(size_t capacity) {
 }
 
 int ConnCache::Get(const Session &key, UserConn &value) {
+    std::lock_guard<std::mutex> lock(lru_lock_);
+
     lru_map::iterator lru_map_it = lru_map_.find(key);
     if (lru_map_it == lru_map_.end())
         return -1;
@@ -28,6 +30,8 @@ int ConnCache::Get(const Session &key, UserConn &value) {
 }
 
 int ConnCache::Put(const Session &key, const UserConn &value) {
+    std::lock_guard<std::mutex> lock(lru_lock_);
+
     lru_map::iterator lru_map_it = lru_map_.find(key);
 
     if (lru_map_it != lru_map_.end()) {

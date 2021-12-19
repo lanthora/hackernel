@@ -5,8 +5,12 @@
 #include <nlohmann/json.hpp>
 #include <thread>
 #include <unistd.h>
+#include <algorithm>
 
 namespace hackernel {
+
+extern bool UserMsgSub(const std::string &msg);
+extern bool UserMsgUnsub(const std::string &msg);
 
 extern bool KernelProcReport(const std::string &msg);
 extern bool KernelProcEnable(const std::string &msg);
@@ -41,6 +45,8 @@ int IpcServer::Init() {
     receiver_->AddHandler(KernelNetDelete);
     receiver_->AddHandler(KernelNetEnable);
     receiver_->AddHandler(KernelNetDisable);
+    receiver_->AddHandler(UserMsgSub);
+    receiver_->AddHandler(UserMsgUnsub);
 
     Broadcaster::GetInstance().AddReceiver(receiver_);
     return 0;
@@ -82,7 +88,45 @@ int IpcServer::SendMsgToClient(Session id, const std::string &msg) {
 
     peer = (struct sockaddr *)conn.first.get();
     len = conn.second;
-    sendto(socket_, msg.data(), msg.size(), 0, peer, len);
+    if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1) {
+        LOG("send error, session=[%d] msg=[%s]", id, msg.data());
+        return -1;
+    }
+    return 0;
+}
+
+int IpcServer::MsgSub(std::string section, const UserConn &user) {
+    std::lock_guard<std::mutex> lock(sub_lock_);
+    sub_[section].push_back(user);
+    return 0;
+}
+
+int IpcServer::MsgUnsub(std::string section, const UserConn &user) {
+    std::lock_guard<std::mutex> lock(sub_lock_);
+    auto it = std::find_if(sub_[section].begin(), sub_[section].end(), [&](const UserConn &item) {
+        return strcmp(user.first->sun_path, item.first->sun_path) == 0;
+    });
+    if (it == sub_[section].end())
+        return -1;
+    sub_[section].erase(it);
+    return 0;
+}
+
+int IpcServer::SendMsgToSubscriber(std::string section, const std::string &msg) {
+    struct sockaddr *peer;
+    socklen_t len;
+    std::lock_guard<std::mutex> lock(sub_lock_);
+
+    auto it = sub_[section].begin();
+    while (it != sub_[section].end()) {
+        peer = (struct sockaddr *)it->first.get();
+        len = it->second;
+
+        if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1)
+            it = sub_[section].erase(it);
+        else
+            ++it;
+    }
     return 0;
 }
 

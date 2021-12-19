@@ -4,14 +4,40 @@
 
 namespace hackernel {
 
+bool UserMsgSub(const std::string &msg) {
+    nlohmann::json doc = nlohmann::json::parse(msg);
+    if (doc["type"] != "user::msg::sub")
+        return false;
+
+    UserConn conn;
+    ConnCache::GetInstance().Get(doc["session"], conn);
+    IpcServer::GetInstance().MsgSub(doc["data"]["section"], conn);
+    doc["data"]["code"] = 0;
+    IpcServer::GetInstance().SendMsgToClient(doc["session"], doc["data"].dump());
+    return true;
+}
+
+bool UserMsgUnsub(const std::string &msg) {
+    nlohmann::json doc = nlohmann::json::parse(msg);
+    if (doc["type"] != "user::msg::unsub")
+        return false;
+
+    UserConn conn;
+    ConnCache::GetInstance().Get(doc["session"], conn);
+    IpcServer::GetInstance().MsgUnsub(doc["data"]["section"], conn);
+    doc["data"]["code"] = 0;
+    IpcServer::GetInstance().SendMsgToClient(doc["session"], doc["data"].dump());
+    return true;
+}
+
 bool KernelProcReport(const std::string &msg) {
     nlohmann::json doc = nlohmann::json::parse(msg);
     if (doc["type"] != "kernel::proc::report")
         return false;
 
-    Session session = doc["session"];
+    std::string section = doc["type"];
     nlohmann::json data = doc["data"];
-    LOG("session=[%d] data=[%s]", session, data.dump().data());
+    IpcServer::GetInstance().SendMsgToSubscriber(section, data.dump());
     return true;
 }
 
@@ -42,9 +68,9 @@ bool KernelFileReport(const std::string &msg) {
     if (doc["type"] != "kernel::file::report")
         return false;
 
-    Session session = doc["session"];
+    std::string section = doc["type"];
     nlohmann::json data = doc["data"];
-    LOG("session=[%d] data=[%s]", session, data.dump().data());
+    IpcServer::GetInstance().SendMsgToSubscriber(section, data.dump());
     return true;
 }
 
