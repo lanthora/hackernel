@@ -24,7 +24,17 @@
       }
     },
     {
-      "label": "build:make",
+      "label": "build:make:debug",
+      "command": "make",
+      "args": [
+        "-Wfatal-errors"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/build/"
+      }
+    },
+    {
+      "label": "build:make:release",
       "command": "make",
       "args": [
         "-j"
@@ -38,7 +48,7 @@
       "dependsOrder": "sequence",
       "dependsOn": [
         "build:cmake:debug",
-        "build:make"
+        "build:make:debug"
       ],
       "problemMatcher": [],
       "group": {
@@ -51,7 +61,7 @@
       "dependsOrder": "sequence",
       "dependsOn": [
         "build:cmake:release",
-        "build:make"
+        "build:make:release"
       ]
     }
   ]
