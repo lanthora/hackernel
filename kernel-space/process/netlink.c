@@ -28,7 +28,7 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 
 	skb = genlmsg_new(MAX_ARG_STRLEN, GFP_KERNEL);
 
-	if ((!skb)) {
+	if (!skb) {
 		LOG("genlmsg_new failed");
 		error = -ENOMEM;
 		goto errout;
@@ -61,29 +61,25 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 	genlmsg_end(skb, head);
 
 	error = genlmsg_unicast(&init_net, skb, g_portid);
-	if (!error) {
-		errcnt = atomic_xchg(&atomic_errcnt, 0);
-		if (unlikely(errcnt))
-			LOG("errcnt=[%u]", errcnt);
-
-		goto out;
+	skb = NULL;
+	if (error) {
+		LOG("genlmsg_unicast failed error=[%d]", error);
+		g_portid = 0;
+		g_service_tgid = 0;
+		conn_check_set_dead();
+		atomic_inc(&atomic_errcnt);
+		goto errout;
 	}
 
-	atomic_inc(&atomic_errcnt);
+	errcnt = atomic_xchg(&atomic_errcnt, 0);
+	if (unlikely(errcnt))
+		LOG("errcnt=[%u]", errcnt);
 
-	if (error == -EAGAIN)
-		goto out;
-
-	g_portid = 0;
-	g_service_tgid = 0;
-	conn_check_set_dead();
-
-	LOG("genlmsg_unicast failed error=[%d]", error);
-
-out:
 	return 0;
 errout:
-	nlmsg_free(skb);
+	if (skb)
+		nlmsg_free(skb);
+
 	return error;
 }
 
