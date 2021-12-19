@@ -25,7 +25,7 @@ bool KernelProcReport(const std::string &msg) {
         return false;
 
     std::vector<std::string> detal;
-    StringSplit(std::string(doc["cmd"]), "\u001f", detal);
+    StringSplit(std::string(doc["data"]["cmd"]), "\u001f", detal);
     std::string workdir = detal[0];
     std::string path = detal[1];
     std::string argv = detal[2];
@@ -44,8 +44,8 @@ bool KernelProcEnable(const std::string &msg) {
         return false;
 
     Session session = doc["session"];
-    doc.erase("session");
-    IpcServer::GetInstance().SendMsgToClient(session, doc.dump());
+    std::string data = doc["data"].dump();
+    IpcServer::GetInstance().SendMsgToClient(session, data);
     return true;
 }
 
@@ -55,8 +55,8 @@ bool KernelProcDisable(const std::string &msg) {
         return false;
 
     Session session = doc["session"];
-    doc.erase("session");
-    IpcServer::GetInstance().SendMsgToClient(session, doc.dump());
+    std::string data = doc["data"].dump();
+    IpcServer::GetInstance().SendMsgToClient(session, data);
     return true;
 }
 

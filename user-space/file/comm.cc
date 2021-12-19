@@ -1,24 +1,13 @@
 #include "file/define.h"
 #include "hackernel/broadcaster.h"
 #include "hackernel/file.h"
+#include "hackernel/ipc.h"
 #include "hknl/netlink.h"
 #include <netlink/genl/genl.h>
 #include <netlink/msg.h>
 #include <nlohmann/json.hpp>
 
 namespace hackernel {
-
-int FileProtectEnable() {
-    return FileProtectEnable(0);
-}
-
-int FileProtectDisable() {
-    return FileProtectDisable(0);
-}
-
-int FileProtectSet(const char *path, FilePerm perm) {
-    return FileProtectSet(0, path, perm);
-}
 
 static int FileProtectStatusUpdate(int32_t session, uint8_t status) {
     struct nl_msg *message;
@@ -59,27 +48,24 @@ int FileProtectSet(int32_t session, const char *path, FilePerm perm) {
 static int FileEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::enable";
-    doc["session"] = session;
     doc["code"] = code;
-    msg = doc.dump();
+    msg = UserJsonWrapper(session, doc);
     return 0;
 }
 
 static int FileDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::disable";
-    doc["session"] = session;
     doc["code"] = code;
-    msg = doc.dump();
+    msg = UserJsonWrapper(session, doc);
     return 0;
 }
 
 static int FileSetJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::set";
-    doc["session"] = session;
     doc["code"] = code;
-    msg = doc.dump();
+    msg = UserJsonWrapper(session, doc);
     return 0;
 }
 
@@ -88,7 +74,7 @@ static int FileReportJsonGen(const char *name, FilePerm perm, std::string &msg) 
     doc["type"] = "kernel::file::report";
     doc["name"] = name;
     doc["perm"] = perm;
-    msg = doc.dump();
+    msg = msg = InternalJsonWrapper(doc);
     return 0;
 }
 

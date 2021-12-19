@@ -1,4 +1,5 @@
 #include "hackernel/broadcaster.h"
+#include "hackernel/ipc.h"
 #include "hackernel/net.h"
 #include "hknl/netlink.h"
 #include <netlink/genl/genl.h>
@@ -7,21 +8,6 @@
 #include <string>
 
 namespace hackernel {
-
-int NetProtectEnable() {
-    return NetProtectEnable(0);
-}
-int NetProtectDisable() {
-    return NetProtectDisable(0);
-}
-
-int NetPolicyInsert(const NetPolicy *policy) {
-    return NetPolicyInsert(0, policy);
-}
-
-int NetPolicyDelete(NetPolicyId id) {
-    return NetPolicyDelete(0, id);
-}
 
 static int NetProtectStatusUpdate(int32_t session, uint8_t status) {
     struct nl_msg *message;
@@ -95,36 +81,32 @@ int NetPolicyDelete(int32_t session, NetPolicyId id) {
 static int NetEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::enable";
-    doc["session"] = session;
     doc["code"] = code;
-    msg = doc.dump();
+    msg = UserJsonWrapper(session, doc);
     return 0;
 }
 
 static int NetDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::disable";
-    doc["session"] = session;
     doc["code"] = code;
-    msg = doc.dump();
+    msg = UserJsonWrapper(session, doc);
     return 0;
 }
 
 static int NetInsertJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::insert";
-    doc["session"] = session;
     doc["code"] = code;
-    msg = doc.dump();
+    msg = UserJsonWrapper(session, doc);
     return 0;
 }
 
 static int NetDeleteJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::delete";
-    doc["session"] = session;
     doc["code"] = code;
-    msg = doc.dump();
+    msg = UserJsonWrapper(session, doc);
     return 0;
 }
 

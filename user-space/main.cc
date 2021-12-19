@@ -29,9 +29,9 @@ void Shutdown() {
     DispatcherExit();
 
     // 关闭内核中的功能模块
-    FileProtectDisable();
-    ProcProtectDisable();
-    NetProtectDisable();
+    FileProtectDisable(SYSTEM_SESSION);
+    ProcProtectDisable(SYSTEM_SESSION);
+    NetProtectDisable(SYSTEM_SESSION);
 
     // 关闭心跳,断开与内核的通信
     HeartbeatExit();

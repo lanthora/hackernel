@@ -19,8 +19,6 @@ enum { PROCESS_PROTECT_UNSPEC, PROCESS_PROTECT_REPORT, PROCESS_PROTECT_ENABLE, P
 
 int ProcProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg);
 
-int ProcProtectEnable();
-int ProcProtectDisable();
 int ProcProtectEnable(int32_t session);
 int ProcProtectDisable(int32_t session);
 

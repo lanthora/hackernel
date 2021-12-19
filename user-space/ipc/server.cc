@@ -118,25 +118,28 @@ int IpcServer::UnixDomainSocketWait() {
         while (size > 0 && isspace(buffer[size - 1]))
             buffer[--size] = 0;
 
-        nlohmann::json doc;
+        nlohmann::json data;
         try {
-            doc = nlohmann::json::parse(buffer);
+            data = nlohmann::json::parse(buffer);
         } catch (nlohmann::json::parse_error &ex) {
             LOG("parse error, buffer=[%s]", buffer);
             continue;
         }
 
-        if (!doc.is_object()) {
+        if (!data.is_object() || !data["type"].is_string()) {
             LOG("invalid request, buffer=[%s]", buffer);
             continue;
         }
 
-        Session session = id_++;
+        Session session = NewUserSession();
         UserID client = std::make_shared<struct sockaddr_un>(peer);
         UserConn conn(client, len);
         ConnCache::GetInstance().Put(session, conn);
 
+        nlohmann::json doc;
         doc["session"] = session;
+        doc["type"] = std::string(data["type"]);
+        doc["data"] = data;
         Broadcaster::GetInstance().Notify(doc.dump());
     }
 
@@ -147,6 +150,13 @@ errout:
     close(socket_);
     Shutdown();
     return -1;
+}
+
+Session IpcServer::NewUserSession() {
+    do {
+        ++id_;
+    } while (id_ == SYSTEM_SESSION);
+    return id_;
 }
 
 #define FILE_PROTECT 0

@@ -5,6 +5,7 @@
 #include "hackernel/util.h"
 #include <list>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -17,6 +18,20 @@ typedef int32_t Session;
 typedef std::shared_ptr<struct sockaddr_un> UserID;
 typedef int UserIDSize;
 typedef std::pair<UserID, UserIDSize> UserConn;
+
+const Session SYSTEM_SESSION = 0;
+
+static inline std::string UserJsonWrapper(const int32_t &session, const nlohmann::json &data) {
+    nlohmann::json doc;
+    doc["session"] = session;
+    doc["type"] = data["type"];
+    doc["data"] = data;
+    return doc.dump();
+}
+
+static inline std::string InternalJsonWrapper(const nlohmann::json &data) {
+    return UserJsonWrapper(SYSTEM_SESSION, data);
+}
 
 class ConnCache {
     typedef std::list<std::pair<Session, UserConn>> lru_list;
@@ -48,10 +63,11 @@ private:
     std::shared_ptr<Receiver> receiver_ = nullptr;
     bool running_;
     int socket_;
-    std::atomic<Session> id_ = 0;
+    std::atomic<Session> id_ = SYSTEM_SESSION;
 
 private:
     int UnixDomainSocketWait();
+    Session NewUserSession();
 };
 
 int IpcWait();

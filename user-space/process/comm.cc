@@ -24,13 +24,6 @@ int ProcProtectStatusUpdate(int32_t session, uint8_t status) {
     return 0;
 }
 
-int ProcProtectEnable() {
-    return ProcProtectEnable(0);
-}
-int ProcProtectDisable() {
-    return ProcProtectDisable(0);
-}
-
 int ProcProtectEnable(int32_t session) {
     return ProcProtectStatusUpdate(session, PROCESS_PROTECT_ENABLE);
 }
@@ -61,25 +54,23 @@ static int ProcReportJsonGen(const std::string &cmd, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::proc::report";
     doc["cmd"] = cmd;
-    msg = doc.dump();
+    msg = InternalJsonWrapper(doc);
     return 0;
 }
 
 static int ProcEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::proc::enable";
-    doc["session"] = session;
     doc["code"] = code;
-    msg = doc.dump();
+    msg = UserJsonWrapper(session, doc);
     return 0;
 }
 
 static int ProcDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::proc::disable";
-    doc["session"] = session;
     doc["code"] = code;
-    msg = doc.dump();
+    msg = UserJsonWrapper(session, doc);
     return 0;
 }
 
