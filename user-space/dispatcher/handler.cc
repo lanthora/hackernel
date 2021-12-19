@@ -1,12 +1,9 @@
-#include "hackernel/dispatcher.h"
 #include "hackernel/file.h"
 #include "hackernel/net.h"
 #include "hackernel/process.h"
 #include <arpa/inet.h>
-#include <iostream>
 #include <nlohmann/json.hpp>
 #include <string>
-#include <vector>
 
 namespace hackernel {
 

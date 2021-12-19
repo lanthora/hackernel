@@ -1,15 +1,7 @@
 #include "hackernel/broadcaster.h"
-#include "hackernel/file.h"
-#include "hackernel/heartbeat.h"
 #include "hackernel/ipc.h"
-#include "hackernel/net.h"
-#include "hackernel/process.h"
-#include <arpa/inet.h>
-#include <cctype>
-#include <ctype.h>
 #include <errno.h>
 #include <functional>
-#include <iostream>
 #include <nlohmann/json.hpp>
 #include <thread>
 #include <unistd.h>

@@ -2,7 +2,6 @@
 #include "hackernel/ipc.h"
 #include "hackernel/process.h"
 #include "hknl/netlink.h"
-#include <algorithm>
 #include <netlink/genl/genl.h>
 #include <netlink/msg.h>
 #include <nlohmann/json.hpp>
