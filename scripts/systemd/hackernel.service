@@ -2,10 +2,9 @@
 Description=Hackernel
 
 [Service]
-Type=forking
 Restart=always
 RestartSec=3
-ExecStart=/usr/bin/daemonize -a -o /var/log/hackernel.log /usr/local/bin/hackernel
+ExecStart=/usr/sbin/hackernel
 
 [Install]
 WantedBy=multi-user.target
