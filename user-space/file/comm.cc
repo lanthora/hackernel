@@ -117,6 +117,7 @@ int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
         name = nla_get_string(genl_info->attrs[FILE_A_NAME]);
         perm = nla_get_s32(genl_info->attrs[FILE_A_PERM]);
         FileReportJsonGen(name, perm, msg);
+        Broadcaster::GetInstance().Notify(msg);
         LOG("kernel::file::report, name=[%s] perm=[%d]", name, perm);
         break;
 
