@@ -30,6 +30,15 @@ bool UserMsgUnsub(const std::string &msg) {
     return true;
 }
 
+bool UserCtrlExit(const std::string &msg) {
+    nlohmann::json doc = nlohmann::json::parse(msg);
+    if (doc["type"] != "user::ctrl::exit")
+        return false;
+
+    Shutdown();
+    return true;
+}
+
 bool KernelProcReport(const std::string &msg) {
     nlohmann::json doc = nlohmann::json::parse(msg);
     if (doc["type"] != "kernel::proc::report")

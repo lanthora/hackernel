@@ -1,16 +1,17 @@
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
+#include <algorithm>
 #include <errno.h>
 #include <functional>
 #include <nlohmann/json.hpp>
 #include <thread>
 #include <unistd.h>
-#include <algorithm>
 
 namespace hackernel {
 
 extern bool UserMsgSub(const std::string &msg);
 extern bool UserMsgUnsub(const std::string &msg);
+extern bool UserCtrlExit(const std::string &msg);
 
 extern bool KernelProcReport(const std::string &msg);
 extern bool KernelProcEnable(const std::string &msg);
@@ -47,6 +48,7 @@ int IpcServer::Init() {
     receiver_->AddHandler(KernelNetDisable);
     receiver_->AddHandler(UserMsgSub);
     receiver_->AddHandler(UserMsgUnsub);
+    receiver_->AddHandler(UserCtrlExit);
 
     Broadcaster::GetInstance().AddReceiver(receiver_);
     return 0;
