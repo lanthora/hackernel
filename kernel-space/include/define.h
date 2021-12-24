@@ -156,4 +156,10 @@
 #define HK_NR_kill HK_NR_UNDEFINED
 #endif
 
+#if defined(__NR_delete_module)
+#define HK_NR_delete_module __NR_delete_module
+#else
+#define HK_NR_delete_module HK_NR_UNDEFINED
+#endif
+
 #endif

@@ -299,11 +299,19 @@ HOOK_DEFINE2(kill, pid_t, pid, int, sig)
 	return 0;
 }
 
+HOOK_DEFINE2(delete_module, const char *, name, unsigned int, flags)
+{
+	if (strstarts(name, "hackernel"))
+		return -EPERM;
+	return 0;
+}
+
 int process_protect_enable(void)
 {
 	REG_HOOK(execve);
 	REG_HOOK(execveat);
 	REG_HOOK(kill);
+	REG_HOOK(delete_module);
 	return 0;
 }
 
@@ -312,6 +320,7 @@ int process_protect_disable(void)
 	UNREG_HOOK(execve);
 	UNREG_HOOK(execveat);
 	UNREG_HOOK(kill);
+	UNREG_HOOK(delete_module);
 	process_perm_hlist_clear();
 	return 0;
 }
