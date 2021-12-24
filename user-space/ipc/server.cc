@@ -12,6 +12,7 @@ namespace hackernel {
 extern bool UserMsgSub(const std::string &msg);
 extern bool UserMsgUnsub(const std::string &msg);
 extern bool UserCtrlExit(const std::string &msg);
+extern bool UserCtrlToken(const std::string &msg);
 
 extern bool KernelProcReport(const std::string &msg);
 extern bool KernelProcEnable(const std::string &msg);
@@ -49,6 +50,7 @@ int IpcServer::Init() {
     receiver_->AddHandler(UserMsgSub);
     receiver_->AddHandler(UserMsgUnsub);
     receiver_->AddHandler(UserCtrlExit);
+    receiver_->AddHandler(UserCtrlToken);
 
     Broadcaster::GetInstance().AddReceiver(receiver_);
     return 0;
@@ -97,13 +99,13 @@ int IpcServer::SendMsgToClient(Session id, const std::string &msg) {
     return 0;
 }
 
-int IpcServer::MsgSub(std::string section, const UserConn &user) {
+int IpcServer::MsgSub(const std::string &section, const UserConn &user) {
     std::lock_guard<std::mutex> lock(sub_lock_);
     sub_[section].push_back(user);
     return 0;
 }
 
-int IpcServer::MsgUnsub(std::string section, const UserConn &user) {
+int IpcServer::MsgUnsub(const std::string &section, const UserConn &user) {
     std::lock_guard<std::mutex> lock(sub_lock_);
     auto it = std::find_if(sub_[section].begin(), sub_[section].end(), [&](const UserConn &item) {
         return strcmp(user.first->sun_path, item.first->sun_path) == 0;
@@ -114,7 +116,7 @@ int IpcServer::MsgUnsub(std::string section, const UserConn &user) {
     return 0;
 }
 
-int IpcServer::SendMsgToSubscriber(std::string section, const std::string &msg) {
+int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string &msg) {
     struct sockaddr *peer;
     socklen_t len;
     std::lock_guard<std::mutex> lock(sub_lock_);
@@ -130,6 +132,10 @@ int IpcServer::SendMsgToSubscriber(std::string section, const std::string &msg) 
             ++it;
     }
     return 0;
+}
+
+void IpcServer::TokenUpdate(const std::string &token) {
+    token_ = token;
 }
 
 int IpcServer::UnixDomainSocketWait() {
@@ -186,6 +192,11 @@ int IpcServer::UnixDomainSocketWait() {
 
         if (!data.is_object() || !data["type"].is_string()) {
             LOG("invalid request, buffer=[%s]", buffer);
+            continue;
+        }
+
+        if (!token_.empty() && (!data["token"].is_string() || data["token"] != token_)) {
+            LOG("invalid token, buffer=[%s]", buffer);
             continue;
         }
 

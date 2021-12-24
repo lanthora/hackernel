@@ -61,9 +61,10 @@ public:
     int StartWait();
     int Stop();
     int SendMsgToClient(Session id, const std::string &msg);
-    int MsgSub(std::string section, const UserConn &user);
-    int MsgUnsub(std::string section, const UserConn &user);
-    int SendMsgToSubscriber(std::string section, const std::string &msg);
+    int MsgSub(const std::string &section, const UserConn &user);
+    int MsgUnsub(const std::string &section, const UserConn &user);
+    int SendMsgToSubscriber(const std::string &section, const std::string &msg);
+    void TokenUpdate(const std::string &token);
 
 private:
     IpcServer() {}
@@ -73,6 +74,7 @@ private:
     std::map<std::string, std::list<UserConn>> sub_;
     std::mutex sub_lock_;
     std::atomic<Session> id_ = SYSTEM_SESSION;
+    std::string token_;
 
 private:
     int UnixDomainSocketWait();

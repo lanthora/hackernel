@@ -39,6 +39,17 @@ bool UserCtrlExit(const std::string &msg) {
     return true;
 }
 
+bool UserCtrlToken(const std::string &msg) {
+    nlohmann::json doc = nlohmann::json::parse(msg);
+    if (doc["type"] != "user::ctrl::token")
+        return false;
+
+    IpcServer::GetInstance().TokenUpdate(doc["data"]["new"]);
+    doc["data"]["code"] = 0;
+    IpcServer::GetInstance().SendMsgToClient(doc["session"], doc["data"].dump());
+    return true;
+}
+
 bool KernelProcReport(const std::string &msg) {
     nlohmann::json doc = nlohmann::json::parse(msg);
     if (doc["type"] != "kernel::proc::report")
