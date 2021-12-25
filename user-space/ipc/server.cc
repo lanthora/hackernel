@@ -70,13 +70,13 @@ int IpcServer::SendMsgToClient(Session id, const std::string &msg) {
     struct sockaddr *peer;
 
     if (ConnCache::GetInstance().Get(id, conn))
-        return -1;
+        return -ESRCH;
 
     peer = (struct sockaddr *)conn.first.get();
     len = conn.second;
     if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1) {
         ERR("send error, session=[%d] msg=[%s]", id, msg.data());
-        return -1;
+        return -EPERM;
     }
     return 0;
 }
@@ -93,7 +93,7 @@ int IpcServer::MsgUnsub(const std::string &section, const UserConn &user) {
         return strcmp(user.first->sun_path, item.first->sun_path) == 0;
     });
     if (it == sub_[section].end())
-        return -1;
+        return -EPERM;
     sub_[section].erase(it);
     return 0;
 }
@@ -116,8 +116,9 @@ int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string
     return 0;
 }
 
-void IpcServer::TokenUpdate(const std::string &token) {
+int IpcServer::TokenUpdate(const std::string &token) {
     token_ = token;
+    return 0;
 }
 
 int IpcServer::UnixDomainSocketWait() {
@@ -200,7 +201,7 @@ int IpcServer::UnixDomainSocketWait() {
 errout:
     close(socket_);
     Shutdown();
-    return -1;
+    return -EPERM;
 }
 
 Session IpcServer::NewUserSession() {

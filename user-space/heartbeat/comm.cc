@@ -20,7 +20,7 @@ int HeartbeatHelper(int interval) {
 
     // 仅能有一个发送心跳的线程
     if (running)
-        return -1;
+        return -EPERM;
 
     running = interval ? GlobalRunningGet() : 0;
     do {

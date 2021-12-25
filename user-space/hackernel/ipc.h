@@ -64,7 +64,7 @@ public:
     int MsgSub(const std::string &section, const UserConn &user);
     int MsgUnsub(const std::string &section, const UserConn &user);
     int SendMsgToSubscriber(const std::string &section, const std::string &msg);
-    void TokenUpdate(const std::string &token);
+    int TokenUpdate(const std::string &token);
 
 private:
     IpcServer() {}

@@ -52,7 +52,7 @@ int Receiver::PopMessageWait(std::string &message) {
     while (message_queue_.empty()) {
         signal_.wait_for(lock, 100ms);
         if (!running_)
-            return -1;
+            return -EPERM;
     }
 
     message = message_queue_.front();

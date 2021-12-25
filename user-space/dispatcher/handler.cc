@@ -48,6 +48,20 @@ bool UserFileDisable(const std::string &msg) {
     return true;
 }
 
+static int UserFileSetCheck(const nlohmann::json &data) {
+    if (!data["path"].is_string())
+        goto errout;
+
+    if (!data["perm"].is_number_integer())
+        goto errout;
+
+    return 0;
+
+errout:
+    ERR("invalid argument=[%s]", data.dump().data());
+    return -EINVAL;
+}
+
 bool UserFileSet(const std::string &msg) {
     nlohmann::json doc = nlohmann::json::parse(msg);
     if (doc["type"] != "user::file::set")
@@ -55,6 +69,9 @@ bool UserFileSet(const std::string &msg) {
 
     int32_t session = doc["session"];
     nlohmann::json data = doc["data"];
+
+    if (UserFileSetCheck(data))
+        return false;
 
     std::string path = data["path"];
     int32_t perm = data["perm"];
@@ -82,6 +99,57 @@ bool UserNetDisable(const std::string &msg) {
     return true;
 }
 
+static int UserNetInsertCheck(const nlohmann::json &data) {
+
+    if (!data["id"].is_number_integer())
+        goto errout;
+    if (!data["priority"].is_number_integer())
+        goto errout;
+    if (!data["addr"].is_object())
+        goto errout;
+    if (!data["addr"]["src"].is_object())
+        goto errout;
+    if (!data["addr"]["src"]["begin"].is_string())
+        goto errout;
+    if (!data["addr"]["src"]["end"].is_string())
+        goto errout;
+    if (!data["addr"]["dst"].is_object())
+        goto errout;
+    if (!data["addr"]["dst"]["begin"].is_string())
+        goto errout;
+    if (!data["addr"]["dst"]["end"].is_string())
+        goto errout;
+    if (!data["protocol"].is_object())
+        goto errout;
+    if (!data["protocol"]["begin"].is_number_integer())
+        goto errout;
+    if (!data["protocol"]["end"].is_number_integer())
+        goto errout;
+    if (!data["port"].is_object())
+        goto errout;
+    if (!data["port"]["src"].is_object())
+        goto errout;
+    if (!data["port"]["src"]["begin"].is_number_integer())
+        goto errout;
+    if (!data["port"]["src"]["end"].is_number_integer())
+        goto errout;
+    if (!data["port"]["dst"].is_object())
+        goto errout;
+    if (!data["port"]["dst"]["begin"].is_number_integer())
+        goto errout;
+    if (!data["port"]["dst"]["end"].is_number_integer())
+        goto errout;
+    if (!data["flags"].is_number_integer())
+        goto errout;
+    if (!data["response"].is_number_integer())
+        goto errout;
+    return 0;
+
+errout:
+    ERR("invalid argument=[%s]", data.dump().data());
+    return -EINVAL;
+}
+
 bool UserNetInsert(const std::string &msg) {
     nlohmann::json doc = nlohmann::json::parse(msg);
     if (doc["type"] != "user::net::insert")
@@ -89,6 +157,8 @@ bool UserNetInsert(const std::string &msg) {
 
     int32_t session = doc["session"];
     nlohmann::json data = doc["data"];
+    if (UserNetInsertCheck(data))
+        return false;
     NetPolicy policy;
     policy.id = data["id"];
     policy.priority = data["priority"];
@@ -109,6 +179,15 @@ bool UserNetInsert(const std::string &msg) {
     return true;
 }
 
+static int UserNetDeleteCheck(const nlohmann::json &data) {
+    if (!data["id"].is_number_integer())
+        goto errout;
+    return 0;
+errout:
+    ERR("invalid argument=[%s]", data.dump().data());
+    return -EINVAL;
+}
+
 bool UserNetDelete(const std::string &msg) {
     nlohmann::json doc = nlohmann::json::parse(msg);
     if (doc["type"] != "user::net::delete")
@@ -117,6 +196,9 @@ bool UserNetDelete(const std::string &msg) {
     int32_t session = doc["session"];
 
     nlohmann::json data = doc["data"];
+    if (UserNetDeleteCheck(data))
+        return false;
+
     uint32_t id = data["id"];
     NetPolicyDelete(session, id);
     return true;

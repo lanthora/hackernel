@@ -19,7 +19,7 @@ int ConnCache::Get(const Session &key, UserConn &value) {
 
     lru_map::iterator lru_map_it = lru_map_.find(key);
     if (lru_map_it == lru_map_.end())
-        return -1;
+        return -ESRCH;
 
     std::pair<Session, UserConn> lru_element = *(lru_map_it->second);
     value = lru_element.second;

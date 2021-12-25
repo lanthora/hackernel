@@ -5,17 +5,46 @@
 
 namespace hackernel {
 
+static int UserMsgSubCheck(const nlohmann::json &data) {
+    if (!data["section"].is_string())
+        goto errout;
+
+    return 0;
+
+errout:
+    ERR("invalid argument=[%s]", data.dump().data());
+    ;
+    return -EINVAL;
+}
+
 bool UserMsgSub(const std::string &msg) {
     nlohmann::json doc = nlohmann::json::parse(msg);
     if (doc["type"] != "user::msg::sub")
         return false;
 
     UserConn conn;
-    ConnCache::GetInstance().Get(doc["session"], conn);
-    IpcServer::GetInstance().MsgSub(doc["data"]["section"], conn);
-    doc["data"]["code"] = 0;
-    IpcServer::GetInstance().SendMsgToClient(doc["session"], doc["data"].dump());
+    if (ConnCache::GetInstance().Get(doc["session"], conn))
+        return false;
+
+    nlohmann::json data = doc["data"];
+    if (UserMsgSubCheck(data))
+        return false;
+    const std::string &section = data["section"];
+
+    data["code"] = IpcServer::GetInstance().MsgSub(section, conn);
+    IpcServer::GetInstance().SendMsgToClient(doc["session"], data.dump());
     return true;
+}
+
+static int UserMsgUnsubCheck(const nlohmann::json &data) {
+    if (!data["section"].is_string())
+        goto errout;
+
+    return 0;
+
+errout:
+    ERR("invalid argument=[%s]", data.dump().data());
+    return -EINVAL;
 }
 
 bool UserMsgUnsub(const std::string &msg) {
@@ -24,10 +53,16 @@ bool UserMsgUnsub(const std::string &msg) {
         return false;
 
     UserConn conn;
-    ConnCache::GetInstance().Get(doc["session"], conn);
-    IpcServer::GetInstance().MsgUnsub(doc["data"]["section"], conn);
-    doc["data"]["code"] = 0;
-    IpcServer::GetInstance().SendMsgToClient(doc["session"], doc["data"].dump());
+    if (ConnCache::GetInstance().Get(doc["session"], conn))
+        return false;
+
+    nlohmann::json data = doc["data"];
+    if (UserMsgUnsubCheck(data))
+        return false;
+    const std::string &section = data["section"];
+
+    data["code"] = IpcServer::GetInstance().MsgUnsub(section, conn);
+    IpcServer::GetInstance().SendMsgToClient(doc["session"], data.dump());
     return true;
 }
 
@@ -40,14 +75,29 @@ bool UserCtrlExit(const std::string &msg) {
     return true;
 }
 
+static int UserCtrlTokenCheck(const nlohmann::json &data) {
+    if (!data["new"].is_string())
+        goto errout;
+
+    return 0;
+
+errout:
+    ERR("invalid argument=[%s]", data.dump().data());
+    return -EINVAL;
+}
+
 bool UserCtrlToken(const std::string &msg) {
     nlohmann::json doc = nlohmann::json::parse(msg);
     if (doc["type"] != "user::ctrl::token")
         return false;
 
-    IpcServer::GetInstance().TokenUpdate(doc["data"]["new"]);
-    doc["data"]["code"] = 0;
-    IpcServer::GetInstance().SendMsgToClient(doc["session"], doc["data"].dump());
+    nlohmann::json data = doc["data"];
+    if (UserCtrlTokenCheck(data))
+        return false;
+    std::string token = data["new"];
+
+    data["code"] = IpcServer::GetInstance().TokenUpdate(token);
+    IpcServer::GetInstance().SendMsgToClient(doc["session"], data.dump());
     return true;
 }
 
