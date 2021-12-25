@@ -106,7 +106,7 @@ int ProcProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
 
         error = ProcPermReply(id, ProcPermCheck(name));
         if (error)
-            LOG("reply_process_perm failed");
+            ERR("reply_process_perm failed, id=[%d] name=[%s]", id, name);
 
         break;
 

@@ -75,7 +75,7 @@ int IpcServer::SendMsgToClient(Session id, const std::string &msg) {
     peer = (struct sockaddr *)conn.first.get();
     len = conn.second;
     if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1) {
-        LOG("send error, session=[%d] msg=[%s]", id, msg.data());
+        ERR("send error, session=[%d] msg=[%s]", id, msg.data());
         return -1;
     }
     return 0;
@@ -130,12 +130,12 @@ int IpcServer::UnixDomainSocketWait() {
 
     socket_ = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (socket_ == -1) {
-        LOG("unix domain socket create failed");
+        ERR("unix domain socket create failed");
         goto errout;
     }
 
     if (setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        LOG("unix domain socket set timeout failed");
+        ERR("unix domain socket set timeout failed");
         goto errout;
     }
 
@@ -143,7 +143,7 @@ int IpcServer::UnixDomainSocketWait() {
     strcpy(server.sun_path, SOCK_PATH);
     unlink(SOCK_PATH);
     if (bind(socket_, (struct sockaddr *)&server, sizeof(server)) == -1) {
-        LOG("unix domain socket bind failed");
+        ERR("unix domain socket bind failed");
         goto errout;
     }
 
@@ -157,7 +157,7 @@ int IpcServer::UnixDomainSocketWait() {
             if (errno == EAGAIN || errno == EINTR)
                 continue;
 
-            LOG("recvfrom errno=[%d] errmsg=[%s]", errno, strerror(errno));
+            ERR("recvfrom errno=[%d] errmsg=[%s]", errno, strerror(errno));
             goto errout;
         }
 
@@ -168,17 +168,17 @@ int IpcServer::UnixDomainSocketWait() {
         try {
             data = nlohmann::json::parse(buffer);
         } catch (nlohmann::json::parse_error &ex) {
-            LOG("parse error, buffer=[%s]", buffer);
+            ERR("parse error, buffer=[%s]", buffer);
             continue;
         }
 
         if (!data.is_object() || !data["type"].is_string()) {
-            LOG("invalid request, buffer=[%s]", buffer);
+            ERR("invalid request, buffer=[%s]", buffer);
             continue;
         }
 
         if (!token_.empty() && (!data["token"].is_string() || data["token"] != token_)) {
-            LOG("invalid token, buffer=[%s]", buffer);
+            ERR("invalid token, buffer=[%s]", buffer);
             continue;
         }
 

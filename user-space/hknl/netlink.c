@@ -97,19 +97,19 @@ void NetlinkServerInit() {
     int error;
 
     if (nl_sock) {
-        LOG("Generic Netlink has been inited");
-        return;
+        ERR("Generic Netlink has been inited");
+        goto errout;
     }
 
     nl_sock = nl_socket_alloc();
     if (!nl_sock) {
-        LOG("Netlink Socket memory alloc failed");
+        ERR("Netlink Socket memory alloc failed");
         goto errout;
     }
 
     error = genl_connect(nl_sock);
     if (error) {
-        LOG("Generic Netlink connect failed");
+        ERR("Generic Netlink connect failed");
         goto errout;
     }
 
@@ -117,32 +117,32 @@ void NetlinkServerInit() {
     const int buff_size = 4 * 1024 * 1024;
     error = nl_socket_set_buffer_size(nl_sock, buff_size, buff_size);
     if (error) {
-        LOG("nl_socket_set_buffer_size failed");
+        ERR("nl_socket_set_buffer_size failed");
         goto errout;
     }
 
     error = genl_ops_resolve(nl_sock, &hackernel_genl_ops);
     if (error) {
-        LOG("Resolve a single Generic Netlink family failed");
+        ERR("Resolve a single Generic Netlink family failed");
         goto errout;
     }
 
     error = genl_register_family(&hackernel_genl_ops);
     if (error) {
-        LOG("Generic Netlink Register failed");
+        ERR("Generic Netlink Register failed");
         goto errout;
     }
     fam_id = hackernel_genl_ops.o_id;
 
     error = nl_socket_modify_cb(nl_sock, NL_CB_VALID, NL_CB_CUSTOM, genl_handle_msg, NULL);
     if (error) {
-        LOG("Generic Netlink modify callback failed");
+        ERR("Generic Netlink modify callback failed");
         goto errout;
     }
 
     error = nl_socket_set_nonblocking(nl_sock);
     if (error) {
-        LOG("Generic Netlink set noblocking failed");
+        ERR("Generic Netlink set noblocking failed");
         goto errout;
     }
 
@@ -154,7 +154,13 @@ void NetlinkServerInit() {
     return;
 
 errout:
-    LOG("Generic Netlink init failed");
+    ERR("Generic Netlink init failed");
+    if (nl_sock) {
+        nl_close(nl_sock);
+        nl_socket_free(nl_sock);
+        nl_sock = NULL;
+    }
+
     Shutdown();
 }
 
@@ -181,14 +187,16 @@ int NetlinkWait() {
         }
 
         if (error < 0) {
-            LOG("poll failed");
+            ERR("poll failed");
+            Shutdown();
             break;
         }
 
         error = nl_recvmsgs_default(NetlinkGetNlSock());
         if (error) {
-            LOG("error=[%d] msg=[%s]", error, nl_geterror(error));
+            ERR("error=[%d] msg=[%s]", error, nl_geterror(error));
             Shutdown();
+            break;
         }
     }
     LOG("netlink exit");
