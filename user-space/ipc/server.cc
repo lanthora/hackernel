@@ -1,5 +1,6 @@
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
+#include "ipc/handler.h"
 #include <algorithm>
 #include <errno.h>
 #include <functional>
@@ -8,25 +9,6 @@
 #include <unistd.h>
 
 namespace hackernel {
-
-extern bool UserMsgSub(const std::string &msg);
-extern bool UserMsgUnsub(const std::string &msg);
-extern bool UserCtrlExit(const std::string &msg);
-extern bool UserCtrlToken(const std::string &msg);
-
-extern bool KernelProcReport(const std::string &msg);
-extern bool KernelProcEnable(const std::string &msg);
-extern bool KernelProcDisable(const std::string &msg);
-
-extern bool KernelFileReport(const std::string &msg);
-extern bool KernelFileSet(const std::string &msg);
-extern bool KernelFileEnable(const std::string &msg);
-extern bool KernelFileDisable(const std::string &msg);
-
-extern bool KernelNetInsert(const std::string &msg);
-extern bool KernelNetDelete(const std::string &msg);
-extern bool KernelNetEnable(const std::string &msg);
-extern bool KernelNetDisable(const std::string &msg);
 
 IpcServer &IpcServer::GetInstance() {
     static IpcServer instance;
