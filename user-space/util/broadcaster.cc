@@ -34,7 +34,15 @@ void Receiver::Exit() {
 }
 
 void Receiver::AddHandler(std::function<bool(const std::string &)> new_handler) {
-    handlers_.push_back(new_handler);
+    handlers_.push_back([=](const std::string &msg) -> bool {
+        try {
+            return new_handler(msg);
+        } catch (std::exception &ex) {
+            ERR("handler error, request msg=[%s]", msg.data());
+            Shutdown();
+            return false;
+        }
+    });
 }
 
 int Receiver::PopMessageWait(std::string &message) {
