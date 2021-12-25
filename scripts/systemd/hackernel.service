@@ -2,8 +2,6 @@
 Description=Hackernel
 
 [Service]
-Restart=always
-RestartSec=3
 ExecStart=/usr/sbin/hackernel
 
 [Install]
