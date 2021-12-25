@@ -1,18 +1,9 @@
 #include "hackernel/dispatcher.h"
+#include "dispatcher/handler.h"
 #include "hackernel/broadcaster.h"
 #include "hackernel/util.h"
 
 namespace hackernel {
-
-extern bool UserProcEnable(const std::string &msg);
-extern bool UserProcDisable(const std::string &msg);
-extern bool UserFileEnable(const std::string &msg);
-extern bool UserFileDisable(const std::string &msg);
-extern bool UserFileSet(const std::string &msg);
-extern bool UserNetEnable(const std::string &msg);
-extern bool UserNetDisable(const std::string &msg);
-extern bool UserNetInsert(const std::string &msg);
-extern bool UserNetDelete(const std::string &msg);
 
 static std::shared_ptr<Receiver> dispatcher = nullptr;
 

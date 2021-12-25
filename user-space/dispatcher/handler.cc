@@ -1,3 +1,4 @@
+#include "dispatcher/handler.h"
 #include "hackernel/file.h"
 #include "hackernel/net.h"
 #include "hackernel/process.h"
