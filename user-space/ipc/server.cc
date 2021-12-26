@@ -39,6 +39,8 @@ int IpcServer::Init() {
 }
 
 int IpcServer::StartWait() {
+    ThreadNameUpdate("ipc-wait");
+    LOG("ipc-wait enter");
     std::thread receiver_thread([&]() {
         ThreadNameUpdate("ipc-recevier");
         LOG("ipc-recevier enter");
@@ -54,6 +56,7 @@ int IpcServer::StartWait() {
 
     receiver_thread.join();
     socket_thread.join();
+    LOG("ipc-wait exit");
     return 0;
 }
 
