@@ -86,6 +86,29 @@ static file_perm_t file_perm_tree_search(fsid_t fsid, ino_t ino)
 	return perm;
 }
 
+static void file_perm_tree_delete(fsid_t fsid, ino_t ino)
+{
+	struct rb_node *node = file_perm_tree.rb_node;
+	const struct file_perm_node tmp = { .fsid = fsid, .ino = ino };
+
+	read_lock(&file_perm_tree_lock);
+	while (node) {
+		struct file_perm_node *this;
+		this = container_of(node, struct file_perm_node, node);
+
+		if (file_perm_node_cmp(&tmp, this)) {
+			node = node->rb_left;
+		} else if (file_perm_node_cmp(this, &tmp)) {
+			node = node->rb_right;
+		} else {
+			rb_erase(&this->node, &file_perm_tree);
+			kfree(this);
+			break;
+		}
+	}
+	read_unlock(&file_perm_tree_lock);
+}
+
 static int file_perm_tree_clear(void)
 {
 	struct file_perm_node *data;
@@ -124,28 +147,35 @@ static int file_perm_data_fill(char *path, struct file_perm_data *data)
 	data->path = adjust_path(path);
 	file_id_get(path, &data->fsid, &data->ino);
 	data->this_perm = file_perm_get(data->fsid, data->ino);
-	data->deny_perm = INVAILD_PERM;
+	data->marked_perm = INVAILD_PERM;
 	return 0;
 }
 
 static int read_protect_check(struct file_perm_data *data)
 {
-	const file_perm_t perm = READ_PROTECT_FLAG;
-	int is_forbidden = data->this_perm & perm;
+	const int is_forbidden = data->this_perm & READ_PROTECT_FLAG;
+	const int is_audited = data->this_perm & READ_AUDIT_FLAG;
 	if (is_forbidden) {
-		data->deny_perm = perm;
+		data->marked_perm = READ_PROTECT_FLAG;
 		file_protect_report_to_userspace(data);
 	}
-
+	if (is_audited) {
+		data->marked_perm = READ_AUDIT_FLAG;
+		file_protect_report_to_userspace(data);
+	}
 	return is_forbidden;
 }
 
 static int write_protect_check(struct file_perm_data *data)
 {
-	const file_perm_t perm = WRITE_PROTECT_FLAG;
-	int is_forbidden = data->this_perm & perm;
+	const int is_forbidden = data->this_perm & WRITE_PROTECT_FLAG;
+	const int is_audited = data->this_perm & WRITE_AUDIT_FLAG;
 	if (is_forbidden) {
-		data->deny_perm = perm;
+		data->marked_perm = WRITE_PROTECT_FLAG;
+		file_protect_report_to_userspace(data);
+	}
+	if (is_audited) {
+		data->marked_perm = WRITE_AUDIT_FLAG;
 		file_protect_report_to_userspace(data);
 	}
 	return is_forbidden;
@@ -153,10 +183,14 @@ static int write_protect_check(struct file_perm_data *data)
 
 static int read_write_protect_check(struct file_perm_data *data)
 {
-	const file_perm_t perm = (READ_PROTECT_FLAG | WRITE_PROTECT_FLAG);
-	int is_forbidden = data->this_perm & perm;
+	const int is_forbidden = data->this_perm & RDWR_PROTECT_FLAG;
+	const int is_audited = data->this_perm & RDWR_AUDIT_FLAG;
 	if (is_forbidden) {
-		data->deny_perm = perm;
+		data->marked_perm = RDWR_PROTECT_FLAG;
+		file_protect_report_to_userspace(data);
+	}
+	if (is_audited) {
+		data->marked_perm = RDWR_AUDIT_FLAG;
 		file_protect_report_to_userspace(data);
 	}
 	return is_forbidden;
@@ -164,10 +198,14 @@ static int read_write_protect_check(struct file_perm_data *data)
 
 static int unlink_protect_check(struct file_perm_data *data)
 {
-	const file_perm_t perm = UNLINK_PROTECT_FLAG;
-	int is_forbidden = data->this_perm & perm;
+	const int is_forbidden = data->this_perm & UNLINK_PROTECT_FLAG;
+	const int is_audited = data->this_perm & UNLINK_AUDIT_FLAG;
 	if (is_forbidden) {
-		data->deny_perm = perm;
+		data->marked_perm = UNLINK_PROTECT_FLAG;
+		file_protect_report_to_userspace(data);
+	}
+	if (is_audited) {
+		data->marked_perm = UNLINK_AUDIT_FLAG;
 		file_protect_report_to_userspace(data);
 	}
 	return is_forbidden;
@@ -175,10 +213,14 @@ static int unlink_protect_check(struct file_perm_data *data)
 
 static int rename_protect_check(struct file_perm_data *data)
 {
-	const file_perm_t perm = RENAME_PROTECT_FLAG;
-	int is_forbidden = data->this_perm & perm;
+	const int is_forbidden = data->this_perm & RENAME_PROTECT_FLAG;
+	const int is_audited = data->this_perm & RENAME_AUDIT_FLAG;
 	if (is_forbidden) {
-		data->deny_perm = perm;
+		data->marked_perm = RENAME_PROTECT_FLAG;
+		file_protect_report_to_userspace(data);
+	}
+	if (is_audited) {
+		data->marked_perm = RENAME_AUDIT_FLAG;
 		file_protect_report_to_userspace(data);
 	}
 	return is_forbidden;
@@ -303,6 +345,10 @@ static int sys_unlink_helper(int dirfd, char __user *pathname,
 	is_forbidden = parent_write_protect_check(data);
 	if (is_forbidden)
 		goto out;
+
+	/* 节点删除前移除树中记录,防止inode重用导致误判 */
+	if (data->this_perm != INVAILD_PERM)
+		file_perm_tree_delete(data->fsid, data->ino);
 
 out:
 	kfree(path);

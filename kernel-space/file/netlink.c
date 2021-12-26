@@ -27,7 +27,7 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	struct sk_buff *skb = NULL;
 	void *head = NULL;
 	const char *filename = data->path;
-	const file_perm_t perm = data->deny_perm;
+	const file_perm_t perm = data->marked_perm;
 	int errcnt;
 	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
 

@@ -25,10 +25,17 @@ typedef unsigned long fsid_t;
 typedef unsigned long ino_t;
 typedef s32 file_perm_t;
 
-#define READ_PROTECT_FLAG 1
-#define WRITE_PROTECT_FLAG 2
-#define UNLINK_PROTECT_FLAG 4
-#define RENAME_PROTECT_FLAG 8
+#define READ_PROTECT_FLAG (1U << 0)
+#define WRITE_PROTECT_FLAG (1U << 1)
+#define UNLINK_PROTECT_FLAG (1U << 2)
+#define RENAME_PROTECT_FLAG (1U << 3)
+#define READ_AUDIT_FLAG (1U << 4)
+#define WRITE_AUDIT_FLAG (1U << 5)
+#define UNLINK_AUDIT_FLAG (1U << 6)
+#define RENAME_AUDIT_FLAG (1U << 7)
+
+#define RDWR_PROTECT_FLAG (READ_PROTECT_FLAG | WRITE_PROTECT_FLAG)
+#define RDWR_AUDIT_FLAG (READ_AUDIT_FLAG | WRITE_AUDIT_FLAG)
 
 #define BAD_FSID 0
 #define BAD_INO 1
@@ -39,7 +46,7 @@ struct file_perm_data {
 	fsid_t fsid;
 	ino_t ino;
 	file_perm_t this_perm;
-	file_perm_t deny_perm;
+	file_perm_t marked_perm;
 };
 
 struct file_perm_node {
