@@ -1,5 +1,6 @@
 #include "ipc/handler.h"
 #include "hackernel/ipc.h"
+#include "ipc/server.h"
 #include <nlohmann/json.hpp>
 #include <string>
 

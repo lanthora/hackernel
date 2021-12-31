@@ -1,4 +1,4 @@
-#include "hackernel/ipc.h"
+#include "ipc/server.h"
 
 namespace hackernel {
 

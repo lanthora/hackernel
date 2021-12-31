@@ -74,7 +74,8 @@
                 "iomanip": "cpp",
                 "valarray": "cpp",
                 "shared_mutex": "cpp",
-                "any": "cpp"
+                "any": "cpp",
+                "variant": "cpp"
         },
         "editor.tabSize": 2,
         "C_Cpp.default.includePath":[               

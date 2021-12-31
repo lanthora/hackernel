@@ -1,3 +1,4 @@
+#include "ipc/server.h"
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
 #include "ipc/handler.h"
