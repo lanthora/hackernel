@@ -11,9 +11,16 @@
 
 namespace hackernel {
 
+using namespace ipc;
+
 IpcServer &IpcServer::GetInstance() {
     static IpcServer instance;
     return instance;
+}
+
+ConnCache &IpcServer::GetConnCache() {
+    static ConnCache cache;
+    return cache;
 }
 
 int IpcServer::Init() {
@@ -73,7 +80,7 @@ int IpcServer::SendMsgToClient(Session id, const std::string &msg) {
     socklen_t len;
     struct sockaddr *peer;
 
-    if (ConnCache::GetInstance().Get(id, conn))
+    if (IpcServer::GetConnCache().Get(id, conn))
         return -ESRCH;
 
     peer = (struct sockaddr *)conn.first.get();
@@ -190,7 +197,7 @@ int IpcServer::UnixDomainSocketWait() {
         Session session = NewUserSession();
         UserID client = std::make_shared<struct sockaddr_un>(peer);
         UserConn conn(client, len);
-        ConnCache::GetInstance().Put(session, conn);
+        IpcServer::GetConnCache().Put(session, conn);
 
         nlohmann::json doc;
         doc["session"] = session;

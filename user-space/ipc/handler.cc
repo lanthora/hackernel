@@ -6,6 +6,8 @@
 
 namespace hackernel {
 
+using namespace ipc;
+
 static int UserMsgSubCheck(const nlohmann::json &data) {
     if (!data["section"].is_string())
         goto errout;
@@ -24,7 +26,7 @@ bool UserMsgSub(const std::string &msg) {
         return false;
 
     UserConn conn;
-    if (ConnCache::GetInstance().Get(doc["session"], conn))
+    if (IpcServer::GetConnCache().Get(doc["session"], conn))
         return false;
 
     nlohmann::json data = doc["data"];
@@ -54,7 +56,7 @@ bool UserMsgUnsub(const std::string &msg) {
         return false;
 
     UserConn conn;
-    if (ConnCache::GetInstance().Get(doc["session"], conn))
+    if (IpcServer::GetConnCache().Get(doc["session"], conn))
         return false;
 
     nlohmann::json data = doc["data"];

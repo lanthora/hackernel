@@ -2,6 +2,7 @@
 #define IPC_SERVER_H
 
 #include "hackernel/ipc.h"
+#include "hackernel/lru.h"
 #include <list>
 #include <map>
 #include <memory>
@@ -13,27 +14,14 @@
 
 namespace hackernel {
 
-class ConnCache {
-    typedef std::list<std::pair<Session, UserConn>> lru_list;
-    typedef std::unordered_map<Session, lru_list::iterator> lru_map;
+namespace ipc {
 
-private:
-    lru_list lru_list_;
-    lru_map lru_map_;
-    size_t lru_capacity_ = 1;
-    std::mutex lru_lock_;
-    ConnCache();
-
-public:
-    static ConnCache &GetInstance();
-    int Get(const Session &key, UserConn &value);
-    int Put(const Session &key, const UserConn &value);
-    int SetCapacity(size_t capacity);
-};
+typedef LRUCache<Session, UserConn> ConnCache;
 
 class IpcServer {
 public:
     static IpcServer &GetInstance();
+    static ConnCache &GetConnCache();
     int Init();
     int StartWait();
     int Stop();
@@ -57,6 +45,8 @@ private:
     int UnixDomainSocketWait();
     Session NewUserSession();
 };
+
+}; // namespace ipc
 
 }; // namespace hackernel
 
