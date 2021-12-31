@@ -1,6 +1,7 @@
 #ifndef HACKERNEL_LRU_H
 #define HACKERNEL_LRU_H
 
+#include <functional>
 #include <list>
 #include <mutex>
 #include <unordered_map>
@@ -47,6 +48,8 @@ public:
         lru_map_[key] = lru_list_.begin();
 
         while (lru_list_.size() > lru_capacity_) {
+            if (on_earse_)
+                on_earse_(lru_list_.back());
             lru_map_.erase(lru_list_.back().first);
             lru_list_.pop_back();
         }
@@ -54,6 +57,15 @@ public:
     }
     int SetCapacity(size_t capacity) {
         lru_capacity_ = capacity;
+        return 0;
+    }
+
+private:
+    std::function<void(const std::pair<Key, Value> &)> on_earse_ = nullptr;
+
+public:
+    int SetOnEarseHandler(std::function<void(const std::pair<Key, Value> &item)> on_earse) {
+        on_earse_ = on_earse;
         return 0;
     }
 };

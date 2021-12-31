@@ -222,4 +222,15 @@ bool KernelNetDisable(const std::string &msg) {
     return true;
 }
 
+bool AuditProcReport(const std::string &msg) {
+    nlohmann::json doc = nlohmann::json::parse(msg);
+    if (doc["type"] != "audit::proc::report")
+        return false;
+
+    std::string section = doc["type"];
+    nlohmann::json data = doc["data"];
+    IpcServer::GetInstance().SendMsgToSubscriber(section, data.dump());
+    return true;
+}
+
 }; // namespace hackernel

@@ -24,6 +24,8 @@ bool KernelNetDelete(const std::string &msg);
 bool KernelNetEnable(const std::string &msg);
 bool KernelNetDisable(const std::string &msg);
 
+bool AuditProcReport(const std::string &msg);
+
 }; // namespace hackernel
 
 #endif
