@@ -2,12 +2,15 @@
 #include "hackernel/ipc.h"
 #include "hackernel/process.h"
 #include "hknl/netlink.h"
+#include "process/audit.h"
 #include <netlink/genl/genl.h>
 #include <netlink/msg.h>
 #include <nlohmann/json.hpp>
 #include <string>
 
 namespace hackernel {
+
+using namespace process;
 
 int ProcProtectStatusUpdate(int32_t session, uint8_t status) {
     struct nl_msg *message = NULL;
@@ -31,8 +34,8 @@ int ProcProtectDisable(int32_t session) {
 }
 
 ProcPerm ProcPermCheck(char *cmd) {
-    ProcPerm perm = PROCESS_ACCEPT;
-    return perm;
+    auto &auditor = Auditor::GetInstance();
+    return auditor.HandlerNewCmd(cmd);
 }
 
 int ProcPermReply(ProcPermID id, ProcPerm perm) {
