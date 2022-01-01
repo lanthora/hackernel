@@ -40,7 +40,6 @@ static int StringSplit(std::string text, const std::string &delimiter, std::vect
 }
 
 int Auditor::Report(std::string cmd) {
-    std::vector<std::string> output;
     std::vector<std::string> detail;
     StringSplit(cmd, "\37", detail);
     if (detail.size() < 3) {
@@ -64,7 +63,7 @@ int Auditor::Report(std::string cmd) {
     std::string msg = InternalJsonWrapper(doc);
     Broadcaster::GetInstance().Notify(msg);
 
-    WARN("audit=[%s]", msg.data());
+    LOG("audit=[%s]", msg.data());
     return 0;
 }
 
