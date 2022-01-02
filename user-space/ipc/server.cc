@@ -173,9 +173,7 @@ int IpcServer::UnixDomainSocketWait() {
             ERR("recvfrom errno=[%d] errmsg=[%s]", errno, strerror(errno));
             goto errout;
         }
-
-        while (size > 0 && isspace(buffer[size - 1]))
-            buffer[--size] = 0;
+        buffer[size] = 0;
 
         nlohmann::json data;
         try {
