@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef PROCESS_AUDIT_H
 #define PROCESS_AUDIT_H
 

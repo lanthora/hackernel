@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef DISPATCHER_HANDLER_H
 #define DISPATCHER_HANDLER_H
 

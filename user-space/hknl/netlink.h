@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef HACKERNEL_NLSERVER_NETLINK_H
 #define HACKERNEL_NLSERVER_NETLINK_H
 

@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #include "hackernel/util.h"
 #include <errno.h>
 #include <fcntl.h>

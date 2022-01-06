@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #include "hknl/netlink.h"
 #include "file/define.h"
 #include "hackernel/util.h"

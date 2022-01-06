@@ -1,4 +1,4 @@
-
+/* SPDX-License-Identifier: GPL-2.0 */
 #include "process/audit.h"
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"

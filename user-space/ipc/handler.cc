@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #include "ipc/handler.h"
 #include "hackernel/ipc.h"
 #include "ipc/server.h"

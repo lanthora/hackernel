@@ -1,7 +1,4 @@
-/**
- * C++函数封装成C函数供netlink的接口使用
- */
-
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef HACKERNEL_WRAPPER_H
 #define HACKERNEL_WRAPPER_H
 

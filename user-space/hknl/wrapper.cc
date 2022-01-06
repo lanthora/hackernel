@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #include "hknl/wrapper.h"
 #include "hackernel/file.h"
 #include "hackernel/heartbeat.h"

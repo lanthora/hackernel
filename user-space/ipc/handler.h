@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0 */
 #ifndef IPC_HANDLER_H
 #define IPC_HANDLER_H
 
