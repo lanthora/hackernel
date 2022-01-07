@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+/* SPDX-License-Identifier: GPL-2.0-only */
 #ifndef HACKERNEL_WATCHDOG_H
 #define HACKERNEL_WATCHDOG_H
 

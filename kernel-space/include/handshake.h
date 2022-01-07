@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+/* SPDX-License-Identifier: GPL-2.0-only */
 #ifndef HACKERNEL_HANDSHAKE_H
 #define HACKERNEL_HANDSHAKE_H
 

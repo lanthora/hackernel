@@ -1,4 +1,4 @@
-/* SPDX-License-Identifier: GPL-2.0 */
+/* SPDX-License-Identifier: GPL-2.0-only */
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
 #include "hackernel/net.h"
