@@ -74,18 +74,11 @@ Auditor &Auditor::GetInstance() {
     return instance;
 }
 
-Auditor::Auditor() {
-    const size_t CMD_COUNT_MAX = 1024;
-    cmd_counter_.SetCapacity(CMD_COUNT_MAX);
-    cmd_counter_.SetOnEarseHandler([&](const std::pair<std::string, uint64_t> &item) {
-        cmd_sum_ -= item.second;
-        return;
-    });
-
+int Auditor::Load() {
     std::ifstream input("/var/lib/hackernel/process.json");
     if (!input) {
         WARN("open /var/lib/hackernel/process.json failed.");
-        return;
+        return -EINVAL;
     }
 
     nlohmann::json doc;
@@ -98,7 +91,7 @@ Auditor::Auditor() {
 
     if (!doc.is_object() || !doc["capacity"].is_number_unsigned() || !doc["raw"].is_array()) {
         ERR("invalid process.json");
-        return;
+        return -EINVAL;
     }
 
     cmd_sum_ = 0UL;
@@ -116,20 +109,31 @@ Auditor::Auditor() {
     }
 
     cmd_counter_.Import(data);
+    return 0;
 }
 
-Auditor::~Auditor() {
+Auditor::Auditor() {
+    const size_t CMD_COUNT_MAX = 1024;
+    cmd_counter_.SetCapacity(CMD_COUNT_MAX);
+    cmd_counter_.SetOnEarseHandler([&](const std::pair<std::string, uint64_t> &item) {
+        cmd_sum_ -= item.second;
+        return;
+    });
+    Load();
+}
+
+int Auditor::Save() {
     std::error_code ec;
     std::filesystem::create_directories("/var/lib/hackernel", ec);
     if (ec) {
         ERR("create dir /var/lib/hackernel failed, errmsg=[%s]", ec.message().data());
-        return;
+        return -EPERM;
     }
 
     std::ofstream output("/var/lib/hackernel/process.json");
     if (!output) {
         ERR("open /var/lib/hackernel/process.json failed");
-        return;
+        return -EPERM;
     }
 
     LRUData<std::string, uint64_t> data;
@@ -146,6 +150,11 @@ Auditor::~Auditor() {
 
     output << std::setw(4) << doc;
     output.close();
+    return 0;
+}
+
+Auditor::~Auditor() {
+    Save();
 }
 
 }; // namespace hackernel
