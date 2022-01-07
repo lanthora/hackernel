@@ -23,8 +23,9 @@ public:
 
 private:
     Auditor();
-    LRUCache<std::string, uint64_t> cmd_count_;
-    uint64_t cmd_count_sum_ = 0UL;
+    ~Auditor();
+    LRUCache<std::string, uint64_t> cmd_counter_;
+    uint64_t cmd_sum_;
 };
 
 }; // namespace process

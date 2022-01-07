@@ -97,7 +97,7 @@ public:
         std::lock_guard<std::mutex> lock(lru_lock_);
 
         lru_capacity_ = data.capacity;
-        for (typename lru_list::reverse_iterator it = data.raw.rbegin(); it != it = data.raw.rend(); ++it) {
+        for (typename lru_list::const_reverse_iterator it = data.raw.rbegin(); it != data.raw.rend(); ++it) {
             UnlockedPut(it->first, it->second);
         }
         return 0;

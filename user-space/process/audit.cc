@@ -3,6 +3,8 @@
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
 #include <cmath>
+#include <filesystem>
+#include <fstream>
 #include <nlohmann/json.hpp>
 
 namespace hackernel {
@@ -15,13 +17,13 @@ static bool CmdWarnCheck(double count, double sum) {
 
 ProcPerm Auditor::HandlerNewCmd(std::string cmd) {
     uint64_t count = 0UL;
-    cmd_count_.Get(cmd, count);
+    cmd_counter_.Get(cmd, count);
     ++count;
-    ++cmd_count_sum_;
-    if (CmdWarnCheck(count, cmd_count_sum_))
+    ++cmd_sum_;
+    if (CmdWarnCheck(count, cmd_sum_))
         Report(cmd);
 
-    cmd_count_.Put(cmd, count);
+    cmd_counter_.Put(cmd, count);
 
     return PROCESS_ACCEPT;
 }
@@ -74,11 +76,76 @@ Auditor &Auditor::GetInstance() {
 
 Auditor::Auditor() {
     const size_t CMD_COUNT_MAX = 1024;
-    cmd_count_.SetCapacity(CMD_COUNT_MAX);
-    cmd_count_.SetOnEarseHandler([&](const std::pair<std::string, uint64_t> &item) {
-        cmd_count_sum_ -= item.second;
+    cmd_counter_.SetCapacity(CMD_COUNT_MAX);
+    cmd_counter_.SetOnEarseHandler([&](const std::pair<std::string, uint64_t> &item) {
+        cmd_sum_ -= item.second;
         return;
     });
+
+    std::ifstream input("/var/lib/hackernel/process.json");
+    if (!input) {
+        WARN("open /var/lib/hackernel/process.json failed.");
+        return;
+    }
+
+    nlohmann::json doc;
+    try {
+        input >> doc;
+    } catch (nlohmann::json::parse_error &ex) {
+        ERR("parse error");
+    }
+    input.close();
+
+    if (!doc.is_object() || !doc["capacity"].is_number_unsigned() || !doc["raw"].is_array()) {
+        ERR("invalid process.json");
+        return;
+    }
+
+    cmd_sum_ = 0UL;
+
+    LRUData<std::string, uint64_t> data;
+    data.capacity = doc["capacity"];
+
+    for (const auto &element : doc["raw"]) {
+        if (!element["cmd"].is_string() || !element["count"].is_number_unsigned()) {
+            WARN("raw element parse failed, element=[%s]", element.dump().data());
+            continue;
+        }
+        data.raw.push_back(std::make_pair<std::string, uint64_t>(element["cmd"], element["count"]));
+        cmd_sum_ += static_cast<uint64_t>(element["count"]);
+    }
+
+    cmd_counter_.Import(data);
+}
+
+Auditor::~Auditor() {
+    std::error_code ec;
+    std::filesystem::create_directories("/var/lib/hackernel", ec);
+    if (ec) {
+        ERR("create dir /var/lib/hackernel failed, errmsg=[%s]", ec.message().data());
+        return;
+    }
+
+    std::ofstream output("/var/lib/hackernel/process.json");
+    if (!output) {
+        ERR("open /var/lib/hackernel/process.json failed");
+        return;
+    }
+
+    LRUData<std::string, uint64_t> data;
+    cmd_counter_.Export(data);
+
+    nlohmann::json doc;
+    doc["capacity"] = data.capacity;
+    for (const auto &it : data.raw) {
+        nlohmann::json raw;
+        raw["cmd"] = it.first;
+        raw["count"] = it.second;
+        doc["raw"].push_back(raw);
+    }
+
+    output << std::setw(4) << doc;
+    output.close();
 }
 
 }; // namespace hackernel
