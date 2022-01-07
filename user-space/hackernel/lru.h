@@ -9,6 +9,14 @@
 
 namespace hackernel {
 
+template <typename Key, typename Value> class LRUData {
+    typedef std::list<std::pair<Key, Value>> lru_list;
+
+public:
+    lru_list raw;
+    size_t capacity;
+};
+
 template <typename Key, typename Value> class LRUCache {
     typedef std::list<std::pair<Key, Value>> lru_list;
     typedef std::unordered_map<Key, typename lru_list::iterator> lru_map;
@@ -34,9 +42,9 @@ public:
         lru_map_[key] = lru_list_.begin();
         return 0;
     }
-    int Put(const Key &key, const Value &value) {
-        std::lock_guard<std::mutex> lock(lru_lock_);
 
+private:
+    int UnlockedPut(const Key &key, const Value &value) {
         typename lru_map::iterator lru_map_it = lru_map_.find(key);
 
         if (lru_map_it != lru_map_.end()) {
@@ -56,8 +64,42 @@ public:
         }
         return 0;
     }
+
+public:
+    int Put(const Key &key, const Value &value) {
+        std::lock_guard<std::mutex> lock(lru_lock_);
+        return UnlockedPut(key, value);
+    }
+
     int SetCapacity(size_t capacity) {
+        std::lock_guard<std::mutex> lock(lru_lock_);
+
         lru_capacity_ = capacity;
+        return 0;
+    }
+
+    int GetCapacity(size_t &capacity) {
+        std::lock_guard<std::mutex> lock(lru_lock_);
+
+        capacity = lru_capacity_;
+        return 0;
+    }
+
+    int Export(LRUData<Key, Value> &data) {
+        std::lock_guard<std::mutex> lock(lru_lock_);
+
+        data.raw = lru_list_;
+        data.capacity = lru_capacity_;
+        return 0;
+    }
+
+    int Import(const LRUData<Key, Value> &data) {
+        std::lock_guard<std::mutex> lock(lru_lock_);
+
+        lru_capacity_ = data.capacity;
+        for (typename lru_list::reverse_iterator it = data.raw.rbegin(); it != it = data.raw.rend(); ++it) {
+            UnlockedPut(it->first, it->second);
+        }
         return 0;
     }
 
