@@ -6,6 +6,7 @@
 #include "hackernel/ipc.h"
 #include "hackernel/net.h"
 #include "hackernel/process.h"
+#include "hackernel/timer.h"
 #include "hknl/netlink.h"
 #include <arpa/inet.h>
 #include <signal.h>
@@ -37,6 +38,9 @@ void Shutdown() {
     // 关闭心跳,断开与内核的通信
     HeartbeatExit();
     NetlinkExit();
+
+    // 关闭定时器
+    TimerExit();
 }
 
 static void SigHandler(int sig) {
@@ -63,11 +67,13 @@ int main() {
     std::thread netlink_thread(NetlinkWait);
     std::thread dispatcher_thread(DispatcherWait);
     std::thread ipc_thread(IpcWait);
+    std::thread timer_thread(TimerWait);
 
     netlink_thread.join();
     heartbeat_thread.join();
     dispatcher_thread.join();
     ipc_thread.join();
+    timer_thread.join();
 
     return 0;
 }
