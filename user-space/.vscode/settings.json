@@ -78,9 +78,10 @@
                 "variant": "cpp",
                 "source_location": "cpp"
         },
-        "editor.tabSize": 2,
         "C_Cpp.default.includePath":[               
                 "/usr/include/libnl3",
                 "${workspaceFolder}"
-        ]
+        ],
+        "editor.detectIndentation": false,
+        "editor.tabSize": 8
 }
