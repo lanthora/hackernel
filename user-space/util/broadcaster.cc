@@ -32,6 +32,7 @@ void Receiver::ConsumeWait() {
 
 void Receiver::Exit() {
     running_ = false;
+    signal_.notify_one();
 }
 
 void Receiver::AddHandler(std::function<bool(const std::string &)> new_handler) {
@@ -50,11 +51,11 @@ int Receiver::PopMessageWait(std::string &message) {
     using namespace std::chrono_literals;
 
     std::unique_lock<std::mutex> lock(message_queue_mutex_);
-    while (message_queue_.empty()) {
-        signal_.wait_for(lock, 100ms);
-        if (!running_)
-            return -EPERM;
-    }
+    if (message_queue_.empty())
+        signal_.wait(lock);
+
+    if (!running_)
+        return -EPERM;
 
     message = message_queue_.front();
     message_queue_.pop();
