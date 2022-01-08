@@ -75,7 +75,8 @@
                 "valarray": "cpp",
                 "shared_mutex": "cpp",
                 "any": "cpp",
-                "variant": "cpp"
+                "variant": "cpp",
+                "source_location": "cpp"
         },
         "editor.tabSize": 2,
         "C_Cpp.default.includePath":[               

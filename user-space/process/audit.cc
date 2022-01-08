@@ -2,6 +2,7 @@
 #include "process/audit.h"
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
+#include "hackernel/timer.h"
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -75,6 +76,8 @@ Auditor &Auditor::GetInstance() {
 }
 
 int Auditor::Load() {
+    std::lock_guard<std::mutex> lock(sl_mutex_);
+
     std::ifstream input("/var/lib/hackernel/process.json");
     if (!input) {
         WARN("open /var/lib/hackernel/process.json failed.");
@@ -120,9 +123,12 @@ Auditor::Auditor() {
         return;
     });
     Load();
+    SetAutoSaveTimer();
 }
 
 int Auditor::Save() {
+    std::lock_guard<std::mutex> lock(sl_mutex_);
+
     std::error_code ec;
     std::filesystem::create_directories("/var/lib/hackernel", ec);
     if (ec) {
@@ -150,6 +156,17 @@ int Auditor::Save() {
 
     output << std::setw(4) << doc;
     output.close();
+    return 0;
+}
+
+int Auditor::SetAutoSaveTimer() {
+    timer::Element element;
+    element.time_point = std::chrono::system_clock::now() + std::chrono::minutes(1);
+    element.func = [&]() {
+        Save();
+        SetAutoSaveTimer();
+    };
+    timer::Timer::GetInstance().Insert(element);
     return 0;
 }
 

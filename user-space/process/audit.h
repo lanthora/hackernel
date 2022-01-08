@@ -18,6 +18,7 @@ public:
 
 private:
     int Load();
+    int SetAutoSaveTimer();
 
 private:
     int Report(std::string cmd);
@@ -30,6 +31,7 @@ private:
     ~Auditor();
     LRUCache<std::string, uint64_t> cmd_counter_;
     uint64_t cmd_sum_;
+    std::mutex sl_mutex_;
 };
 
 }; // namespace process
