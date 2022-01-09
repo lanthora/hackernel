@@ -12,17 +12,36 @@ namespace hackernel {
 
 using namespace process;
 
-static bool CmdWarnCheck(double count, double sum) {
+bool Auditor::WarnCmdCheck(double count, double sum) {
     return -1.0 * (1.0 / count) * log(count / sum) > 1.0;
 }
 
-ProcPerm Auditor::HandlerNewCmd(std::string cmd) {
+bool Auditor::TrustedCmdCheck(const std::string &cmd) {
+    std::shared_lock<std::shared_mutex> lock(trusted_cmd_mutex_);
+    return trusted_cmd_.contains(cmd);
+}
+
+int Auditor::TrustedCmdInsert(const std::string &cmd) {
+    std::unique_lock<std::shared_mutex> trusted_lock(trusted_cmd_mutex_);
+    trusted_cmd_.insert(cmd);
+    return 0;
+}
+
+ProcPerm Auditor::HandlerNewCmd(const std::string &cmd) {
+
+    if (TrustedCmdCheck(cmd))
+        return PROCESS_ACCEPT;
+
     uint64_t count = 0UL;
     cmd_counter_.Get(cmd, count);
     ++count;
     ++cmd_sum_;
-    if (CmdWarnCheck(count, cmd_sum_))
+
+    if (WarnCmdCheck(count, cmd_sum_)) {
         Report(cmd);
+    } else {
+        TrustedCmdInsert(cmd);
+    }
 
     cmd_counter_.Put(cmd, count);
 
@@ -42,7 +61,7 @@ static int StringSplit(std::string text, const std::string &delimiter, std::vect
     return 0;
 }
 
-int Auditor::Report(std::string cmd) {
+int Auditor::Report(const std::string &cmd) {
     std::vector<std::string> detail;
     StringSplit(cmd, "\37", detail);
     if (detail.size() < 3) {
@@ -92,8 +111,23 @@ int Auditor::Load() {
     }
     input.close();
 
-    if (!doc.is_object() || !doc["capacity"].is_number_unsigned() || !doc["raw"].is_array()) {
-        ERR("invalid process.json");
+    if (!doc.is_object()) {
+        ERR("process.json is not json");
+        return -EINVAL;
+    }
+
+    if (!doc["capacity"].is_number_unsigned()) {
+        ERR("can not read capacity from capacity");
+        return -EINVAL;
+    }
+
+    if (!doc["raw"].is_array()) {
+        ERR("can not read raw from capacity");
+        return -EINVAL;
+    }
+
+    if (!doc["trusted"].is_array()) {
+        ERR("can not read trusted list from capacity");
         return -EINVAL;
     }
 
@@ -109,6 +143,14 @@ int Auditor::Load() {
         }
         data.raw.push_back(std::make_pair<std::string, uint64_t>(element["cmd"], element["count"]));
         cmd_sum_ += static_cast<uint64_t>(element["count"]);
+    }
+
+    for (const auto &trusted : doc["trusted"]) {
+        if (!trusted.is_string()) {
+            WARN("trusted item is not string, trusted=[%s]", trusted.dump().data());
+            continue;
+        }
+        TrustedCmdInsert(trusted);
     }
 
     cmd_counter_.Import(data);
@@ -128,6 +170,12 @@ Auditor::Auditor() {
 
 int Auditor::Save() {
     std::lock_guard<std::mutex> lock(sl_mutex_);
+
+    static uint64_t last_cmd_sum = 0L;
+    if (cmd_sum_ == last_cmd_sum)
+        return 0;
+
+    last_cmd_sum = cmd_sum_;
 
     std::error_code ec;
     std::filesystem::create_directories("/var/lib/hackernel", ec);
@@ -152,6 +200,11 @@ int Auditor::Save() {
         raw["cmd"] = it.first;
         raw["count"] = it.second;
         doc["raw"].push_back(raw);
+    }
+
+    std::unique_lock<std::shared_mutex> trusted_lock(trusted_cmd_mutex_);
+    for (const auto &it : trusted_cmd_) {
+        doc["trusted"].push_back(it);
     }
 
     output << std::setw(4) << doc;
