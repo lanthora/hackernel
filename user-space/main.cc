@@ -66,14 +66,14 @@ int main() {
     std::thread heartbeat_thread(HeartbeatWait);
     std::thread netlink_thread(NetlinkWait);
     std::thread dispatcher_thread(DispatcherWait);
-    std::thread ipc_thread(IpcWait);
     std::thread timer_thread(TimerWait);
+    std::thread ipc_thread(IpcWait);
 
-    netlink_thread.join();
     heartbeat_thread.join();
+    netlink_thread.join();
     dispatcher_thread.join();
-    ipc_thread.join();
     timer_thread.join();
+    ipc_thread.join();
 
     return 0;
 }
