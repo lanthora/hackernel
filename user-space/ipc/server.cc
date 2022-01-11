@@ -28,8 +28,8 @@ int IpcServer::Init() {
     receiver_ = std::make_shared<Receiver>();
 
     receiver_->AddHandler(KernelProcReport);
-    receiver_->AddHandler(KernelFileReport);
     receiver_->AddHandler(AuditProcReport);
+    receiver_->AddHandler(KernelFileReport);
     receiver_->AddHandler(KernelProcEnable);
     receiver_->AddHandler(KernelProcDisable);
     receiver_->AddHandler(KernelFileSet);
