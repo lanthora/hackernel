@@ -9,19 +9,19 @@
 namespace hackernel {
 
 static std::shared_ptr<Receiver> dispatcher = nullptr;
-static std::unordered_set<std::string> enabled_type_set;
+static std::unordered_set<std::string> dispatcher_concerned_types;
 
 static void DispatcherFilterInit() {
-    enabled_type_set.clear();
-    enabled_type_set.insert("user::proc::enable");
-    enabled_type_set.insert("user::proc::disable");
-    enabled_type_set.insert("user::file::enable");
-    enabled_type_set.insert("user::file::disable");
-    enabled_type_set.insert("user::file::set");
-    enabled_type_set.insert("user::net::enable");
-    enabled_type_set.insert("user::net::disable");
-    enabled_type_set.insert("user::net::insert");
-    enabled_type_set.insert("user::net::delete");
+    dispatcher_concerned_types.clear();
+    dispatcher_concerned_types.insert("user::proc::enable");
+    dispatcher_concerned_types.insert("user::proc::disable");
+    dispatcher_concerned_types.insert("user::file::enable");
+    dispatcher_concerned_types.insert("user::file::disable");
+    dispatcher_concerned_types.insert("user::file::set");
+    dispatcher_concerned_types.insert("user::net::enable");
+    dispatcher_concerned_types.insert("user::net::disable");
+    dispatcher_concerned_types.insert("user::net::insert");
+    dispatcher_concerned_types.insert("user::net::delete");
 }
 
 static bool DispatcherFilter(const std::string &msg) {
@@ -30,7 +30,7 @@ static bool DispatcherFilter(const std::string &msg) {
         return true;
     if (!doc["type"].is_string())
         return true;
-    if (!enabled_type_set.contains(doc["type"]))
+    if (!dispatcher_concerned_types.contains(doc["type"]))
         return true;
     return false;
 }
