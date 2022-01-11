@@ -44,7 +44,7 @@ int Handshake() {
 int HeartbeatWait() {
     ThreadNameUpdate("heartbeat");
     LOG("heartbeat enter");
-    int error = HeartbeatHelper(100);
+    int error = HeartbeatHelper(1000);
     LOG("heartbeat exit");
     return error;
 }
