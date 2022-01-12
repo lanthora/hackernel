@@ -2,6 +2,8 @@
 #include "hackernel/heartbeat.h"
 #include "hknl/netlink.h"
 #include <chrono>
+#include <condition_variable>
+#include <mutex>
 #include <netlink/genl/genl.h>
 #include <netlink/msg.h>
 #include <thread>
@@ -9,10 +11,13 @@
 
 namespace hackernel {
 
+static std::mutex exit_mutex;
+static std::condition_variable exit_signal;
 static bool running = false;
 
 void HeartbeatExit() {
     running = false;
+    exit_signal.notify_one();
 }
 
 int HeartbeatHelper(int interval) {
@@ -31,7 +36,9 @@ int HeartbeatHelper(int interval) {
         nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_TGID, tgid);
         nl_send_auto(NetlinkGetNlSock(), msg);
         nlmsg_free(msg);
-        std::this_thread::sleep_for(std::chrono::milliseconds(interval));
+
+        std::unique_lock<std::mutex> lock(exit_mutex);
+        exit_signal.wait_until(lock, std::chrono::system_clock::now() + std::chrono::milliseconds(interval));
     } while (running);
 
     return 0;
