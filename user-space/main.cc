@@ -74,6 +74,7 @@ int main() {
     dispatcher_thread.join();
     timer_thread.join();
     ipc_thread.join();
+    LOG("exit normally");
 
     return 0;
 }

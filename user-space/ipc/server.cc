@@ -72,6 +72,10 @@ int IpcServer::StartWait() {
 
 int IpcServer::Stop() {
     running_ = false;
+
+    if (shutdown(socket_, SHUT_RDWR))
+        LOG("close socket failed");
+
     if (receiver_)
         receiver_->Exit();
     return 0;
@@ -136,7 +140,6 @@ int IpcServer::TokenUpdate(const std::string &token) {
 
 int IpcServer::UnixDomainSocketWait() {
     const char *SOCK_PATH = "/tmp/hackernel.sock";
-    const struct timeval tv { .tv_sec = 0, .tv_usec = 100000 };
     const int BUFFER_SIZE = 1024;
 
     char buffer[BUFFER_SIZE];
@@ -145,11 +148,6 @@ int IpcServer::UnixDomainSocketWait() {
     socket_ = socket(AF_UNIX, SOCK_DGRAM, 0);
     if (socket_ == -1) {
         ERR("unix domain socket create failed");
-        goto errout;
-    }
-
-    if (setsockopt(socket_, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
-        ERR("unix domain socket set timeout failed");
         goto errout;
     }
 
@@ -167,8 +165,9 @@ int IpcServer::UnixDomainSocketWait() {
     while (running_) {
         len = sizeof(peer);
         int size = recvfrom(socket_, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&peer, &len);
-        if (size == -1) {
-            if (errno == EAGAIN || errno == EINTR)
+
+        if (size <= 0) {
+            if (!size || errno == EAGAIN || errno == EINTR)
                 continue;
 
             ERR("recvfrom errno=[%d] errmsg=[%s]", errno, strerror(errno));
