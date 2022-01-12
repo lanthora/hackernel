@@ -141,12 +141,6 @@ void NetlinkServerInit() {
         goto errout;
     }
 
-    error = nl_socket_set_nonblocking(nl_sock);
-    if (error) {
-        ERR("Generic Netlink set noblocking failed");
-        goto errout;
-    }
-
     // 应用层收到消息会检查当前期待收到的seq与上次发送的seq是否一致
     nl_socket_disable_seq_check(nl_sock);
 
@@ -170,29 +164,10 @@ static bool running = false;
 int NetlinkWait() {
     int error;
 
-    struct pollfd fds = {
-        .fd = nl_socket_get_fd(NetlinkGetNlSock()),
-        .events = POLLIN,
-    };
-
     ThreadNameUpdate("netlink");
     LOG("netlink enter");
     running = GlobalRunningGet();
     while (running) {
-        const int nfds = 1;
-        const int timeout = 100;
-
-        error = poll(&fds, nfds, timeout);
-        if (error == 0) {
-            continue;
-        }
-
-        if (error < 0) {
-            ERR("poll failed");
-            Shutdown();
-            break;
-        }
-
         error = nl_recvmsgs_default(NetlinkGetNlSock());
         if (error) {
             ERR("error=[%d] msg=[%s]", error, nl_geterror(error));
@@ -209,5 +184,6 @@ int NetlinkWait() {
 
 int NetlinkExit() {
     running = false;
+    shutdown(nl_socket_get_fd(NetlinkGetNlSock()), SHUT_RDWR);
     return 0;
 }
