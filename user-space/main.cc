@@ -15,16 +15,19 @@
 using namespace hackernel;
 
 static bool running = true;
+static int retval = 0;
 
-bool GlobalRunningGet() {
+bool RUNNING() {
     return running;
 }
 
-void Shutdown() {
-    LOG("shutdown");
+void SHUTDOWN(int code) {
     if (!running)
         return;
+
+    LOG("exit start");
     running = false;
+    retval = code;
 
     // 停止接受外部用户输入
     IpcExit();
@@ -45,7 +48,7 @@ void Shutdown() {
 
 static void SigHandler(int sig) {
     LOG("received signal=[%d], exit now", sig);
-    Shutdown();
+    SHUTDOWN(HACKERNEL_SIG);
 }
 
 static void RegSigHandler() {
@@ -74,7 +77,7 @@ int main() {
     dispatcher_thread.join();
     timer_thread.join();
     ipc_thread.join();
-    LOG("exit normally");
+    LOG("exit done");
 
-    return 0;
+    return retval;
 }

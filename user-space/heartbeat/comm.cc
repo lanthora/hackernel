@@ -28,17 +28,14 @@ int HeartbeatHelper(int interval) {
     if (running)
         return -EPERM;
 
-    running = interval ? GlobalRunningGet() : 0;
+    running = interval ? RUNNING() : 0;
     do {
-        msg = nlmsg_alloc();
-        genlmsg_put(msg, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_HANDSHAKE,
-                    HACKERNEL_FAMLY_VERSION);
+        msg = NetlinkMsgAlloc(HACKERNEL_C_HANDSHAKE);
         nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_TGID, tgid);
-        nl_send_auto(NetlinkGetNlSock(), msg);
-        nlmsg_free(msg);
+        NetlinkSend(msg);
 
         std::unique_lock<std::mutex> lock(exit_mutex);
-        exit_signal.wait_until(lock, std::chrono::system_clock::now() + std::chrono::milliseconds(interval));
+        exit_signal.wait_for(lock, std::chrono::milliseconds(running ? interval : 0));
     } while (running);
 
     return 0;
@@ -62,7 +59,7 @@ int HeartbeatHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, str
     if (code) {
         ERR("handshake response code=[%d]", code);
         ERR("handshake failed. exit");
-        Shutdown();
+        SHUTDOWN(HACKERNEL_HEARTBEAT);
     }
 
     return 0;

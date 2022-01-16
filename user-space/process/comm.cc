@@ -16,14 +16,12 @@ using namespace process;
 int ProcProtectStatusUpdate(int32_t session, uint8_t status) {
     struct nl_msg *message = NULL;
 
-    message = nlmsg_alloc();
-    genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_PROCESS_PROTECT,
-                HACKERNEL_FAMLY_VERSION);
+    message = NetlinkMsgAlloc(HACKERNEL_C_PROCESS_PROTECT);
+
     nla_put_s32(message, PROCESS_A_SESSION, session);
     nla_put_u8(message, PROCESS_A_OP_TYPE, status);
 
-    nl_send_auto(NetlinkGetNlSock(), message);
-    nlmsg_free(message);
+    NetlinkSend(message);
     return 0;
 }
 
@@ -42,14 +40,11 @@ ProcPerm ProcPermCheck(char *cmd) {
 int ProcPermReply(ProcPermID id, ProcPerm perm) {
     struct nl_msg *message = NULL;
 
-    message = nlmsg_alloc();
-    genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_PROCESS_PROTECT,
-                HACKERNEL_FAMLY_VERSION);
+    message = NetlinkMsgAlloc(HACKERNEL_C_PROCESS_PROTECT);
     nla_put_u8(message, PROCESS_A_OP_TYPE, PROCESS_PROTECT_REPORT);
     nla_put_s32(message, PROCESS_A_ID, id);
     nla_put_s32(message, PROCESS_A_PERM, perm);
-    nl_send_auto(NetlinkGetNlSock(), message);
-    nlmsg_free(message);
+    NetlinkSend(message);
     return 0;
 }
 

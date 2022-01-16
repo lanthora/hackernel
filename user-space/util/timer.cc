@@ -14,7 +14,7 @@ int Timer::Insert(const Element &element) {
 }
 
 int Timer::RunWait() {
-    running_ = GlobalRunningGet();
+    running_ = RUNNING();
     while (running_) {
         std::unique_lock<std::mutex> lock(sync_mutex_);
         if (queue_.empty()) {

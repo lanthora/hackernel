@@ -17,7 +17,7 @@ void Receiver::NewMessage(std::string message) {
 void Receiver::ConsumeWait() {
     std::string message;
 
-    running_ = GlobalRunningGet();
+    running_ = RUNNING();
     while (running_) {
         if (PopMessageWait(message))
             continue;
@@ -41,7 +41,7 @@ void Receiver::AddHandler(std::function<bool(const std::string &)> new_handler) 
             return new_handler(msg);
         } catch (std::exception &ex) {
             ERR("handler error, request msg=[%s]", msg.data());
-            Shutdown();
+            SHUTDOWN(HACKERNEL_BAD_RECEIVER);
             return false;
         }
     });

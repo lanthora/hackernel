@@ -13,13 +13,11 @@ namespace hackernel {
 static int FileProtectStatusUpdate(int32_t session, uint8_t status) {
     struct nl_msg *message;
 
-    message = nlmsg_alloc();
-    genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_FILE_PROTECT,
-                HACKERNEL_FAMLY_VERSION);
+    message = NetlinkMsgAlloc(HACKERNEL_C_FILE_PROTECT);
     nla_put_s32(message, FILE_A_SESSION, session);
     nla_put_u8(message, FILE_A_OP_TYPE, status);
-    nl_send_auto(NetlinkGetNlSock(), message);
-    nlmsg_free(message);
+    NetlinkSend(message);
+
     return 0;
 }
 
@@ -34,15 +32,12 @@ int FileProtectDisable(int32_t session) {
 int FileProtectSet(int32_t session, const char *path, FilePerm perm) {
     struct nl_msg *message;
 
-    message = nlmsg_alloc();
-    genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_FILE_PROTECT,
-                HACKERNEL_FAMLY_VERSION);
+    message = NetlinkMsgAlloc(HACKERNEL_C_FILE_PROTECT);
     nla_put_s32(message, FILE_A_SESSION, session);
     nla_put_u8(message, FILE_A_OP_TYPE, FILE_PROTECT_SET);
     nla_put_string(message, FILE_A_NAME, path);
     nla_put_s32(message, FILE_A_PERM, perm);
-    nl_send_auto(NetlinkGetNlSock(), message);
-    nlmsg_free(message);
+    NetlinkSend(message);
     return 0;
 }
 

@@ -13,12 +13,10 @@ namespace hackernel {
 static int NetProtectStatusUpdate(int32_t session, uint8_t status) {
     struct nl_msg *message;
 
-    message = nlmsg_alloc();
-    genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_NET_PROTECT,
-                HACKERNEL_FAMLY_VERSION);
+    message = NetlinkMsgAlloc(HACKERNEL_C_NET_PROTECT);
     nla_put_s32(message, NET_A_SESSION, session);
     nla_put_u8(message, NET_A_OP_TYPE, status);
-    nl_send_auto(NetlinkGetNlSock(), message);
+    NetlinkSend(message);
 
     return 0;
 }
@@ -34,9 +32,7 @@ int NetProtectDisable(int32_t session) {
 int NetPolicyInsert(int32_t session, const NetPolicy *policy) {
     struct nl_msg *message;
 
-    message = nlmsg_alloc();
-    genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_NET_PROTECT,
-                HACKERNEL_FAMLY_VERSION);
+    message = NetlinkMsgAlloc(HACKERNEL_C_NET_PROTECT);
 
     nla_put_s32(message, NET_A_SESSION, session);
     nla_put_u8(message, NET_A_OP_TYPE, NET_PROTECT_INSERT);
@@ -60,7 +56,7 @@ int NetPolicyInsert(int32_t session, const NetPolicy *policy) {
     nla_put_u32(message, NET_A_RESPONSE, policy->response);
     nla_put_s32(message, NET_A_FLAGS, policy->flags);
 
-    nl_send_auto(NetlinkGetNlSock(), message);
+    NetlinkSend(message);
 
     return 0;
 }
@@ -68,13 +64,11 @@ int NetPolicyInsert(int32_t session, const NetPolicy *policy) {
 int NetPolicyDelete(int32_t session, NetPolicyId id) {
     struct nl_msg *message;
 
-    message = nlmsg_alloc();
-    genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, NetlinkGetFamilyID(), 0, NLM_F_REQUEST, HACKERNEL_C_NET_PROTECT,
-                HACKERNEL_FAMLY_VERSION);
+    message = NetlinkMsgAlloc(HACKERNEL_C_NET_PROTECT);
     nla_put_s32(message, NET_A_SESSION, session);
     nla_put_u8(message, NET_A_OP_TYPE, NET_PROTECT_DELETE);
     nla_put_u32(message, NET_A_ID, id);
-    nl_send_auto(NetlinkGetNlSock(), message);
+    NetlinkSend(message);
 
     return 0;
 }

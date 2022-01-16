@@ -1,8 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#ifndef HACKERNEL_NLSERVER_NETLINK_H
-#define HACKERNEL_NLSERVER_NETLINK_H
+#ifndef HKNL_NETLINK_H
+#define HKNL_NETLINK_H
 
 #include "hackernel/util.h"
+#include <netlink/msg.h>
+#include <stdint.h>
 
 EXTERN_C_BEGIN
 
@@ -22,11 +24,12 @@ enum {
 };
 #define HACKERNEL_C_MAX (__HACKERNEL_C_MAX - 1)
 
-int NetlinkGetFamilyID();
-struct nl_sock *NetlinkGetNlSock();
 void NetlinkServerInit(void);
 int NetlinkWait(void);
 int NetlinkExit(void);
+
+struct nl_msg *NetlinkMsgAlloc(uint8_t cmd);
+int NetlinkSend(struct nl_msg *message);
 
 EXTERN_C_END
 

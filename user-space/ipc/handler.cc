@@ -75,7 +75,7 @@ bool UserCtrlExit(const std::string &msg) {
     if (doc["type"] != "user::ctrl::exit")
         return false;
 
-    Shutdown();
+    SHUTDOWN(HACKERNEL_SUCCESS);
     return true;
 }
 

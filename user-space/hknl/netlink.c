@@ -6,6 +6,7 @@
 #include "hknl/wrapper.h"
 #include "net/define.h"
 #include "process/define.h"
+#include <errno.h>
 #include <linux/genetlink.h>
 #include <netlink/attr.h>
 #include <netlink/errno.h>
@@ -19,14 +20,6 @@
 
 static struct nl_sock *nl_sock = NULL;
 static int fam_id = 0;
-
-int NetlinkGetFamilyID() {
-    return fam_id;
-}
-
-struct nl_sock *NetlinkGetNlSock() {
-    return nl_sock;
-}
 
 static struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1] = {
     [HANDSHAKE_A_STATUS_CODE] = {.type = NLA_S32},
@@ -156,7 +149,7 @@ errout:
         nl_sock = NULL;
     }
 
-    Shutdown();
+    SHUTDOWN(HACKERNEL_NETLINK_INIT);
 }
 
 static bool running = false;
@@ -166,24 +159,47 @@ int NetlinkWait() {
 
     ThreadNameUpdate("netlink");
     LOG("netlink enter");
-    running = GlobalRunningGet();
+    running = RUNNING();
     while (running) {
-        error = nl_recvmsgs_default(NetlinkGetNlSock());
+        error = nl_recvmsgs_default(nl_sock);
         if (error) {
             ERR("error=[%d] msg=[%s]", error, nl_geterror(error));
-            Shutdown();
+            SHUTDOWN(HACKERNEL_NETLINK_WAIT);
             break;
         }
     }
     LOG("netlink exit");
-    nl_close(NetlinkGetNlSock());
-    nl_socket_free(NetlinkGetNlSock());
+    if (nl_sock) {
+        nl_close(nl_sock);
+        nl_socket_free(nl_sock);
+        nl_sock = NULL;
+    }
 
     return 0;
 }
 
 int NetlinkExit() {
     running = false;
-    shutdown(nl_socket_get_fd(NetlinkGetNlSock()), SHUT_RDWR);
+    if (nl_sock)
+        shutdown(nl_socket_get_fd(nl_sock), SHUT_RDWR);
     return 0;
+}
+
+struct nl_msg *NetlinkMsgAlloc(uint8_t cmd) {
+    struct nl_msg *message;
+
+    message = nlmsg_alloc();
+    genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, fam_id, 0, NLM_F_REQUEST, cmd, HACKERNEL_FAMLY_VERSION);
+    return message;
+}
+
+int NetlinkSend(struct nl_msg *message) {
+    int error = 0;
+
+    if (!nl_sock)
+        return -EFAULT;
+
+    error = nl_send_auto(nl_sock, message);
+    nlmsg_free(message);
+    return error;
 }

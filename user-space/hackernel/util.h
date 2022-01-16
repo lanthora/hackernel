@@ -54,12 +54,21 @@ int KernelModuleInsert(const char *filename);
 int KernelModuleRemove(const char *modulename);
 
 // 将各个线程的运行状态设置为退出
-void Shutdown();
+enum {
+    HACKERNEL_SUCCESS,
+    HACKERNEL_SIG,
+    HACKERNEL_NETLINK_INIT,
+    HACKERNEL_HEARTBEAT,
+    HACKERNEL_NETLINK_WAIT,
+    HACKERNEL_UNIX_DOMAIN_SOCKET,
+    HACKERNEL_BAD_RECEIVER,
+};
 
-// Wait类函数进入循环前, 退出条件变量用GlobalRunningGet函数初始化.
-// 进程初始化过程中出现致命错误,将调用Shutdown关闭各个线程,
-// 如果线程设置运行状态位的时间晚于Shutdown设置的时间,该线程会误认为系统正常并继续运行
-bool GlobalRunningGet();
+void SHUTDOWN(int code);
+
+// Wait类函数进入循环前, 退出条件变量用RUNNING函数初始化.
+// 进程初始化过程中出现致命错误,将调用SHUTDOWN关闭各个线程
+bool RUNNING();
 
 EXTERN_C_END
 

@@ -73,7 +73,7 @@ int IpcServer::StartWait() {
 int IpcServer::Stop() {
     running_ = false;
 
-    if (shutdown(socket_, SHUT_RDWR))
+    if (socket_ && shutdown(socket_, SHUT_RDWR))
         LOG("close socket failed");
 
     if (receiver_)
@@ -161,7 +161,7 @@ int IpcServer::UnixDomainSocketWait() {
 
     socklen_t len;
     struct sockaddr_un peer;
-    running_ = GlobalRunningGet();
+    running_ = RUNNING();
     while (running_) {
         len = sizeof(peer);
         int size = recvfrom(socket_, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&peer, &len);
@@ -210,7 +210,7 @@ int IpcServer::UnixDomainSocketWait() {
 
 errout:
     close(socket_);
-    Shutdown();
+    SHUTDOWN(HACKERNEL_UNIX_DOMAIN_SOCKET);
     return -EPERM;
 }
 

@@ -36,7 +36,7 @@ private:
     IpcServer() {}
     std::shared_ptr<Receiver> receiver_ = nullptr;
     bool running_;
-    int socket_;
+    int socket_ = 0;
     std::map<std::string, std::list<UserConn>> sub_;
     std::mutex sub_lock_;
     std::atomic<Session> id_ = SYSTEM_SESSION;

@@ -48,40 +48,10 @@ ProcPerm Auditor::HandlerNewCmd(const std::string &cmd) {
     return PROCESS_ACCEPT;
 }
 
-static int StringSplit(std::string text, const std::string &delimiter, std::vector<std::string> &output) {
-    size_t pos = 0;
-    output.clear();
-    while ((pos = text.find(delimiter)) != std::string::npos) {
-        output.push_back(text.substr(0, pos));
-        text.erase(0, pos + delimiter.length());
-    }
-    if (text.size()) {
-        output.push_back(text);
-    }
-    return 0;
-}
-
 int Auditor::Report(const std::string &cmd) {
-    std::vector<std::string> detail;
-    StringSplit(cmd, "\37", detail);
-    if (detail.size() < 3) {
-        ERR("invalid cmd, cmd=[%s]", cmd.data());
-        return -EINVAL;
-    }
-
-    std::string workdir = detail[0];
-    std::string path = detail[1];
-    std::string argv = detail[2];
-
-    for (size_t i = 3; i < detail.size(); ++i) {
-        argv.append(" " + detail[i]);
-    }
-
     nlohmann::json doc;
     doc["type"] = "audit::proc::report";
-    doc["workdir"] = workdir;
-    doc["path"] = path;
-    doc["argv"] = argv;
+    doc["cmd"] = cmd.data();
     std::string msg = InternalJsonWrapper(doc);
     Broadcaster::GetInstance().Notify(msg);
 
