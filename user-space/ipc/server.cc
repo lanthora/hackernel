@@ -81,18 +81,26 @@ int IpcServer::Stop() {
     return 0;
 }
 
-int IpcServer::SendMsgToClient(Session id, const std::string &msg) {
+int IpcServer::SendMsgToClient(const nlohmann::json &doc) {
     UserConn conn;
-    socklen_t len;
-    struct sockaddr *peer;
+    Session session = doc["session"];
 
-    if (IpcServer::GetConnCache().Get(id, conn))
+    if (IpcServer::GetConnCache().Get(session, conn))
         return -ESRCH;
 
-    peer = (struct sockaddr *)conn.first.get();
-    len = conn.second;
+    nlohmann::json data = doc["data"];
+    data["extra"] = conn.extra;
+
+    return SendMsgToClient(conn, data.dump());
+}
+
+int IpcServer::SendMsgToClient(UserConn conn, const std::string &msg) {
+    socklen_t len;
+    struct sockaddr *peer;
+    peer = (struct sockaddr *)conn.peer.get();
+    len = conn.len;
     if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1) {
-        ERR("send error, session=[%d] msg=[%s]", id, msg.data());
+        ERR("send error, peer=[%s], msg=[%s]", ((struct sockaddr_un *)peer)->sun_path, msg.data());
         return -EPERM;
     }
     return 0;
@@ -106,9 +114,8 @@ int IpcServer::MsgSub(const std::string &section, const UserConn &user) {
 
 int IpcServer::MsgUnsub(const std::string &section, const UserConn &user) {
     std::lock_guard<std::mutex> lock(sub_lock_);
-    auto it = std::find_if(sub_[section].begin(), sub_[section].end(), [&](const UserConn &item) {
-        return strcmp(user.first->sun_path, item.first->sun_path) == 0;
-    });
+    auto it = std::find_if(sub_[section].begin(), sub_[section].end(),
+                           [&](const UserConn &item) { return strcmp(user.peer->sun_path, item.peer->sun_path) == 0; });
     if (it == sub_[section].end())
         return -EPERM;
     sub_[section].erase(it);
@@ -122,8 +129,8 @@ int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string
 
     auto it = sub_[section].begin();
     while (it != sub_[section].end()) {
-        peer = (struct sockaddr *)it->first.get();
-        len = it->second;
+        peer = (struct sockaddr *)it->peer.get();
+        len = it->len;
 
         if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1)
             it = sub_[section].erase(it);
@@ -193,9 +200,11 @@ int IpcServer::UnixDomainSocketWait() {
             continue;
         }
 
+        UserConn conn;
+        conn.peer = std::make_shared<struct sockaddr_un>(peer);
+        conn.len = len;
+        conn.extra = data["extra"];
         Session session = NewUserSession();
-        UserID client = std::make_shared<struct sockaddr_un>(peer);
-        UserConn conn(client, len);
         IpcServer::GetConnCache().Put(session, conn);
 
         nlohmann::json doc;

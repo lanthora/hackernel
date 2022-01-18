@@ -13,7 +13,12 @@ namespace hackernel {
 typedef int32_t Session;
 typedef std::shared_ptr<struct sockaddr_un> UserID;
 typedef int UserIDSize;
-typedef std::pair<UserID, UserIDSize> UserConn;
+
+struct UserConn {
+    UserID peer;
+    UserIDSize len;
+    nlohmann::json extra;
+};
 
 const Session SYSTEM_SESSION = 0;
 

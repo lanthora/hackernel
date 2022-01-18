@@ -30,13 +30,13 @@ bool UserMsgSub(const std::string &msg) {
     if (IpcServer::GetConnCache().Get(doc["session"], conn))
         return false;
 
-    nlohmann::json data = doc["data"];
+    nlohmann::json &data = doc["data"];
     if (UserMsgSubCheck(data))
         return false;
     const std::string &section = data["section"];
 
     data["code"] = IpcServer::GetInstance().MsgSub(section, conn);
-    IpcServer::GetInstance().SendMsgToClient(doc["session"], data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 
@@ -60,13 +60,13 @@ bool UserMsgUnsub(const std::string &msg) {
     if (IpcServer::GetConnCache().Get(doc["session"], conn))
         return false;
 
-    nlohmann::json data = doc["data"];
+    nlohmann::json &data = doc["data"];
     if (UserMsgUnsubCheck(data))
         return false;
     const std::string &section = data["section"];
 
     data["code"] = IpcServer::GetInstance().MsgUnsub(section, conn);
-    IpcServer::GetInstance().SendMsgToClient(doc["session"], data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 
@@ -95,13 +95,13 @@ bool UserCtrlToken(const std::string &msg) {
     if (doc["type"] != "user::ctrl::token")
         return false;
 
-    nlohmann::json data = doc["data"];
+    nlohmann::json &data = doc["data"];
     if (UserCtrlTokenCheck(data))
         return false;
     std::string token = data["new"];
 
     data["code"] = IpcServer::GetInstance().TokenUpdate(token);
-    IpcServer::GetInstance().SendMsgToClient(doc["session"], data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 
@@ -121,9 +121,7 @@ bool KernelProcEnable(const std::string &msg) {
     if (doc["type"] != "kernel::proc::enable")
         return false;
 
-    Session session = doc["session"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToClient(session, data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 
@@ -132,9 +130,7 @@ bool KernelProcDisable(const std::string &msg) {
     if (doc["type"] != "kernel::proc::disable")
         return false;
 
-    Session session = doc["session"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToClient(session, data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 
@@ -154,9 +150,7 @@ bool KernelFileSet(const std::string &msg) {
     if (doc["type"] != "kernel::file::set")
         return false;
 
-    Session session = doc["session"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToClient(session, data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 bool KernelFileEnable(const std::string &msg) {
@@ -164,9 +158,7 @@ bool KernelFileEnable(const std::string &msg) {
     if (doc["type"] != "kernel::file::enable")
         return false;
 
-    Session session = doc["session"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToClient(session, data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 
@@ -175,9 +167,7 @@ bool KernelFileDisable(const std::string &msg) {
     if (doc["type"] != "kernel::file::disable")
         return false;
 
-    Session session = doc["session"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToClient(session, data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 
@@ -186,9 +176,7 @@ bool KernelNetInsert(const std::string &msg) {
     if (doc["type"] != "kernel::net::insert")
         return false;
 
-    Session session = doc["session"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToClient(session, data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 
@@ -197,9 +185,7 @@ bool KernelNetDelete(const std::string &msg) {
     if (doc["type"] != "kernel::net::delete")
         return false;
 
-    Session session = doc["session"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToClient(session, data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 bool KernelNetEnable(const std::string &msg) {
@@ -207,9 +193,7 @@ bool KernelNetEnable(const std::string &msg) {
     if (doc["type"] != "kernel::net::enable")
         return false;
 
-    Session session = doc["session"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToClient(session, data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 bool KernelNetDisable(const std::string &msg) {
@@ -217,9 +201,7 @@ bool KernelNetDisable(const std::string &msg) {
     if (doc["type"] != "kernel::net::disable")
         return false;
 
-    Session session = doc["session"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToClient(session, data.dump());
+    IpcServer::GetInstance().SendMsgToClient(doc);
     return true;
 }
 

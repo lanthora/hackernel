@@ -26,11 +26,14 @@ public:
     int Init();
     int StartWait();
     int Stop();
-    int SendMsgToClient(Session id, const std::string &msg);
+    int SendMsgToClient(const nlohmann::json &doc);
     int MsgSub(const std::string &section, const UserConn &user);
     int MsgUnsub(const std::string &section, const UserConn &user);
     int SendMsgToSubscriber(const std::string &section, const std::string &msg);
     int TokenUpdate(const std::string &token);
+
+private:
+    int SendMsgToClient(UserConn conn, const std::string &msg);
 
 private:
     IpcServer() {}
