@@ -55,7 +55,7 @@ int Auditor::Report(const std::string &cmd) {
     std::string msg = InternalJsonWrapper(doc);
     Broadcaster::GetInstance().Notify(msg);
 
-    LOG("audit=[%s]", msg.data());
+    DBG("audit=[%s]", msg.data());
     return 0;
 }
 
@@ -77,27 +77,27 @@ int Auditor::Load() {
     try {
         input >> doc;
     } catch (nlohmann::json::parse_error &ex) {
-        ERR("parse error");
+        WARN("parse error");
     }
     input.close();
 
     if (!doc.is_object()) {
-        ERR("process.json is not json");
+        WARN("process.json is not json");
         return -EINVAL;
     }
 
     if (!doc["capacity"].is_number_unsigned()) {
-        ERR("can not read capacity from capacity");
+        WARN("can not read capacity from capacity");
         return -EINVAL;
     }
 
     if (!doc["raw"].is_array()) {
-        ERR("can not read raw from capacity");
+        WARN("can not read raw from capacity");
         return -EINVAL;
     }
 
     if (!doc["trusted"].is_array()) {
-        ERR("can not read trusted list from capacity");
+        WARN("can not read trusted list from capacity");
         return -EINVAL;
     }
 
@@ -150,13 +150,13 @@ int Auditor::Save() {
     std::error_code ec;
     std::filesystem::create_directories("/var/lib/hackernel", ec);
     if (ec) {
-        ERR("create dir /var/lib/hackernel failed, errmsg=[%s]", ec.message().data());
+        WARN("create dir /var/lib/hackernel failed, errmsg=[%s]", ec.message().data());
         return -EPERM;
     }
 
     std::ofstream output("/var/lib/hackernel/process.json");
     if (!output) {
-        ERR("open /var/lib/hackernel/process.json failed");
+        WARN("open /var/lib/hackernel/process.json failed");
         return -EPERM;
     }
 

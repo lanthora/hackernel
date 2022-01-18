@@ -158,7 +158,7 @@ int NetlinkWait() {
     int error;
 
     ThreadNameUpdate("netlink");
-    LOG("netlink enter");
+    DBG("netlink enter");
     running = RUNNING();
     while (running) {
         error = nl_recvmsgs_default(nl_sock);
@@ -168,7 +168,7 @@ int NetlinkWait() {
             break;
         }
     }
-    LOG("netlink exit");
+    DBG("netlink exit");
     if (nl_sock) {
         nl_close(nl_sock);
         nl_socket_free(nl_sock);

@@ -52,9 +52,9 @@ Timer &Timer::GetInstance() {
 
 int TimerWait() {
     ThreadNameUpdate("timer");
-    LOG("timer enter");
+    DBG("timer enter");
     timer::Timer::GetInstance().RunWait();
-    LOG("timer exit");
+    DBG("timer exit");
     return 0;
 }
 

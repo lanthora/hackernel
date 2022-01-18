@@ -25,7 +25,7 @@ void SHUTDOWN(int code) {
     if (!running)
         return;
 
-    LOG("exit start");
+    DBG("exit start");
     running = false;
     retval = code;
 
@@ -47,7 +47,7 @@ void SHUTDOWN(int code) {
 }
 
 static void SigHandler(int sig) {
-    LOG("received signal=[%d], exit now", sig);
+    DBG("received signal=[%d], exit now", sig);
     SHUTDOWN(HACKERNEL_SIG);
 }
 
@@ -77,7 +77,7 @@ int main() {
     dispatcher_thread.join();
     timer_thread.join();
     ipc_thread.join();
-    LOG("exit done");
+    DBG("exit done");
 
     return retval;
 }

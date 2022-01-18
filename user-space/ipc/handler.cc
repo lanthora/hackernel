@@ -16,7 +16,7 @@ static int UserMsgSubCheck(const nlohmann::json &data) {
     return 0;
 
 errout:
-    ERR("invalid argument=[%s]", data.dump().data());
+    WARN("invalid argument=[%s]", data.dump().data());
     return -EINVAL;
 }
 
@@ -46,7 +46,7 @@ static int UserMsgUnsubCheck(const nlohmann::json &data) {
     return 0;
 
 errout:
-    ERR("invalid argument=[%s]", data.dump().data());
+    WARN("invalid argument=[%s]", data.dump().data());
     return -EINVAL;
 }
 
@@ -85,7 +85,7 @@ static int UserCtrlTokenCheck(const nlohmann::json &data) {
     return 0;
 
 errout:
-    ERR("invalid argument=[%s]", data.dump().data());
+    WARN("invalid argument=[%s]", data.dump().data());
     return -EINVAL;
 }
 

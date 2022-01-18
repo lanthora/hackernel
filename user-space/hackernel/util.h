@@ -31,9 +31,9 @@ EXTERN_C_BEGIN
     } while (0)
 
 #if defined(DEBUG)
-#define LOG WARN
+#define DBG WARN
 #else
-#define LOG(fmt, arg...)
+#define DBG(fmt, arg...)
 #endif
 
 #define ERR(fmt, arg...)                                                                                               \

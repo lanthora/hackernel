@@ -53,9 +53,9 @@ int DispatcherWait() {
     dispatcher->AddHandler(UserNetDelete);
 
     Broadcaster::GetInstance().AddReceiver(dispatcher);
-    LOG("dispatcher enter");
+    DBG("dispatcher enter");
     dispatcher->ConsumeWait();
-    LOG("dispatcher exit");
+    DBG("dispatcher exit");
     return 0;
 }
 

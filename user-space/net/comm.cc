@@ -118,7 +118,7 @@ int NetProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, st
         code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
         NetEnableJsonGen(session, code, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("kernel::net::enable, session=[%d] code=[%d]", session, code);
+        DBG("kernel::net::enable, session=[%d] code=[%d]", session, code);
         break;
 
     case NET_PROTECT_DISABLE:
@@ -126,7 +126,7 @@ int NetProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, st
         code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
         NetDisableJsonGen(session, code, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("kernel::net::disable, session=[%d] code=[%d]", session, code);
+        DBG("kernel::net::disable, session=[%d] code=[%d]", session, code);
         break;
 
     case NET_PROTECT_INSERT:
@@ -134,7 +134,7 @@ int NetProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, st
         code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
         NetInsertJsonGen(session, code, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("kernel::net::insert, session=[%d] code=[%d]", session, code);
+        DBG("kernel::net::insert, session=[%d] code=[%d]", session, code);
         break;
 
     case NET_PROTECT_DELETE:
@@ -142,11 +142,11 @@ int NetProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, st
         code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
         NetDeleteJsonGen(session, code, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("kernel::net::delete, session=[%d] code=[%d]", session, code);
+        DBG("kernel::net::delete, session=[%d] code=[%d]", session, code);
         break;
 
     default:
-        LOG("Unknown net protect command Type");
+        DBG("Unknown net protect command Type");
     }
     return 0;
 }

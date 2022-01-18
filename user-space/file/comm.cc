@@ -90,7 +90,7 @@ int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
         code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
         FileEnableJsonGen(session, code, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("kernel::file::enable, session=[%d] code=[%d]", session, code);
+        DBG("kernel::file::enable, session=[%d] code=[%d]", session, code);
         break;
 
     case FILE_PROTECT_DISABLE:
@@ -98,7 +98,7 @@ int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
         code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
         FileDisableJsonGen(session, code, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("kernel::file::disable, session=[%d] code=[%d]", session, code);
+        DBG("kernel::file::disable, session=[%d] code=[%d]", session, code);
         break;
 
     case FILE_PROTECT_SET:
@@ -106,7 +106,7 @@ int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
         code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
         FileSetJsonGen(session, code, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("kernel::file::set, session=[%d] code=[%d]", session, code);
+        DBG("kernel::file::set, session=[%d] code=[%d]", session, code);
         break;
 
     case FILE_PROTECT_REPORT:
@@ -114,11 +114,11 @@ int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
         perm = nla_get_s32(genl_info->attrs[FILE_A_PERM]);
         FileReportJsonGen(name, perm, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("kernel::file::report, name=[%s] perm=[%d]", name, perm);
+        DBG("kernel::file::report, name=[%s] perm=[%d]", name, perm);
         break;
 
     default:
-        LOG("Unknown process protect command Type");
+        DBG("Unknown process protect command Type");
     }
 
     return 0;

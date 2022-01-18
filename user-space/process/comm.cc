@@ -84,7 +84,7 @@ int ProcProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
         code = nla_get_s32(genl_info->attrs[PROCESS_A_STATUS_CODE]);
         ProcEnableJsonGen(session, code, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("kernel::proc::enable, session=[%d] code=[%d]", session, code);
+        DBG("kernel::proc::enable, session=[%d] code=[%d]", session, code);
         break;
 
     case PROCESS_PROTECT_DISABLE:
@@ -92,25 +92,25 @@ int ProcProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
         code = nla_get_s32(genl_info->attrs[PROCESS_A_STATUS_CODE]);
         ProcDisableJsonGen(session, code, msg);
         Broadcaster::GetInstance().Notify(msg);
-        LOG("kernel::proc::disable, session=[%d] code=[%d]", session, code);
+        DBG("kernel::proc::disable, session=[%d] code=[%d]", session, code);
         break;
 
     case PROCESS_PROTECT_REPORT:
         id = nla_get_s32(genl_info->attrs[PROCESS_A_ID]);
         name = nla_get_string(genl_info->attrs[PROCESS_A_NAME]);
-        LOG("kernel::proc::report, id=[%d] name=[%s]", id, name);
+        DBG("kernel::proc::report, id=[%d] name=[%s]", id, name);
 
         ProcReportJsonGen(name, msg);
         Broadcaster::GetInstance().Notify(msg);
 
         error = ProcPermReply(id, ProcPermCheck(name));
         if (error)
-            ERR("reply_process_perm failed, id=[%d] name=[%s]", id, name);
+            WARN("reply_process_perm failed, id=[%d] name=[%s]", id, name);
 
         break;
 
     default:
-        LOG("Unknown process protect command Type");
+        DBG("Unknown process protect command Type");
     }
     return 0;
 }

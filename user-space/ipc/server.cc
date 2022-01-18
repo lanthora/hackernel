@@ -50,23 +50,23 @@ int IpcServer::Init() {
 
 int IpcServer::StartWait() {
     ThreadNameUpdate("ipc-wait");
-    LOG("ipc-wait enter");
+    DBG("ipc-wait enter");
     std::thread receiver_thread([&]() {
         ThreadNameUpdate("ipc-recevier");
-        LOG("ipc-recevier enter");
+        DBG("ipc-recevier enter");
         receiver_->ConsumeWait();
-        LOG("ipc-recevier exit");
+        DBG("ipc-recevier exit");
     });
     std::thread socket_thread([&]() {
         ThreadNameUpdate("ipc-socket");
-        LOG("ipc-socket enter");
+        DBG("ipc-socket enter");
         UnixDomainSocketWait();
-        LOG("ipc-socket exit");
+        DBG("ipc-socket exit");
     });
 
     receiver_thread.join();
     socket_thread.join();
-    LOG("ipc-wait exit");
+    DBG("ipc-wait exit");
     return 0;
 }
 
@@ -74,7 +74,7 @@ int IpcServer::Stop() {
     running_ = false;
 
     if (socket_ && shutdown(socket_, SHUT_RDWR))
-        LOG("close socket failed");
+        DBG("close socket failed");
 
     if (receiver_)
         receiver_->Exit();
@@ -100,7 +100,7 @@ int IpcServer::SendMsgToClient(UserConn conn, const std::string &msg) {
     peer = (struct sockaddr *)conn.peer.get();
     len = conn.len;
     if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1) {
-        ERR("send error, peer=[%s], msg=[%s]", ((struct sockaddr_un *)peer)->sun_path, msg.data());
+        WARN("send error, peer=[%s], msg=[%s]", ((struct sockaddr_un *)peer)->sun_path, msg.data());
         return -EPERM;
     }
     return 0;
@@ -191,17 +191,17 @@ int IpcServer::UnixDomainSocketWait() {
         try {
             data = nlohmann::json::parse(buffer);
         } catch (nlohmann::json::parse_error &ex) {
-            ERR("parse error, buffer=[%s]", buffer);
+            WARN("parse error, buffer=[%s]", buffer);
             continue;
         }
 
         if (!data.is_object() || !data["type"].is_string()) {
-            ERR("invalid request, buffer=[%s]", buffer);
+            WARN("invalid request, buffer=[%s]", buffer);
             continue;
         }
 
         if (!token_.empty() && (!data["token"].is_string() || data["token"] != token_)) {
-            ERR("invalid token, buffer=[%s]", buffer);
+            WARN("invalid token, buffer=[%s]", buffer);
             continue;
         }
 
@@ -242,7 +242,7 @@ int IpcWait() {
 }
 
 void IpcExit() {
-    LOG("IpcExit Exit");
+    DBG("IpcExit Exit");
     IpcServer::GetInstance().Stop();
     return;
 }
