@@ -114,12 +114,18 @@ int IpcServer::MsgSub(const std::string &section, const UserConn &user) {
 
 int IpcServer::MsgUnsub(const std::string &section, const UserConn &user) {
     std::lock_guard<std::mutex> lock(sub_lock_);
-    auto it = std::find_if(sub_[section].begin(), sub_[section].end(),
-                           [&](const UserConn &item) { return strcmp(user.peer->sun_path, item.peer->sun_path) == 0; });
+    auto cmp = [&](const UserConn &item) { return strcmp(user.peer->sun_path, item.peer->sun_path) == 0; };
+    auto it = std::find_if(sub_[section].begin(), sub_[section].end(), cmp);
     if (it == sub_[section].end())
         return -EPERM;
     sub_[section].erase(it);
     return 0;
+}
+
+int IpcServer::SendMsgToSubscriber(const nlohmann::json &doc) {
+    std::string section = doc["type"];
+    nlohmann::json data = doc["data"];
+    return SendMsgToSubscriber(section, data.dump());
 }
 
 int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string &msg) {
@@ -127,8 +133,7 @@ int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string
     socklen_t len;
     std::lock_guard<std::mutex> lock(sub_lock_);
 
-    auto it = sub_[section].begin();
-    while (it != sub_[section].end()) {
+    for (auto it = sub_[section].begin(); it != sub_[section].end();) {
         peer = (struct sockaddr *)it->peer.get();
         len = it->len;
 

@@ -109,9 +109,7 @@ bool KernelProcReport(const std::string &msg) {
     if (doc["type"] != "kernel::proc::report")
         return false;
 
-    std::string section = doc["type"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToSubscriber(section, data.dump());
+    IpcServer::GetInstance().SendMsgToSubscriber(doc);
     return true;
 }
 
@@ -138,9 +136,7 @@ bool KernelFileReport(const std::string &msg) {
     if (doc["type"] != "kernel::file::report")
         return false;
 
-    std::string section = doc["type"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToSubscriber(section, data.dump());
+    IpcServer::GetInstance().SendMsgToSubscriber(doc);
     return true;
 }
 
@@ -209,9 +205,7 @@ bool AuditProcReport(const std::string &msg) {
     if (doc["type"] != "audit::proc::report")
         return false;
 
-    std::string section = doc["type"];
-    nlohmann::json data = doc["data"];
-    IpcServer::GetInstance().SendMsgToSubscriber(section, data.dump());
+    IpcServer::GetInstance().SendMsgToSubscriber(doc);
     return true;
 }
 
