@@ -17,7 +17,6 @@ static int UserMsgSubCheck(const nlohmann::json &data) {
 
 errout:
     ERR("invalid argument=[%s]", data.dump().data());
-    ;
     return -EINVAL;
 }
 
