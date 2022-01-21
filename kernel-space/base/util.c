@@ -522,7 +522,6 @@ void disable_wp(unsigned long addr)
 }
 #endif
 
-#ifdef CONFIG_KALLSYMS_LOOKUP_NAME
 kallsyms_lookup_name_t hk_kallsyms_lookup_name;
 static struct kprobe hk_kp = { .symbol_name = "kallsyms_lookup_name" };
 static void hk_kallsyms_lookup_name_init(void)
@@ -531,11 +530,6 @@ static void hk_kallsyms_lookup_name_init(void)
 	hk_kallsyms_lookup_name = (kallsyms_lookup_name_t)hk_kp.addr;
 	unregister_kprobe(&hk_kp);
 }
-#else
-static void hk_kallsyms_lookup_name_init(void)
-{
-}
-#endif
 
 int sys_call_table_init(void)
 {

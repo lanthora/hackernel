@@ -6,10 +6,6 @@
 #include <linux/syscalls.h>
 #include <linux/version.h>
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 7, 0)
-#define CONFIG_KALLSYMS_LOOKUP_NAME 1
-#endif
-
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 11, 0))
 #define CONFIG_NLA_STRSCPY 1
 #endif
@@ -20,10 +16,6 @@
  */
 #if defined(CONFIG_X86_64) || defined(CONFIG_ARM64)
 #define CONFIG_SYSCALL_PTREGS 1
-#endif
-
-#ifndef CONFIG_KALLSYMS_LOOKUP_NAME
-#define CONFIG_KALLSYMS_LOOKUP_NAME 0
 #endif
 
 #ifndef CONFIG_NLA_STRSCPY

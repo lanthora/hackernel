@@ -30,6 +30,9 @@ extern unsigned long *g_sys_call_table;
 #define ARGS_MAP_RAW ARGS_MAP
 #endif
 
+#define SYSCALL_UPDATE(nr, func) g_sys_call_table[nr] = (unsigned long)func
+#define SYSCALL_BACKUP(func, nr) func = (void *)g_sys_call_table[nr]
+
 #define REG_DEFINE(name)                                                       \
 	static int __hook_##name(void)                                         \
 	{                                                                      \
@@ -43,11 +46,11 @@ extern unsigned long *g_sys_call_table;
 		}                                                              \
                                                                                \
 		if (!hk_sys_##name) {                                          \
-			hk_sys_##name = g_sys_call_table[HK_NR_##name];        \
+			SYSCALL_BACKUP(hk_sys_##name, HK_NR_##name);           \
 		}                                                              \
                                                                                \
 		disable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));  \
-		g_sys_call_table[HK_NR_##name] = &sys_##name##_hook;           \
+		SYSCALL_UPDATE(HK_NR_##name, &sys_##name##_hook);              \
 		enable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));   \
 		return 0;                                                      \
 	}
@@ -66,14 +69,12 @@ extern unsigned long *g_sys_call_table;
 			return -EPERM;                                         \
 		}                                                              \
 		disable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));  \
-		g_sys_call_table[HK_NR_##name] = hk_sys_##name;                \
+		SYSCALL_UPDATE(HK_NR_##name, hk_sys_##name);                   \
 		enable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));   \
 		return 0;                                                      \
 	}
 
 #define HOOK_DEFINEx(x, name, ...)                                             \
-	__diag_push();                                                         \
-	__diag_ignore(GCC, 8, "-Wint-conversion", "");                         \
 	static long __sys_##name##_hook(DECL_MAP(x, __VA_ARGS__));             \
 	long sys_##name##_hook(DECL_MAP_RAW(x, __VA_ARGS__));                  \
 	long (*hk_sys_##name)(DECL_MAP_RAW(x, __VA_ARGS__));                   \
@@ -87,7 +88,6 @@ extern unsigned long *g_sys_call_table;
 	}                                                                      \
 	REG_DEFINE(name)                                                       \
 	UNREG_DEFINE(name)                                                     \
-	__diag_pop();                                                          \
 	static long __sys_##name##_hook(DECL_MAP(x, __VA_ARGS__))
 
 #define HOOK_DEFINE1(name, ...) HOOK_DEFINEx(1, name, __VA_ARGS__)

@@ -4,6 +4,7 @@
 
 #include "define.h"
 #include <linux/kernel.h>
+#include <linux/kprobes.h>
 #include <linux/sched.h>
 #include <linux/uuid.h>
 #include <linux/version.h>
@@ -40,13 +41,8 @@ void enable_wp(unsigned long addr);
 
 #define spaceship(a, b) ((a == b) ? 0 : ((a > b) ? 1 : -1))
 
-#if CONFIG_KALLSYMS_LOOKUP_NAME
-#include <linux/kprobes.h>
 typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
 extern kallsyms_lookup_name_t hk_kallsyms_lookup_name;
-#else
-#define hk_kallsyms_lookup_name kallsyms_lookup_name
-#endif
 
 void util_init(void);
 
