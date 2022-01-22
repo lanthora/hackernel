@@ -32,12 +32,12 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
 
 	if (!filename)
-		LOG("filename is null");
+		ERR("filename is null");
 
 	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 
 	if ((!skb)) {
-		LOG("genlmsg_new failed");
+		ERR("genlmsg_new failed");
 		error = -ENOMEM;
 		goto errout;
 	}
@@ -45,25 +45,25 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	head = genlmsg_put(skb, g_portid, 0, &genl_family, 0,
 			   HACKERNEL_C_FILE_PROTECT);
 	if (!head) {
-		LOG("genlmsg_put failed");
+		ERR("genlmsg_put failed");
 		error = -ENOMEM;
 		goto errout;
 	}
 	error = nla_put_u8(skb, FILE_A_OP_TYPE, FILE_PROTECT_REPORT);
 	if (error) {
-		LOG("nla_put_u8 failed");
+		ERR("nla_put_u8 failed");
 		goto errout;
 	}
 
 	error = nla_put_s32(skb, FILE_A_PERM, perm);
 	if (error) {
-		LOG("nla_put_s32 failed");
+		ERR("nla_put_s32 failed");
 		goto errout;
 	}
 
 	error = nla_put_string(skb, FILE_A_NAME, filename);
 	if (error) {
-		LOG("nla_put_string failed");
+		ERR("nla_put_string failed");
 		goto errout;
 	}
 	genlmsg_end(skb, head);
@@ -72,7 +72,7 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	if (!error) {
 		errcnt = atomic_xchg(&atomic_errcnt, 0);
 		if (unlikely(errcnt))
-			LOG("errcnt=[%u]", errcnt);
+			ERR("errcnt=[%u]", errcnt);
 
 		goto out;
 	}
@@ -85,7 +85,7 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 
 	conn_check_set_dead();
 
-	LOG("genlmsg_unicast failed error=[%d]", error);
+	ERR("genlmsg_unicast failed error=[%d]", error);
 
 out:
 	return 0;
@@ -148,7 +148,7 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		break;
 	}
 	default: {
-		LOG("Unknown file protect command");
+		ERR("Unknown file protect command");
 	}
 	}
 
@@ -156,14 +156,14 @@ response:
 
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 	if (unlikely(!reply)) {
-		LOG("genlmsg_new failed");
+		ERR("genlmsg_new failed");
 		goto errout;
 	}
 
 	head = genlmsg_put_reply(reply, info, &genl_family, 0,
 				 HACKERNEL_C_FILE_PROTECT);
 	if (unlikely(!head)) {
-		LOG("genlmsg_put_reply failed");
+		ERR("genlmsg_put_reply failed");
 		goto errout;
 	}
 
@@ -171,20 +171,20 @@ response:
 		session = nla_get_s32(info->attrs[FILE_A_SESSION]);
 		error = nla_put_s32(reply, FILE_A_SESSION, session);
 		if (unlikely(error)) {
-			LOG("nla_put_s32 failed");
+			ERR("nla_put_s32 failed");
 			goto errout;
 		}
 	}
 
 	error = nla_put_s32(reply, FILE_A_OP_TYPE, type);
 	if (unlikely(error)) {
-		LOG("nla_put_s32 failed");
+		ERR("nla_put_s32 failed");
 		goto errout;
 	}
 
 	error = nla_put_s32(reply, FILE_A_STATUS_CODE, code);
 	if (unlikely(error)) {
-		LOG("nla_put_s32 failed");
+		ERR("nla_put_s32 failed");
 		goto errout;
 	}
 
@@ -192,7 +192,7 @@ response:
 
 	error = genlmsg_reply(reply, info);
 	if (unlikely(error))
-		LOG("genlmsg_reply failed");
+		ERR("genlmsg_reply failed");
 
 	return 0;
 errout:

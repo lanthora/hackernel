@@ -78,7 +78,7 @@ static int process_perm_insert(const process_perm_id_t id)
 	perm_head = &process_perm_hlist[idx];
 	new = kmalloc(size, GFP_KERNEL);
 	if (!new) {
-		LOG("no memory");
+		ERR("no memory");
 		goto out;
 	}
 	new->id = id;
@@ -186,13 +186,13 @@ static process_perm_t process_protect_status(char *msg)
 
 	error = process_perm_insert(id);
 	if (error) {
-		LOG("process_perm_insert failed");
+		ERR("process_perm_insert failed");
 		goto out;
 	}
 
 	error = process_protect_report_to_userspace(id, msg);
 	if (error) {
-		LOG("report to userspace failed");
+		ERR("report to userspace failed");
 		goto out;
 	}
 

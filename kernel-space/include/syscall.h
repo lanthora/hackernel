@@ -37,11 +37,11 @@ extern unsigned long *g_sys_call_table;
 	static int __hook_##name(void)                                         \
 	{                                                                      \
 		if (HK_NR_##name == HK_NR_UNDEFINED) {                         \
-			LOG("undefined system call: " STR(name));              \
+			ERR("undefined system call: " STR(name));              \
 			return -ENOSYS;                                        \
 		}                                                              \
 		if (!g_sys_call_table) {                                       \
-			LOG("g_sys_call_table is not initialized");            \
+			ERR("g_sys_call_table is not initialized");            \
 			return -EPERM;                                         \
 		}                                                              \
                                                                                \

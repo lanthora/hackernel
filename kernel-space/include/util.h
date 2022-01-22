@@ -22,14 +22,20 @@ int file_id_get(const char *name, unsigned long *fsid, unsigned long *ino);
 
 char *adjust_path(char *path);
 
-#ifdef DEBUG
-#define LOG(fmt, arg...)                                                       \
+#define ERR(fmt, arg...)                                                       \
 	do {                                                                   \
 		printk(KERN_ERR "hackernel: %s:%d " fmt "\n", __FILE__,        \
 		       __LINE__, ##arg);                                       \
 	} while (0)
+
+#ifdef DEBUG
+#define INFO(fmt, arg...)                                                      \
+	do {                                                                   \
+		printk(KERN_INFO "hackernel: %s:%d " fmt "\n", __FILE__,       \
+		       __LINE__, ##arg);                                       \
+	} while (0)
 #else
-#define LOG(fmt, arg...)
+#define INFO(fmt, arg...)
 #endif
 
 /* 用特殊ascii码间隔不同参数,0x1F是单元分隔符 */

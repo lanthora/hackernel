@@ -128,21 +128,21 @@ int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		code = net_policy_delete(nla_get_s32(info->attrs[NET_A_ID]));
 		goto response;
 	default: {
-		LOG("Unknown process protect command");
+		ERR("Unknown process protect command");
 	}
 	}
 
 response:
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 	if (unlikely(!reply)) {
-		LOG("genlmsg_new failed");
+		ERR("genlmsg_new failed");
 		goto errout;
 	}
 
 	head = genlmsg_put_reply(reply, info, &genl_family, 0,
 				 HACKERNEL_C_NET_PROTECT);
 	if (unlikely(!head)) {
-		LOG("genlmsg_put_reply failed");
+		ERR("genlmsg_put_reply failed");
 		goto errout;
 	}
 
@@ -150,20 +150,20 @@ response:
 		session = nla_get_s32(info->attrs[NET_A_SESSION]);
 		error = nla_put_s32(reply, NET_A_SESSION, session);
 		if (unlikely(error)) {
-			LOG("nla_put_s32 failed");
+			ERR("nla_put_s32 failed");
 			goto errout;
 		}
 	}
 
 	error = nla_put_u32(reply, NET_A_OP_TYPE, type);
 	if (unlikely(error)) {
-		LOG("nla_put_s32 failed");
+		ERR("nla_put_s32 failed");
 		goto errout;
 	}
 
 	error = nla_put_s32(reply, NET_A_STATUS_CODE, code);
 	if (unlikely(error)) {
-		LOG("nla_put_s32 failed");
+		ERR("nla_put_s32 failed");
 		goto errout;
 	}
 
@@ -171,7 +171,7 @@ response:
 
 	error = genlmsg_reply(reply, info);
 	if (unlikely(error))
-		LOG("genlmsg_reply failed");
+		ERR("genlmsg_reply failed");
 
 	return 0;
 errout:

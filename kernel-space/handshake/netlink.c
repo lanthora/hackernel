@@ -18,18 +18,18 @@ int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 	int code = 0;
 
 	if (!netlink_capable(skb, CAP_SYS_ADMIN)) {
-		LOG("netlink_capable failed");
+		ERR("netlink_capable failed");
 		return -EPERM;
 	}
 
 	if (hackernel_heartbeat_check(info->snd_portid)) {
-		LOG("hackernel_heartbeat_check failed");
+		ERR("hackernel_heartbeat_check failed");
 		return -EPERM;
 	}
 
 	if (!info->attrs[HANDSHAKE_A_SYS_SERVICE_TGID]) {
 		code = -EINVAL;
-		LOG("HANDSHAKE_A_SYS_SERVICE_TGID failed");
+		ERR("HANDSHAKE_A_SYS_SERVICE_TGID failed");
 		goto response;
 	}
 
@@ -38,20 +38,20 @@ int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 response:
 	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
 	if (unlikely(!reply)) {
-		LOG("genlmsg_new failed");
+		ERR("genlmsg_new failed");
 		goto errout;
 	}
 
 	head = genlmsg_put_reply(reply, info, &genl_family, 0,
 				 HACKERNEL_C_HANDSHAKE);
 	if (unlikely(!head)) {
-		LOG("genlmsg_put_reply failed");
+		ERR("genlmsg_put_reply failed");
 		goto errout;
 	}
 
 	error = nla_put_s32(reply, HANDSHAKE_A_STATUS_CODE, code);
 	if (unlikely(error)) {
-		LOG("nla_put_s32 failed");
+		ERR("nla_put_s32 failed");
 		goto errout;
 	}
 
@@ -61,7 +61,7 @@ response:
 	// 此处调用 nlmsg_free(reply) 会引起内核crash
 	error = genlmsg_reply(reply, info);
 	if (unlikely(error))
-		LOG("genlmsg_reply failed");
+		ERR("genlmsg_reply failed");
 
 	return 0;
 errout:

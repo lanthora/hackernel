@@ -11,6 +11,7 @@ MODULE_LICENSE("GPL v2");
 
 static int init(void)
 {
+	INFO("hackernel init");
 	util_init();
 	process_protect_init();
 	file_protect_init();
@@ -27,6 +28,7 @@ static void cleanup(void)
 	process_protect_destory();
 	file_protect_destory();
 	net_protect_destory();
+	INFO("hackernel exit");
 	return;
 }
 

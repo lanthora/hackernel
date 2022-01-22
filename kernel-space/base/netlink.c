@@ -57,7 +57,7 @@ void netlink_kernel_start(void)
 
 	error = genl_register_family(&genl_family);
 	if (error)
-		LOG("genl_register_family failed");
+		ERR("genl_register_family failed");
 }
 
 void netlink_kernel_stop(void)
@@ -66,5 +66,5 @@ void netlink_kernel_stop(void)
 
 	error = genl_unregister_family(&genl_family);
 	if (error)
-		LOG("genl_unregister_family failed");
+		ERR("genl_unregister_family failed");
 }

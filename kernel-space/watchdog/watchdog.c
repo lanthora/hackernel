@@ -7,7 +7,7 @@ static int watchdog_kthread(void *data)
 	struct watchdog *dog = data;
 
 	if (!dog || !dog->bark) {
-		LOG("invalid watch dog");
+		ERR("invalid watch dog");
 		return 0;
 	}
 	while (!kthread_should_stop()) {
@@ -29,7 +29,7 @@ void watchdog_start(struct watchdog *dog)
 {
 	dog->task = kthread_run(watchdog_kthread, dog, "hk_wdog");
 	if (IS_ERR_OR_NULL(dog->task)) {
-		LOG("watchdog_kthread create failed");
+		ERR("watchdog_kthread create failed");
 		dog->task = NULL;
 	}
 }
