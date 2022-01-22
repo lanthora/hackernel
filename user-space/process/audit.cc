@@ -3,6 +3,7 @@
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
 #include "hackernel/timer.h"
+#include "hackernel/util.h"
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -12,46 +13,57 @@ namespace hackernel {
 
 using namespace process;
 
-bool Auditor::WarnCmdCheck(double count, double sum) {
-    return -1.0 * (1.0 / count) * log(count / sum) > 1.0;
+bool Auditor::UpdateThenIsTrusted(const std::string &cmd) {
+    uint64_t curcnt = 0UL;
+    cmd_counter_.Get(cmd, curcnt);
+    ++curcnt;
+    ++sumcnt_;
+
+    auto trusted = -1.0 * (1.0 / curcnt) * log(1.0 * curcnt / sumcnt_) < 1.0;
+    DBG("audit update, cmd=[%s] curcnt=[%ld] sumcnt_=[%ld] trusted=[%d]", cmd.data(), curcnt, sumcnt_, trusted);
+    if (trusted)
+        TrustedCmdInsert(cmd);
+    cmd_counter_.Put(cmd, curcnt);
+    return trusted;
 }
 
-bool Auditor::TrustedCmdCheck(const std::string &cmd) {
+bool Auditor::IsTrusted(const std::string &cmd) {
     std::shared_lock<std::shared_mutex> lock(trusted_cmd_mutex_);
     return trusted_cmd_.contains(cmd);
 }
 
 int Auditor::TrustedCmdInsert(const std::string &cmd) {
     std::unique_lock<std::shared_mutex> trusted_lock(trusted_cmd_mutex_);
+    DBG("audit trust, cmd=[%s]", cmd.data());
     trusted_cmd_.insert(cmd);
     return 0;
 }
 
 ProcPerm Auditor::HandlerNewCmd(const std::string &cmd) {
-
-    if (TrustedCmdCheck(cmd))
+    if (!enabled_)
         return PROCESS_ACCEPT;
 
-    uint64_t count = 0UL;
-    cmd_counter_.Get(cmd, count);
-    ++count;
-    ++cmd_sum_;
-
-    if (WarnCmdCheck(count, cmd_sum_)) {
-        Report(cmd);
-    } else {
-        TrustedCmdInsert(cmd);
+    if (IsTrusted(cmd)) {
+        return PROCESS_ACCEPT;
     }
 
-    cmd_counter_.Put(cmd, count);
+    if (UpdateThenIsTrusted(cmd)) {
+        return PROCESS_ACCEPT;
+    }
 
-    return PROCESS_ACCEPT;
+    Report(cmd);
+
+    if (judge_ == "allow")
+        return PROCESS_ACCEPT;
+
+    return PROCESS_REJECT;
 }
 
 int Auditor::Report(const std::string &cmd) {
     nlohmann::json doc;
     doc["type"] = "audit::proc::report";
     doc["cmd"] = cmd.data();
+    doc["judge"] = judge_;
     std::string msg = InternalJsonWrapper(doc);
     Broadcaster::GetInstance().Notify(msg);
 
@@ -101,7 +113,7 @@ int Auditor::Load() {
         return -EINVAL;
     }
 
-    cmd_sum_ = 0UL;
+    sumcnt_ = 0UL;
 
     LRUData<std::string, uint64_t> data;
     data.capacity = doc["capacity"];
@@ -112,7 +124,7 @@ int Auditor::Load() {
             continue;
         }
         data.raw.push_back(std::make_pair<std::string, uint64_t>(element["cmd"], element["count"]));
-        cmd_sum_ += static_cast<uint64_t>(element["count"]);
+        sumcnt_ += static_cast<uint64_t>(element["count"]);
     }
 
     for (const auto &trusted : doc["trusted"]) {
@@ -124,6 +136,15 @@ int Auditor::Load() {
     }
 
     cmd_counter_.Import(data);
+
+    if (doc["enabled"].is_boolean()) {
+        enabled_ = doc["enabled"];
+    }
+
+    if (doc["judge"].is_string()) {
+        judge_ = doc["judge"];
+    }
+
     return 0;
 }
 
@@ -131,7 +152,7 @@ Auditor::Auditor() {
     const size_t CMD_COUNT_MAX = 1024;
     cmd_counter_.SetCapacity(CMD_COUNT_MAX);
     cmd_counter_.SetOnEarseHandler([&](const std::pair<std::string, uint64_t> &item) {
-        cmd_sum_ -= item.second;
+        sumcnt_ -= item.second;
         return;
     });
     Load();
@@ -142,10 +163,10 @@ int Auditor::Save() {
     std::lock_guard<std::mutex> lock(sl_mutex_);
 
     static uint64_t last_cmd_sum = 0L;
-    if (cmd_sum_ == last_cmd_sum)
+    if (sumcnt_ == last_cmd_sum)
         return 0;
 
-    last_cmd_sum = cmd_sum_;
+    last_cmd_sum = sumcnt_;
 
     std::error_code ec;
     std::filesystem::create_directories("/var/lib/hackernel", ec);
@@ -176,6 +197,9 @@ int Auditor::Save() {
     for (const auto &it : trusted_cmd_) {
         doc["trusted"].push_back(it);
     }
+
+    doc["enabled"] = enabled_;
+    doc["judge"] = judge_;
 
     output << std::setw(4) << doc;
     output.close();

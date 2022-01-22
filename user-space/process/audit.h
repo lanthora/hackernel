@@ -25,20 +25,22 @@ private:
 private:
     int Report(const std::string &cmd);
     int TrustedCmdInsert(const std::string &cmd);
-    bool TrustedCmdCheck(const std::string &cmd);
+    bool IsTrusted(const std::string &cmd);
+    bool UpdateThenIsTrusted(const std::string &cmd);
 
 public:
     static Auditor &GetInstance();
-    static bool WarnCmdCheck(double count, double sum);
 
 private:
     Auditor();
     ~Auditor();
     LRUCache<std::string, uint64_t> cmd_counter_;
-    uint64_t cmd_sum_;
+    uint64_t sumcnt_;
     std::mutex sl_mutex_;
     std::unordered_set<std::string> trusted_cmd_;
     std::shared_mutex trusted_cmd_mutex_;
+    std::string judge_ = "allow";
+    bool enabled_ = true;
 };
 
 }; // namespace process
