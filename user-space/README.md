@@ -6,3 +6,8 @@
 
 * [nlohmann-json](https://github.com/nlohmann/json)
 * [libnl](https://www.infradead.org/~tgr/libnl/doc/api/index.html#main_intro)
+
+## TODO
+
+1. 重启时可以恢复关闭时的运行状态.
+2. 添加默认配置.
