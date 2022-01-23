@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "file.h"
+#include "handshake.h"
 #include "watchdog.h"
 #include <linux/binfmts.h>
 #include <linux/dcache.h>
@@ -297,6 +298,9 @@ static int sys_open_helper(int dirfd, char __user *pathname, int flags,
 	if (!conn_check_living())
 		goto out;
 
+	if (hackernel_trusted_proccess())
+		goto out;
+
 	path = get_absolute_path_alloc(dirfd, pathname);
 	real = kmalloc(PATH_MAX, GFP_KERNEL);
 	if (!path || !real)
@@ -333,6 +337,9 @@ static int sys_unlink_helper(int dirfd, char __user *pathname,
 	if (!conn_check_living())
 		goto out;
 
+	if (hackernel_trusted_proccess())
+		goto out;
+
 	path = get_absolute_path_alloc(dirfd, pathname);
 	if (!path)
 		goto out;
@@ -363,6 +370,9 @@ static int sys_rename_helper(int srcfd, char __user *srcpath, int dstfd,
 	char *dst = NULL;
 
 	if (!conn_check_living())
+		goto out;
+
+	if (hackernel_trusted_proccess())
 		goto out;
 
 	src = get_absolute_path_alloc(srcfd, srcpath);

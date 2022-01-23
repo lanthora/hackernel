@@ -87,7 +87,8 @@
 		"dma-mapping.h": "c",
 		"scatterlist.h": "c",
 		"io.h": "c",
-		"string.h": "c"
+		"string.h": "c",
+		"watchdog.h": "c"
 	},
 	"editor.insertSpaces": false,
 	"editor.detectIndentation": false,

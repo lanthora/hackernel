@@ -15,6 +15,11 @@ int hackernel_heartbeat_check(u32 portid)
 	return 0;
 }
 
+bool hackernel_trusted_proccess(void)
+{
+	return current->tgid == g_service_tgid;
+}
+
 void inline tgid_init(pid_t pid)
 {
 	g_service_tgid = pid;

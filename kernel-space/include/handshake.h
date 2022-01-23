@@ -14,5 +14,6 @@ enum {
 
 void inline tgid_init(pid_t pid);
 int hackernel_heartbeat_check(u32 portid);
+bool hackernel_trusted_proccess(void);
 
 #endif

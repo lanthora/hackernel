@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
+#include "handshake.h"
 #include "netlink.h"
 #include "process.h"
 #include "syscall.h"
@@ -217,6 +218,9 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 	process_perm_t perm = PROCESS_INVAILD;
 
 	if (!conn_check_living())
+		goto out;
+
+	if (hackernel_trusted_proccess())
 		goto out;
 
 	msg = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);

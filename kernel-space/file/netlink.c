@@ -19,7 +19,6 @@ struct nla_policy file_policy[FILE_A_MAX + 1] = {
 };
 
 extern struct genl_family genl_family;
-extern pid_t g_service_tgid;
 
 int file_protect_report_to_userspace(struct file_perm_data *data)
 {
