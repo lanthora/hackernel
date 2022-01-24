@@ -40,8 +40,9 @@ int Auditor::TrustedCmdInsert(const std::string &cmd) {
 }
 
 ProcPerm Auditor::HandlerNewCmd(const std::string &cmd) {
-    if (!enabled_)
+    if (judge_ == "disable") {
         return PROCESS_ACCEPT;
+    }
 
     if (IsTrusted(cmd)) {
         return PROCESS_ACCEPT;
@@ -56,7 +57,10 @@ ProcPerm Auditor::HandlerNewCmd(const std::string &cmd) {
     if (judge_ == "allow")
         return PROCESS_ACCEPT;
 
-    return PROCESS_REJECT;
+    if (judge_ == "reject")
+        return PROCESS_REJECT;
+
+    return PROCESS_ACCEPT;
 }
 
 int Auditor::Report(const std::string &cmd) {
@@ -143,6 +147,10 @@ int Auditor::Load() {
 
     if (doc["judge"].is_string()) {
         judge_ = doc["judge"];
+    }
+
+    if (enabled_) {
+        ProcProtectEnable(SYSTEM_SESSION);
     }
 
     return 0;

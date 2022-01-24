@@ -8,6 +8,7 @@
 #include "hackernel/process.h"
 #include "hackernel/timer.h"
 #include "hknl/netlink.h"
+#include "process/audit.h"
 #include <arpa/inet.h>
 #include <signal.h>
 #include <thread>
@@ -71,6 +72,8 @@ int main() {
     std::thread dispatcher_thread(DispatcherWait);
     std::thread timer_thread(TimerWait);
     std::thread ipc_thread(IpcWait);
+
+    process::Auditor::GetInstance();
 
     heartbeat_thread.join();
     netlink_thread.join();
