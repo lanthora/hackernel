@@ -73,7 +73,7 @@ int main() {
     std::thread timer_thread(TimerWait);
     std::thread ipc_thread(IpcWait);
 
-    process::Auditor::GetInstance();
+    process::Auditor::GetInstance().Init();
 
     heartbeat_thread.join();
     netlink_thread.join();

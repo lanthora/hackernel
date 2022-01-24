@@ -149,10 +149,6 @@ int Auditor::Load() {
         judge_ = doc["judge"];
     }
 
-    if (enabled_) {
-        ProcProtectEnable(SYSTEM_SESSION);
-    }
-
     return 0;
 }
 
@@ -165,6 +161,13 @@ Auditor::Auditor() {
     });
     Load();
     SetAutoSaveTimer();
+}
+
+int Auditor::Init() {
+    if (enabled_) {
+        ProcProtectEnable(SYSTEM_SESSION);
+    }
+    return 0;
 }
 
 int Auditor::Save() {

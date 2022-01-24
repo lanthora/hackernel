@@ -17,6 +17,7 @@ class Auditor {
 public:
     ProcPerm HandlerNewCmd(const std::string &cmd);
     int Save();
+    int Init();
 
 private:
     int Load();
