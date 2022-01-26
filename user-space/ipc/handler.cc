@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "ipc/handler.h"
 #include "hackernel/ipc.h"
+#include "hackernel/json.h"
 #include "ipc/server.h"
 #include <nlohmann/json.hpp>
 #include <string>
@@ -16,7 +17,7 @@ static int UserMsgSubCheck(const nlohmann::json &data) {
     return 0;
 
 errout:
-    WARN("invalid argument=[%s]", data.dump().data());
+    WARN("invalid argument=[%s]", json::dump(data).data());
     return -EINVAL;
 }
 
@@ -46,7 +47,7 @@ static int UserMsgUnsubCheck(const nlohmann::json &data) {
     return 0;
 
 errout:
-    WARN("invalid argument=[%s]", data.dump().data());
+    WARN("invalid argument=[%s]", json::dump(data).data());
     return -EINVAL;
 }
 
@@ -85,7 +86,7 @@ static int UserCtrlTokenCheck(const nlohmann::json &data) {
     return 0;
 
 errout:
-    WARN("invalid argument=[%s]", data.dump().data());
+    WARN("invalid argument=[%s]", json::dump(data).data());
     return -EINVAL;
 }
 

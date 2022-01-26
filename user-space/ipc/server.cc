@@ -91,7 +91,7 @@ int IpcServer::SendMsgToClient(const nlohmann::json &doc) {
     nlohmann::json data = doc["data"];
     data["extra"] = conn.extra;
 
-    return SendMsgToClient(conn, data.dump());
+    return SendMsgToClient(conn, json::dump(data));
 }
 
 int IpcServer::SendMsgToClient(UserConn conn, const std::string &msg) {
@@ -125,7 +125,7 @@ int IpcServer::MsgUnsub(const std::string &section, const UserConn &user) {
 int IpcServer::SendMsgToSubscriber(const nlohmann::json &doc) {
     std::string section = doc["type"];
     nlohmann::json data = doc["data"];
-    return SendMsgToSubscriber(section, data.dump());
+    return SendMsgToSubscriber(section, json::dump(data));
 }
 
 int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string &msg) {
@@ -216,7 +216,7 @@ int IpcServer::UnixDomainSocketWait() {
         doc["session"] = session;
         doc["type"] = std::string(data["type"]);
         doc["data"] = data;
-        Broadcaster::GetInstance().Notify(doc.dump());
+        Broadcaster::GetInstance().Notify(json::dump(doc));
     }
 
     close(socket_);

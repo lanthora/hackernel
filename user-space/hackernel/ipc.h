@@ -3,6 +3,7 @@
 #define HACKERNEL_IPC_H
 
 #include "broadcaster.h"
+#include "hackernel/json.h"
 #include "hackernel/util.h"
 #include <nlohmann/json.hpp>
 #include <string>
@@ -27,7 +28,7 @@ static inline std::string UserJsonWrapper(const int32_t &session, const nlohmann
     doc["session"] = session;
     doc["type"] = data["type"];
     doc["data"] = data;
-    return doc.dump();
+    return json::dump(doc);
 }
 
 static inline std::string InternalJsonWrapper(const nlohmann::json &data) {

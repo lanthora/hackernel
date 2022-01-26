@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "dispatcher/handler.h"
 #include "hackernel/file.h"
+#include "hackernel/json.h"
 #include "hackernel/net.h"
 #include "hackernel/process.h"
 #include <arpa/inet.h>
@@ -59,7 +60,7 @@ static int UserFileSetCheck(const nlohmann::json &data) {
     return 0;
 
 errout:
-    WARN("invalid argument=[%s]", data.dump().data());
+    WARN("invalid argument=[%s]", json::dump(data).data());
     return -EINVAL;
 }
 
@@ -147,7 +148,7 @@ static int UserNetInsertCheck(const nlohmann::json &data) {
     return 0;
 
 errout:
-    WARN("invalid argument=[%s]", data.dump().data());
+    WARN("invalid argument=[%s]", json::dump(data).data());
     return -EINVAL;
 }
 
@@ -185,7 +186,7 @@ static int UserNetDeleteCheck(const nlohmann::json &data) {
         goto errout;
     return 0;
 errout:
-    WARN("invalid argument=[%s]", data.dump().data());
+    WARN("invalid argument=[%s]", json::dump(data).data());
     return -EINVAL;
 }
 

@@ -124,7 +124,7 @@ int Auditor::Load() {
 
     for (const auto &element : doc["raw"]) {
         if (!element["cmd"].is_string() || !element["count"].is_number_unsigned()) {
-            WARN("raw element parse failed, element=[%s]", element.dump().data());
+            WARN("raw element parse failed, element=[%s]", json::dump(element).data());
             continue;
         }
         data.raw.push_back(std::make_pair<std::string, uint64_t>(element["cmd"], element["count"]));
@@ -133,7 +133,7 @@ int Auditor::Load() {
 
     for (const auto &trusted : doc["trusted"]) {
         if (!trusted.is_string()) {
-            WARN("trusted item is not string, trusted=[%s]", trusted.dump().data());
+            WARN("trusted item is not string, trusted=[%s]", json::dump(trusted).data());
             continue;
         }
         TrustedCmdInsert(trusted);
@@ -212,6 +212,7 @@ int Auditor::Save() {
     doc["enabled"] = enabled_;
     doc["judge"] = judge_;
 
+    // TODO: 验证写入非UTF-8编码字符时是否出现异常
     output << std::setw(4) << doc;
     output.close();
     return 0;
