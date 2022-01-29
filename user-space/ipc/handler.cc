@@ -22,7 +22,7 @@ errout:
 }
 
 bool UserMsgSub(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::msg::sub")
         return false;
 
@@ -52,7 +52,7 @@ errout:
 }
 
 bool UserMsgUnsub(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::msg::unsub")
         return false;
 
@@ -71,7 +71,7 @@ bool UserMsgUnsub(const std::string &msg) {
 }
 
 bool UserCtrlExit(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::ctrl::exit")
         return false;
 
@@ -91,7 +91,7 @@ errout:
 }
 
 bool UserCtrlToken(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::ctrl::token")
         return false;
 
@@ -106,7 +106,7 @@ bool UserCtrlToken(const std::string &msg) {
 }
 
 bool KernelProcReport(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::proc::report")
         return false;
 
@@ -115,7 +115,7 @@ bool KernelProcReport(const std::string &msg) {
 }
 
 bool KernelProcEnable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::proc::enable")
         return false;
 
@@ -124,7 +124,7 @@ bool KernelProcEnable(const std::string &msg) {
 }
 
 bool KernelProcDisable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::proc::disable")
         return false;
 
@@ -133,7 +133,7 @@ bool KernelProcDisable(const std::string &msg) {
 }
 
 bool KernelFileReport(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::file::report")
         return false;
 
@@ -142,7 +142,7 @@ bool KernelFileReport(const std::string &msg) {
 }
 
 bool KernelFileSet(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::file::set")
         return false;
 
@@ -150,7 +150,7 @@ bool KernelFileSet(const std::string &msg) {
     return true;
 }
 bool KernelFileEnable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::file::enable")
         return false;
 
@@ -159,7 +159,7 @@ bool KernelFileEnable(const std::string &msg) {
 }
 
 bool KernelFileDisable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::file::disable")
         return false;
 
@@ -168,7 +168,7 @@ bool KernelFileDisable(const std::string &msg) {
 }
 
 bool KernelNetInsert(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::insert")
         return false;
 
@@ -177,7 +177,7 @@ bool KernelNetInsert(const std::string &msg) {
 }
 
 bool KernelNetDelete(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::delete")
         return false;
 
@@ -185,7 +185,7 @@ bool KernelNetDelete(const std::string &msg) {
     return true;
 }
 bool KernelNetEnable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::enable")
         return false;
 
@@ -193,7 +193,7 @@ bool KernelNetEnable(const std::string &msg) {
     return true;
 }
 bool KernelNetDisable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::disable")
         return false;
 
@@ -202,7 +202,7 @@ bool KernelNetDisable(const std::string &msg) {
 }
 
 bool AuditProcReport(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "audit::proc::report")
         return false;
 

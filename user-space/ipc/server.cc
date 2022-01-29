@@ -189,7 +189,7 @@ int IpcServer::UnixDomainSocketWait() {
 
         nlohmann::json data;
         try {
-            data = nlohmann::json::parse(buffer);
+            data = json::parse(buffer);
         } catch (nlohmann::json::parse_error &ex) {
             WARN("parse error, buffer=[%s]", buffer);
             continue;

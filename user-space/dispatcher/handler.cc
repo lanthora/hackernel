@@ -11,7 +11,7 @@
 namespace hackernel {
 
 bool UserProcEnable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::proc::enable")
         return false;
 
@@ -21,7 +21,7 @@ bool UserProcEnable(const std::string &msg) {
 }
 
 bool UserProcDisable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::proc::disable")
         return false;
 
@@ -31,7 +31,7 @@ bool UserProcDisable(const std::string &msg) {
 }
 
 bool UserFileEnable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::file::enable")
         return false;
 
@@ -41,7 +41,7 @@ bool UserFileEnable(const std::string &msg) {
 }
 
 bool UserFileDisable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::file::disable")
         return false;
 
@@ -65,7 +65,7 @@ errout:
 }
 
 bool UserFileSet(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::file::set")
         return false;
 
@@ -82,7 +82,7 @@ bool UserFileSet(const std::string &msg) {
 }
 
 bool UserNetEnable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::net::enable")
         return false;
 
@@ -92,7 +92,7 @@ bool UserNetEnable(const std::string &msg) {
 }
 
 bool UserNetDisable(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::net::disable")
         return false;
 
@@ -153,7 +153,7 @@ errout:
 }
 
 bool UserNetInsert(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::net::insert")
         return false;
 
@@ -191,7 +191,7 @@ errout:
 }
 
 bool UserNetDelete(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::net::delete")
         return false;
 

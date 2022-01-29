@@ -2,6 +2,7 @@
 #include "hackernel/dispatcher.h"
 #include "dispatcher/handler.h"
 #include "hackernel/broadcaster.h"
+#include "hackernel/json.h"
 #include "hackernel/util.h"
 #include <nlohmann/json.hpp>
 #include <unordered_set>
@@ -25,7 +26,7 @@ static void DispatcherFilterInit() {
 }
 
 static bool DispatcherFilter(const std::string &msg) {
-    nlohmann::json doc = nlohmann::json::parse(msg);
+    nlohmann::json doc = json::parse(msg);
     if (!doc.is_object())
         return true;
     if (!doc["type"].is_string())

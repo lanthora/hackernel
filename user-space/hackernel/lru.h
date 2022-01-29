@@ -28,6 +28,9 @@ private:
     std::mutex lru_lock_;
 
 public:
+    LRUCache() {}
+    LRUCache(size_t capacity) : lru_capacity_(capacity) {}
+
     int Get(const Key &key, Value &value) {
         std::lock_guard<std::mutex> lock(lru_lock_);
 

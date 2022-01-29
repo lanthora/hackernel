@@ -9,11 +9,8 @@ namespace hackernel {
 
 namespace json {
 
-static inline std::string dump(const nlohmann::json &doc) {
-    std::string retval = doc.dump(-1, ' ', false, nlohmann::json::error_handler_t::ignore);
-    DBG("json dump, %s", retval.data());
-    return retval;
-}
+std::string dump(const nlohmann::json &doc);
+nlohmann::json parse(const std::string &msg);
 
 }; // namespace json
 
