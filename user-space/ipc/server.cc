@@ -43,6 +43,7 @@ int IpcServer::Init() {
     receiver_->AddHandler(UserMsgUnsub);
     receiver_->AddHandler(UserCtrlExit);
     receiver_->AddHandler(UserCtrlToken);
+    receiver_->AddHandler(UserTestEcho);
 
     Broadcaster::GetInstance().AddReceiver(receiver_);
     return 0;

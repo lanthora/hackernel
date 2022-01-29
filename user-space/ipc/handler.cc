@@ -10,6 +10,15 @@ namespace hackernel {
 
 using namespace ipc;
 
+bool UserTestEcho(const std::string &msg) {
+    nlohmann::json doc = json::parse(msg);
+    if (doc["type"] != "user::test::echo")
+        return false;
+
+    IpcServer::GetInstance().SendMsgToClient(doc);
+    return true;
+}
+
 static int UserMsgSubCheck(const nlohmann::json &data) {
     if (!data["section"].is_string())
         goto errout;

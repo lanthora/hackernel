@@ -10,6 +10,7 @@ bool UserMsgSub(const std::string &msg);
 bool UserMsgUnsub(const std::string &msg);
 bool UserCtrlExit(const std::string &msg);
 bool UserCtrlToken(const std::string &msg);
+bool UserTestEcho(const std::string &msg);
 
 bool KernelProcReport(const std::string &msg);
 bool KernelProcEnable(const std::string &msg);
