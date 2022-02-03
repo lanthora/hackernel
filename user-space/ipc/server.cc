@@ -166,6 +166,8 @@ int IpcServer::UnixDomainSocketWait() {
 
     server.sun_family = AF_UNIX;
     strcpy(server.sun_path, SOCK_PATH);
+
+    // BUG: 服务端正常运行的情况下可以被unlink,unlink后会导致无法与新客户端建立连接
     unlink(SOCK_PATH);
     if (bind(socket_, (struct sockaddr *)&server, sizeof(server)) == -1) {
         ERR("unix domain socket bind failed");

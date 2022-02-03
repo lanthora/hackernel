@@ -84,7 +84,6 @@ int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
 
     type = nla_get_u8(genl_info->attrs[FILE_A_OP_TYPE]);
     switch (type) {
-    // TODO: 根据业务分别处理case,目前只是打印日志
     case FILE_PROTECT_ENABLE:
         session = nla_get_s32(genl_info->attrs[FILE_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
