@@ -25,6 +25,9 @@ bool Auditor::UpdateThenIsTrusted(const std::string &cmd) {
     if (trusted)
         TrustedCmdInsert(cmd);
     cmd_counter_.Put(cmd, curcnt);
+
+    MarkChanged();
+
     return trusted;
 }
 
@@ -160,16 +163,22 @@ bool Auditor::Handler(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] == "user::proc::enable") {
         enabled_ = true;
+        MarkChanged();
         return true;
     }
     if (doc["type"] == "user::proc::disable") {
         enabled_ = false;
+        MarkChanged();
         return true;
     }
 
     // TODO: 处理其他会引起进程配置变更的广播消息
 
     return false;
+}
+
+void Auditor::MarkChanged() {
+    last_update_time_ = std::chrono::system_clock::now();
 }
 
 int Auditor::Init() {
@@ -199,17 +208,20 @@ int Auditor::Init() {
     if (enabled_) {
         ProcProtectEnable(SYSTEM_SESSION);
     }
+
+    MarkChanged();
     return 0;
 }
 
 int Auditor::Save() {
     std::lock_guard<std::mutex> lock(sl_mutex_);
 
-    static uint64_t last_cmd_sum = 0L;
-    if (sumcnt_ == last_cmd_sum)
+    static auto last_save_time = std::chrono::system_clock::now();
+
+    if (last_save_time == last_update_time_)
         return 0;
 
-    last_cmd_sum = sumcnt_;
+    last_save_time = last_update_time_;
 
     std::error_code ec;
     std::filesystem::create_directories("/var/lib/hackernel", ec);

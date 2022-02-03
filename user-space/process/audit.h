@@ -5,6 +5,7 @@
 #include "hackernel/broadcaster.h"
 #include "hackernel/lru.h"
 #include "hackernel/process.h"
+#include <chrono>
 #include <shared_mutex>
 #include <string>
 #include <unordered_set>
@@ -30,6 +31,7 @@ private:
     bool IsTrusted(const std::string &cmd);
     bool UpdateThenIsTrusted(const std::string &cmd);
     bool Handler(const std::string &msg);
+    void MarkChanged();
 
 public:
     static Auditor &GetInstance();
@@ -45,6 +47,7 @@ private:
     std::string judge_ = "allow";
     bool enabled_ = true;
     std::shared_ptr<Receiver> receiver_ = nullptr;
+    std::chrono::system_clock::time_point last_update_time_;
 };
 
 }; // namespace process
