@@ -168,6 +168,7 @@ int IpcServer::UnixDomainSocketWait() {
     strcpy(server.sun_path, SOCK_PATH);
 
     // BUG: 服务端正常运行的情况下可以被unlink,unlink后会导致无法与新客户端建立连接
+    // TODO: 默认保护 /tmp/hackernel.sock ,禁止删除,移动
     unlink(SOCK_PATH);
     if (bind(socket_, (struct sockaddr *)&server, sizeof(server)) == -1) {
         ERR("unix domain socket bind failed");
