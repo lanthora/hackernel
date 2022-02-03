@@ -2,6 +2,7 @@
 #include "process/audit.h"
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
+#include "hackernel/threads.h"
 #include "hackernel/timer.h"
 #include "hackernel/util.h"
 #include <cmath>
@@ -11,7 +12,7 @@
 
 namespace hackernel {
 
-using namespace process;
+namespace process {
 
 bool Auditor::UpdateThenIsTrusted(const std::string &cmd) {
     uint64_t curcnt = 0UL;
@@ -152,18 +153,49 @@ int Auditor::Load() {
     return 0;
 }
 
-Auditor::Auditor() {
+Auditor::Auditor() {}
+
+// 根据广播中的消息更新配置,消息产生与配置更新解耦
+bool Auditor::Handler(const std::string &msg) {
+    nlohmann::json doc = json::parse(msg);
+    if (doc["type"] == "user::proc::enable") {
+        enabled_ = true;
+        return true;
+    }
+    if (doc["type"] == "user::proc::disable") {
+        enabled_ = false;
+        return true;
+    }
+
+    // TODO: 处理其他会引起进程配置变更的广播消息
+
+    return false;
+}
+
+int Auditor::Init() {
     const size_t CMD_COUNT_MAX = 1024;
     cmd_counter_.SetCapacity(CMD_COUNT_MAX);
     cmd_counter_.SetOnEarseHandler([&](const std::pair<std::string, uint64_t> &item) {
         sumcnt_ -= item.second;
         return;
     });
+
+    receiver_ = std::make_shared<Receiver>();
+    if (!receiver_) {
+        ERR("make receiver failed");
+        return -ENOMEM;
+    }
+
+    receiver_->AddHandler([&](const std::string &msg) { return Handler(msg); });
+    Broadcaster::GetInstance().AddReceiver(receiver_);
+    Threads::GetInstance().AddThread([&]() {
+        ThreadNameUpdate("audit-process");
+        receiver_->ConsumeWait();
+    });
+
     Load();
     SetAutoSaveTimer();
-}
 
-int Auditor::Init() {
     if (enabled_) {
         ProcProtectEnable(SYSTEM_SESSION);
     }
@@ -232,5 +264,7 @@ int Auditor::SetAutoSaveTimer() {
 Auditor::~Auditor() {
     Save();
 }
+
+} // namespace process
 
 }; // namespace hackernel

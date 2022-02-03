@@ -2,6 +2,7 @@
 #ifndef PROCESS_AUDIT_H
 #define PROCESS_AUDIT_H
 
+#include "hackernel/broadcaster.h"
 #include "hackernel/lru.h"
 #include "hackernel/process.h"
 #include <shared_mutex>
@@ -16,11 +17,11 @@ class Auditor {
 
 public:
     ProcPerm HandlerNewCmd(const std::string &cmd);
-    int Save();
     int Init();
 
 private:
     int Load();
+    int Save();
     int SetAutoSaveTimer();
 
 private:
@@ -28,6 +29,7 @@ private:
     int TrustedCmdInsert(const std::string &cmd);
     bool IsTrusted(const std::string &cmd);
     bool UpdateThenIsTrusted(const std::string &cmd);
+    bool Handler(const std::string &msg);
 
 public:
     static Auditor &GetInstance();
@@ -42,6 +44,7 @@ private:
     std::shared_mutex trusted_cmd_mutex_;
     std::string judge_ = "allow";
     bool enabled_ = true;
+    std::shared_ptr<Receiver> receiver_ = nullptr;
 };
 
 }; // namespace process

@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
+#include "file/audit.h"
 #include "hackernel/broadcaster.h"
 #include "hackernel/dispatcher.h"
 #include "hackernel/file.h"
@@ -6,6 +7,7 @@
 #include "hackernel/ipc.h"
 #include "hackernel/net.h"
 #include "hackernel/process.h"
+#include "hackernel/threads.h"
 #include "hackernel/timer.h"
 #include "hknl/netlink.h"
 #include "process/audit.h"
@@ -74,12 +76,16 @@ int main() {
     std::thread ipc_thread(IpcWait);
 
     process::Auditor::GetInstance().Init();
+    file::Auditor::GetInstance().Init();
 
     heartbeat_thread.join();
     netlink_thread.join();
     dispatcher_thread.join();
     timer_thread.join();
     ipc_thread.join();
+
+    Broadcaster::GetInstance().ExitAllReceiver();
+    Threads::GetInstance().WaitAllThreadsExit();
     DBG("exit done");
 
     return retval;
