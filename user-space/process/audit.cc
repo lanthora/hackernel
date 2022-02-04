@@ -107,17 +107,17 @@ int Auditor::Load() {
     }
 
     if (!doc["capacity"].is_number_unsigned()) {
-        WARN("can not read capacity from capacity");
+        WARN("can not read capacity from json");
         return -EINVAL;
     }
 
     if (!doc["raw"].is_array()) {
-        WARN("can not read raw from capacity");
+        WARN("can not read raw from json");
         return -EINVAL;
     }
 
     if (!doc["trusted"].is_array()) {
-        WARN("can not read trusted list from capacity");
+        WARN("can not read trusted list from json");
         return -EINVAL;
     }
 
@@ -248,7 +248,7 @@ int Auditor::Save() {
         doc["raw"].push_back(raw);
     }
 
-    std::unique_lock<std::shared_mutex> trusted_lock(trusted_cmd_mutex_);
+    std::shared_lock<std::shared_mutex> trusted_lock(trusted_cmd_mutex_);
     for (const auto &it : trusted_cmd_) {
         doc["trusted"].push_back(it);
     }
