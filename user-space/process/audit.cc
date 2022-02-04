@@ -198,7 +198,7 @@ int Auditor::Init() {
     receiver_->AddHandler([&](const std::string &msg) { return Handler(msg); });
     Broadcaster::GetInstance().AddReceiver(receiver_);
     Threads::GetInstance().AddThread([&]() {
-        ThreadNameUpdate("audit-process");
+        ThreadNameUpdate("process");
         receiver_->ConsumeWait();
     });
 
