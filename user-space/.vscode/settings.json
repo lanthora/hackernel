@@ -79,10 +79,11 @@
                 "source_location": "cpp",
                 "queue": "cpp"
         },
-        "C_Cpp.default.includePath":[               
+        "C_Cpp.default.includePath": [
                 "/usr/include/libnl3",
                 "${workspaceFolder}"
         ],
+        "C_Cpp.intelliSenseCacheSize": 0,
         "editor.detectIndentation": false,
         "editor.tabSize": 8
 }
