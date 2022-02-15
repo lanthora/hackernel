@@ -221,8 +221,6 @@ int Auditor::Save() {
     if (last_save_time == last_update_time_)
         return 0;
 
-    last_save_time = last_update_time_;
-
     std::error_code ec;
     std::filesystem::create_directories("/var/lib/hackernel", ec);
     if (ec) {
@@ -259,6 +257,8 @@ int Auditor::Save() {
     // TODO: 验证写入非UTF-8编码字符时是否出现异常
     output << std::setw(4) << doc;
     output.close();
+
+    last_save_time = last_update_time_;
     return 0;
 }
 

@@ -31,7 +31,6 @@ int Auditor::Save() {
     static auto last_save_time = std::chrono::system_clock::now();
     if (last_save_time == last_update_time_)
         return 0;
-    last_save_time = last_update_time_;
 
     std::error_code ec;
     std::filesystem::create_directories("/var/lib/hackernel", ec);
@@ -60,6 +59,7 @@ int Auditor::Save() {
     output << std::setw(4) << doc;
     output.close();
 
+    last_save_time = last_update_time_;
     return 0;
 }
 
