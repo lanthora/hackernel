@@ -14,7 +14,7 @@
 
 extern pid_t g_service_tgid;
 
-static DECLARE_WAIT_QUEUE_HEAD(process_perm_wq);
+static DECLARE_WAIT_QUEUE_HEAD(wq);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
 
 #define PROCESS_PERM_MASK 0xFF
@@ -114,7 +114,7 @@ int process_perm_update(const process_perm_id_t id, const process_perm_t perm)
 	write_unlock(&perm_head->lock);
 
 	read_unlock(&process_perm_hlist_lock);
-	wake_up(&process_perm_wq);
+	wake_up(&wq);
 
 	return 0;
 }
@@ -197,8 +197,12 @@ static process_perm_t process_protect_status(char *msg)
 		goto out;
 	}
 
-	wait_event_timeout(process_perm_wq, process_perm_condition(id, &retval),
-			   timeout);
+	wait_event_timeout(wq, process_perm_condition(id, &retval), timeout);
+
+	if (retval == PROCESS_WATT) {
+		ERR("get process protect status timeout");
+		goto out;
+	}
 
 out:
 	process_perm_delele(id);
