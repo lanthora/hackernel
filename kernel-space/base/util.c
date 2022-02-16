@@ -5,10 +5,11 @@
 #include <linux/mount.h>
 #include <linux/namei.h>
 #include <linux/statfs.h>
+#include <linux/uaccess.h>
 
 unsigned long *g_sys_call_table = NULL;
 
-static int argv_size_user(char __user *__user *argv, int max)
+static int argv_size_user(char __user *__user *argv)
 {
 	int argc = 0;
 	char __user *cur;
@@ -39,7 +40,7 @@ char *parse_argv_alloc(const char __user *const __user *argv)
 	if (!cmd)
 		goto errout;
 
-	argc = argv_size_user((char **)argv, BINPRM_BUF_SIZE);
+	argc = argv_size_user((char **)argv);
 	if (!argc)
 		goto errout;
 
@@ -117,13 +118,6 @@ char *get_exec_path(struct task_struct *task, void *buffer, size_t buffer_size)
 	return ret_ptr;
 }
 
-static char *get_pwd_path(void *buffer, size_t buffer_size)
-{
-	struct path pwd;
-	get_fs_pwd(current->fs, &pwd);
-	return d_path(&pwd, buffer, buffer_size);
-}
-
 /**
  * 通过这个函数获取根目录的路径,在一般情况下,根目录的路径是/
  * 但是在chroot或者使用namespace后,这个路径相应的会产生变化,
@@ -148,9 +142,16 @@ char *get_root_path_alloc(void)
 char *get_pwd_path_alloc(void)
 {
 	char *tmp, *buffer;
+	struct path pwd;
+
 	buffer = kzalloc(PATH_MAX, GFP_KERNEL);
-	tmp = get_pwd_path(buffer, PATH_MAX);
+
+	get_fs_pwd(current->fs, &pwd);
+	tmp = d_path(&pwd, buffer, PATH_MAX);
 	strcpy(buffer, tmp);
+
+	path_put(&pwd);
+
 	return buffer;
 }
 
