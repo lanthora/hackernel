@@ -1,20 +1,12 @@
 ifneq ($(KERNELRELEASE),)
 
-obj-m :=hackernel.o
-hackernel-objs :=\
-	base/main.o \
-	base/netlink.o \
-	base/util.o \
-	handshake/core.o \
-	handshake/netlink.o \
-	process/core.o \
-	process/netlink.o \
-	file/core.o \
-	file/netlink.o \
-	net/core.o \
-	net/netlink.o \
-	watchdog/core.o \
-	watchdog/watchdog.o \
+obj-m := hackernel.o
+hackernel-objs += base/main.o base/netlink.o base/util.o
+hackernel-objs += watchdog/core.o watchdog/watchdog.o
+hackernel-objs += handshake/core.o handshake/netlink.o
+hackernel-objs += process/core.o process/netlink.o
+hackernel-objs += file/core.o file/netlink.o
+hackernel-objs += net/core.o net/netlink.o
 
 ccflags-y += $(HACKERNEL_MODULE_CFLAGS)
 ccflags-y += -I$(src)/include
