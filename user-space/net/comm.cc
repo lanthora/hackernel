@@ -2,7 +2,7 @@
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
 #include "hackernel/net.h"
-#include "hknl/netlink.h"
+#include "nlc/netlink.h"
 #include <netlink/genl/genl.h>
 #include <netlink/msg.h>
 #include <nlohmann/json.hpp>

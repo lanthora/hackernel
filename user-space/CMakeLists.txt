@@ -19,7 +19,7 @@ endif()
 
 include_directories("/usr/include/libnl3")
 
-add_subdirectory(hknl)
+add_subdirectory(nlc)
 add_subdirectory(heartbeat)
 add_subdirectory(file)
 add_subdirectory(process)
@@ -28,7 +28,7 @@ add_subdirectory(ipc)
 add_subdirectory(util)
 add_subdirectory(dispatcher)
 
-target_link_libraries(${PROJECT_NAME} hknl)
+target_link_libraries(${PROJECT_NAME} nlc)
 target_link_libraries(${PROJECT_NAME} heartbeat)
 target_link_libraries(${PROJECT_NAME} file)
 target_link_libraries(${PROJECT_NAME} process)

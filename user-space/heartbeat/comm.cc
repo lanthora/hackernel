@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "hackernel/heartbeat.h"
-#include "hknl/netlink.h"
+#include "nlc/netlink.h"
 #include <chrono>
 #include <condition_variable>
 #include <mutex>

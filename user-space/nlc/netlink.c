@@ -1,10 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "hknl/netlink.h"
+#include "nlc/netlink.h"
 #include "file/define.h"
 #include "hackernel/util.h"
 #include "heartbeat/define.h"
-#include "hknl/wrapper.h"
 #include "net/define.h"
+#include "nlc/wrapper.h"
 #include "process/define.h"
 #include <errno.h>
 #include <linux/genetlink.h>

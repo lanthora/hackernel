@@ -9,7 +9,7 @@
 #include "hackernel/process.h"
 #include "hackernel/threads.h"
 #include "hackernel/timer.h"
-#include "hknl/netlink.h"
+#include "nlc/netlink.h"
 #include "process/audit.h"
 #include <arpa/inet.h>
 #include <signal.h>
