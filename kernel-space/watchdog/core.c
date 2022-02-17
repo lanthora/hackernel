@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "watchdog.h"
+#include "hackernel/watchdog.h"
 
 static struct watchdog dog;
 static bool connecting = false;

@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "util.h"
+#include "hackernel/util.h"
 #include <linux/binfmts.h>
 #include <linux/fs_struct.h>
 #include <linux/mount.h>

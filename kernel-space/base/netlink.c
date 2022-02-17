@@ -1,11 +1,11 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "netlink.h"
-#include "file.h"
-#include "handshake.h"
-#include "net.h"
-#include "process.h"
-#include "syscall.h"
-#include "util.h"
+#include "hackernel/netlink.h"
+#include "hackernel/file.h"
+#include "hackernel/handshake.h"
+#include "hackernel/net.h"
+#include "hackernel/process.h"
+#include "hackernel/syscall.h"
+#include "hackernel/util.h"
 #include <net/genetlink.h>
 #include <net/netlink.h>
 

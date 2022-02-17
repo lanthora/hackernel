@@ -106,7 +106,7 @@
 		"/usr/src/linux-aarch64/include",
 		"/usr/src/linux-aarch64/arch/arm64/include",
 		"/usr/src/linux-aarch64/arch/arm64/include/generated",
-		"${workspaceFolder}/include",
+		"${workspaceFolder}",
 	],
 	"C_Cpp.default.defines": [
 		"MODULE",

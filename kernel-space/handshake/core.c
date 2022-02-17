@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "handshake.h"
-#include "syscall.h"
-#include "watchdog.h"
+#include "hackernel/handshake.h"
+#include "hackernel/syscall.h"
+#include "hackernel/watchdog.h"
 
 pid_t hackernel_tgid;
 extern struct net *hackernel_net;

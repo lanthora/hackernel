@@ -9,7 +9,7 @@ hackernel-objs += file/core.o file/netlink.o
 hackernel-objs += net/core.o net/netlink.o
 
 ccflags-y += $(HACKERNEL_MODULE_CFLAGS)
-ccflags-y += -I$(src)/include
+ccflags-y += -I$(src)
 ccflags-y += $(call cc-option,-fmacro-prefix-map=$(PWD)/=)
 
 else

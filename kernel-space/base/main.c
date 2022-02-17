@@ -1,10 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "file.h"
-#include "net.h"
-#include "netlink.h"
-#include "process.h"
-#include "util.h"
-#include "watchdog.h"
+#include "hackernel/file.h"
+#include "hackernel/net.h"
+#include "hackernel/netlink.h"
+#include "hackernel/process.h"
+#include "hackernel/util.h"
+#include "hackernel/watchdog.h"
 #include <linux/module.h>
 
 MODULE_LICENSE("GPL v2");

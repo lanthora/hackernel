@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "file.h"
-#include "handshake.h"
-#include "watchdog.h"
+#include "hackernel/file.h"
+#include "hackernel/handshake.h"
+#include "hackernel/watchdog.h"
 #include <linux/binfmts.h>
 #include <linux/dcache.h>
 #include <linux/file.h>

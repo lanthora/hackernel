@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "netlink.h"
-#include "handshake.h"
-#include "net.h"
-#include "util.h"
+#include "hackernel/netlink.h"
+#include "hackernel/handshake.h"
+#include "hackernel/net.h"
+#include "hackernel/util.h"
 
 extern struct genl_family genl_family;
 

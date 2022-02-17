@@ -2,7 +2,7 @@
 #ifndef HACKERNEL_PROCESS_H
 #define HACKERNEL_PROCESS_H
 
-#include "syscall.h"
+#include "hackernel/syscall.h"
 #include <net/genetlink.h>
 #include <net/netlink.h>
 

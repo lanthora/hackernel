@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "netlink.h"
-#include "file.h"
-#include "handshake.h"
-#include "watchdog.h"
+#include "hackernel/netlink.h"
+#include "hackernel/file.h"
+#include "hackernel/handshake.h"
+#include "hackernel/watchdog.h"
 #include <linux/version.h>
 
 #if CONFIG_NLA_STRSCPY

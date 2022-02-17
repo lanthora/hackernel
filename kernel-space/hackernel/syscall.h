@@ -2,8 +2,8 @@
 #ifndef HACKERNEL_SYSCALL_H
 #define HACKERNEL_SYSCALL_H
 
-#include "define.h"
-#include "util.h"
+#include "hackernel/define.h"
+#include "hackernel/util.h"
 #include <linux/kernel.h>
 
 extern unsigned long *g_sys_call_table;

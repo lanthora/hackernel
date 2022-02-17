@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "watchdog.h"
-#include "util.h"
+#include "hackernel/watchdog.h"
+#include "hackernel/util.h"
 
 static int watchdog_kthread(void *data)
 {

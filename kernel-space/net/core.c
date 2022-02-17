@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "net.h"
-#include "netlink.h"
-#include "util.h"
-#include "watchdog.h"
+#include "hackernel/net.h"
+#include "hackernel/netlink.h"
+#include "hackernel/util.h"
+#include "hackernel/watchdog.h"
 #include <linux/bitmap.h>
 #include <linux/gfp.h>
 #include <linux/ip.h>

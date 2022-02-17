@@ -2,7 +2,7 @@
 #ifndef HACKERNEL_FILE_H
 #define HACKERNEL_FILE_H
 
-#include "syscall.h"
+#include "hackernel/syscall.h"
 #include <linux/kernel.h>
 #include <net/genetlink.h>
 #include <net/netlink.h>

@@ -2,7 +2,7 @@
 #ifndef HACKERNEL_UTIL_H
 #define HACKERNEL_UTIL_H
 
-#include "define.h"
+#include "hackernel/define.h"
 #include <linux/kernel.h>
 #include <linux/kprobes.h>
 #include <linux/sched.h>
