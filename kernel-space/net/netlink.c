@@ -96,7 +96,7 @@ int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	u8 type;
 	s32 session;
 
-	if (g_portid != info->snd_portid)
+	if (hackernel_user_check(info))
 		return -EPERM;
 
 	if (!info->attrs[NET_A_OP_TYPE]) {

@@ -21,7 +21,8 @@ enum {
 void netlink_kernel_start(void);
 void netlink_kernel_stop(void);
 
-extern u32 g_portid;
+extern u32 hackernel_portid;
+extern struct net *hackernel_net;
 
 int handshake_handler(struct sk_buff *skb, struct genl_info *info);
 

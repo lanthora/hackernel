@@ -41,7 +41,7 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 		goto errout;
 	}
 
-	head = genlmsg_put(skb, g_portid, 0, &genl_family, 0,
+	head = genlmsg_put(skb, hackernel_portid, 0, &genl_family, 0,
 			   HACKERNEL_C_FILE_PROTECT);
 	if (!head) {
 		ERR("genlmsg_put failed");
@@ -67,7 +67,7 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	}
 	genlmsg_end(skb, head);
 
-	error = genlmsg_unicast(&init_net, skb, g_portid);
+	error = genlmsg_unicast(hackernel_net, skb, hackernel_portid);
 	if (!error) {
 		errcnt = atomic_xchg(&atomic_errcnt, 0);
 		if (unlikely(errcnt))
@@ -102,7 +102,7 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	u8 type;
 	s32 session;
 
-	if (g_portid != info->snd_portid)
+	if (hackernel_user_check(info))
 		return -EPERM;
 
 	if (!info->attrs[FILE_A_OP_TYPE]) {

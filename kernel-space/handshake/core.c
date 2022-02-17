@@ -1,26 +1,43 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
+#include "handshake.h"
 #include "syscall.h"
 #include "watchdog.h"
 
-pid_t g_service_tgid;
-extern u32 g_portid;
+pid_t hackernel_tgid;
+extern struct net *hackernel_net;
+extern u32 hackernel_portid;
 
-int hackernel_heartbeat_check(u32 portid)
+int hackernel_user_check(struct genl_info *info)
 {
-	if (portid != g_portid && conn_check_living())
+	if (info->snd_portid != hackernel_portid)
 		return -EPERM;
 
-	g_portid = portid;
+	if (genl_info_net(info) != hackernel_net)
+		return -EPERM;
+	return 0;
+}
+
+int hackernel_heartbeat_check(struct genl_info *info)
+{
+	if (!conn_check_living())
+		goto update;
+
+	if (hackernel_user_check(info))
+		return -EPERM;
+
+update:
+	hackernel_net = genl_info_net(info);
+	hackernel_portid = info->snd_portid;
 	conn_check_set_alive();
 	return 0;
 }
 
 bool hackernel_trusted_proccess(void)
 {
-	return current->tgid == g_service_tgid;
+	return current->tgid == hackernel_tgid;
 }
 
 void inline tgid_init(pid_t pid)
 {
-	g_service_tgid = pid;
+	hackernel_tgid = pid;
 }

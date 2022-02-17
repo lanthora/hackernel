@@ -6,7 +6,7 @@
 #include <linux/binfmts.h>
 
 extern struct genl_family genl_family;
-extern pid_t g_service_tgid;
+extern pid_t hackernel_tgid;
 
 struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
 	[PROCESS_A_STATUS_CODE] = { .type = NLA_S32 },
@@ -34,7 +34,7 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 		goto errout;
 	}
 
-	head = genlmsg_put(skb, g_portid, 0, &genl_family, 0,
+	head = genlmsg_put(skb, hackernel_portid, 0, &genl_family, 0,
 			   HACKERNEL_C_PROCESS_PROTECT);
 	if (!head) {
 		ERR("genlmsg_put failed");
@@ -60,12 +60,12 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 	}
 	genlmsg_end(skb, head);
 
-	error = genlmsg_unicast(&init_net, skb, g_portid);
+	error = genlmsg_unicast(&init_net, skb, hackernel_portid);
 	skb = NULL;
 	if (error) {
 		ERR("genlmsg_unicast failed error=[%d]", error);
-		g_portid = 0;
-		g_service_tgid = 0;
+		hackernel_portid = 0;
+		hackernel_tgid = 0;
 		conn_check_set_dead();
 		atomic_inc(&atomic_errcnt);
 		goto errout;
@@ -92,7 +92,7 @@ int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	u8 type;
 	s32 session;
 
-	if (g_portid != info->snd_portid)
+	if (hackernel_user_check(info))
 		return -EPERM;
 
 	if (!info->attrs[PROCESS_A_OP_TYPE]) {

@@ -12,7 +12,7 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 
-extern pid_t g_service_tgid;
+extern pid_t hackernel_tgid;
 
 static DECLARE_WAIT_QUEUE_HEAD(wq);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
@@ -280,7 +280,7 @@ static int self_protect(pid_t nr, int sig)
 	task = get_pid_task(pid, PIDTYPE_PID);
 	if (!task)
 		return 0;
-	if (task->tgid != g_service_tgid)
+	if (task->tgid != hackernel_tgid)
 		return 0;
 	return -EPERM;
 }

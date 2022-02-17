@@ -22,7 +22,7 @@ int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 		return -EPERM;
 	}
 
-	if (hackernel_heartbeat_check(info->snd_portid)) {
+	if (hackernel_heartbeat_check(info)) {
 		ERR("hackernel_heartbeat_check failed");
 		return -EPERM;
 	}

@@ -9,7 +9,8 @@
 #include <net/genetlink.h>
 #include <net/netlink.h>
 
-u32 g_portid = 0;
+u32 hackernel_portid = 0;
+struct net *hackernel_net = NULL;
 
 extern struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1];
 extern struct nla_policy file_policy[FILE_A_MAX + 1];
