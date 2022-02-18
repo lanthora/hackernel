@@ -1,5 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "hackernel/watchdog.h"
+#include "watchdog/api.h"
 #include "hackernel/log.h"
 
 static int watchdog_kthread(void *data)

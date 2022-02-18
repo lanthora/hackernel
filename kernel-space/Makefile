@@ -1,8 +1,8 @@
 ifneq ($(KERNELRELEASE),)
 
 obj-m := hackernel.o
-hackernel-objs += base/main.o base/netlink.o base/syscall.o
-hackernel-objs += watchdog/core.o watchdog/watchdog.o
+hackernel-objs += base/main.o base/netlink.o base/syscall.o base/watchdog.o
+hackernel-objs += watchdog/watchdog.o
 hackernel-objs += handshake/core.o handshake/netlink.o
 hackernel-objs += process/core.o process/netlink.o process/utils.o
 hackernel-objs += file/core.o file/netlink.o file/utils.o
