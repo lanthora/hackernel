@@ -1,10 +1,12 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
+#include "file/utils.h"
 #include "hackernel/handshake.h"
+#include "hackernel/log.h"
 #include "hackernel/netlink.h"
 #include "hackernel/process.h"
 #include "hackernel/syscall.h"
-#include "hackernel/util.h"
 #include "hackernel/watchdog.h"
+#include "process/utils.h"
 #include <linux/binfmts.h>
 #include <linux/gfp.h>
 #include <linux/list.h>

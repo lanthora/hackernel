@@ -3,10 +3,17 @@
 #define HACKERNEL_SYSCALL_H
 
 #include "hackernel/define.h"
-#include "hackernel/util.h"
+#include "hackernel/log.h"
 #include <linux/kernel.h>
 
+typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
+
 extern unsigned long *g_sys_call_table;
+extern kallsyms_lookup_name_t hk_kallsyms_lookup_name;
+
+void disable_wp(unsigned long addr);
+void enable_wp(unsigned long addr);
+void syscall_early_init(void);
 
 #define HKMAP1(cnt, m, t, a, ...) m(t, a, cnt)
 #define HKMAP2(cnt, m, t, a, ...) m(t, a, cnt), HKMAP1(cnt##i, m, __VA_ARGS__)

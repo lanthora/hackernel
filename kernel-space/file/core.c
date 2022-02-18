@@ -1,4 +1,5 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
+#include "file/utils.h"
 #include "hackernel/file.h"
 #include "hackernel/handshake.h"
 #include "hackernel/watchdog.h"
