@@ -59,4 +59,5 @@ nc -uU /tmp/hackernel.sock
 
 ## Licence
 
-[SPDX-License-Identifier: GPL-2.0-only](https://spdx.org/licenses/GPL-2.0-only.html)
+[GPL-2.0-only](https://spdx.org/licenses/GPL-2.0-only.html)
+
