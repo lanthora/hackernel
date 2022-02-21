@@ -17,7 +17,7 @@ namespace process {
 class Auditor {
 
 public:
-    ProcPerm HandlerNewCmd(const std::string &cmd);
+    ProcPerm HandleNewCmd(const std::string &cmd);
     int Init();
 
 private:

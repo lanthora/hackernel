@@ -34,7 +34,7 @@ int ProcProtectDisable(int32_t session) {
 
 ProcPerm ProcPermCheck(char *cmd) {
     auto &auditor = Auditor::GetInstance();
-    return auditor.HandlerNewCmd(cmd);
+    return auditor.HandleNewCmd(cmd);
 }
 
 int ProcPermReply(ProcPermID id, ProcPerm perm) {
