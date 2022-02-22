@@ -163,6 +163,11 @@ static bool running = false;
 int NetlinkWait() {
     int error;
 
+    if (!nl_sock) {
+        ERR("nl_sock is not inited");
+        return 0;
+    }
+
     struct pollfd fds = {
         .fd = nl_socket_get_fd(nl_sock),
         .events = POLLIN,
