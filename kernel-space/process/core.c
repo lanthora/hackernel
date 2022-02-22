@@ -284,7 +284,9 @@ static int self_protect(pid_t nr, int sig)
 		return 0;
 	if (task->tgid != hackernel_tgid)
 		return 0;
-	return -EPERM;
+	if (sig == SIGKILL || sig == SIGSTOP)
+		return -EPERM;
+	return 0;
 }
 
 HOOK_DEFINE3(execve, char *, pathname, char **, argv, char **, envp)

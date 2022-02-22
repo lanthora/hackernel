@@ -18,7 +18,6 @@
 using namespace hackernel;
 
 static bool running = true;
-static int retval = 0;
 
 bool RUNNING() {
     return running;
@@ -27,10 +26,9 @@ bool RUNNING() {
 void SHUTDOWN(int code) {
     if (!running)
         return;
-
-    DBG("exit start");
     running = false;
-    retval = code;
+
+    DBG("exit start ,code=[%d]", code);
 
     // 停止接受外部用户输入
     IpcExit();
@@ -88,5 +86,5 @@ int main() {
     Threads::GetInstance().WaitAllThreadsExit();
     DBG("exit done");
 
-    return retval;
+    return 0;
 }
