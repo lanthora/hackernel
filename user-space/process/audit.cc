@@ -50,8 +50,10 @@ ProcPerm Auditor::HandleNewCmd(const std::string &cmd) {
     if (judge_ == "allow" && UpdateThenIsTrusted(cmd))
         return PROCESS_ACCEPT;
 
-    if (judge_ == "reject" && cmd.ends_with("Riddikulus"))
+    if (judge_ == "reject" && cmd.ends_with("Riddikulus")) {
         judge_ = "disable";
+        MarkChanged();
+    }
 
     Report(cmd);
 
