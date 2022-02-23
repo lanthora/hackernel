@@ -70,10 +70,10 @@ int NetProtectDisable(int32_t session);
 int NetPolicyInsert(int32_t session, const struct NetPolicy *policy);
 int NetPolicyDelete(int32_t session, NetPolicyId id);
 
-#define FLAG_NET_INBOUND (1U << 0)
-#define FLAG_NET_OUTBOUND (1U << 1)
-#define FLAG_NET_ONLY_CHECK_NEW_TCP (1U << 2)
-#define FLAG_NET_ONLY_ALLOW_TCP_HEADER (1U << 3)
+#define FLAG_NET_INBOUND (0b00000001)
+#define FLAG_NET_OUTBOUND (0b00000010)
+#define FLAG_NET_ONLY_CHECK_NEW_TCP (0b00000100)
+#define FLAG_NET_ONLY_ALLOW_TCP_HEADER (0b000001000)
 
 }; // namespace hackernel
 

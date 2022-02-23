@@ -18,14 +18,16 @@ int FileProtectEnable(int32_t session);
 int FileProtectDisable(int32_t session);
 int FileProtectSet(int32_t session, const char *path, FilePerm perm);
 
-#define FLAG_FILE_READ_DISABLE (1U << 0)
-#define FLAG_FILE_WRITE_DISABLE (1U << 1)
-#define FLAG_FILE_DELETE_DISABLE (1U << 2)
-#define FLAG_FILE_RENAME_DISABLE (1U << 3)
-#define FLAG_FILE_READ_AUDIT (1U << 4)
-#define FLAG_FILE_WRITE_AUDIT (1U << 5)
-#define FLAG_FILE_DELETE_AUDIT (1U << 6)
-#define FLAG_FILE_RENAME_AUDIT (1U << 7)
+#define FLAG_FILE_DISABLE_READ (0b00000001)
+#define FLAG_FILE_DISABLE_WRITE (0b00000010)
+#define FLAG_FILE_DISABLE_DELETE (0b00000100)
+#define FLAG_FILE_DISABLE_RENAME (0b00001000)
+#define FLAG_FILE_DISABLE_ALL (0b00001111)
+#define FLAG_FILE_AUDIT_READ (0b00010000)
+#define FLAG_FILE_AUDIT_WRITE (0b00100000)
+#define FLAG_FILE_AUDIT_DELETE (0b01000000)
+#define FLAG_FILE_AUDIT_RENAME (0b10000000)
+#define FLAG_FILE_AUDIT_ALL (0b11110000)
 
 }; // namespace hackernel
 
