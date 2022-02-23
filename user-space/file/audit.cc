@@ -103,11 +103,11 @@ int Auditor::Load() {
 // 自我防护设置,每次启动都会生效,除非用户运行过程中强行解除防护
 int Auditor::InitDefender() {
     std::unique_lock<std::shared_mutex> perms_lock(perms_mutex_);
-    perms_["/tmp"] = 8;                 // 禁止移动
-    perms_["/tmp/hackernel.sock"] = 12; // 禁止移动,删除
-    perms_["/var"] = 8;                 // 禁止移动
-    perms_["/var/lib"] = 8;             // 禁止移动
-    perms_["/var/lib/hackernel"] = 15;  // 禁止移动,删除,读,写
+    perms_["/tmp"] = 0x08;                // 禁止移动
+    perms_["/tmp/hackernel.sock"] = 0x0C; // 禁止移动,删除
+    perms_["/var"] = 0x08;                // 禁止移动
+    perms_["/var/lib"] = 0x08;            // 禁止移动
+    perms_["/var/lib/hackernel"] = 0x0F;  // 禁止移动,删除,读,写
     MarkChanged();
     return 0;
 }
