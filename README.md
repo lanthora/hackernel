@@ -8,8 +8,8 @@
 
 ### 环境
 
-* 架构: X86_64/ARM/ARM64
-* 内核版本: Linux5.10及以上
+* 架构: AMD64/ARM/ARM64
+* 内核: latest linux longterm
 
 ### 依赖
 
