@@ -16,7 +16,7 @@ else
 
 KERNELRELEASE ?= $(shell uname -r)
 KDIR ?= /lib/modules/$(KERNELRELEASE)/build
-DRIVER_VERSION := 0.0.1
+DRIVER_VERSION := 1.0.0
 
 release:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
