@@ -57,10 +57,6 @@ nc -uU /tmp/hackernel.sock
 
 产品化
 
-## 开发组
-
-Matrix: `#hackernel:matrix.armix.cc`
-
 ## Licence
 
 [GPL-2.0-only](https://spdx.org/licenses/GPL-2.0-only.html)
