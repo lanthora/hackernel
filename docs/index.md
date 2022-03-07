@@ -10,6 +10,6 @@
 
 ## 其他
 
-* [准备知识](design.md)
+* [准备知识](prepare.md)
 * [接口文档](api.md)
 * [关于](about.md)
