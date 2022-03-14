@@ -57,8 +57,10 @@ response:
 
 	genlmsg_end(reply, head);
 
-	// reply指向的内存由 genlmsg_reply 释放
-	// 此处调用 nlmsg_free(reply) 会引起内核crash
+	/**
+	 * reply指向的内存由 genlmsg_reply 释放,
+	 * 此处调用 nlmsg_free(reply) 会引起内核crash
+	 */
 	error = genlmsg_reply(reply, info);
 	if (unlikely(error))
 		ERR("genlmsg_reply failed");

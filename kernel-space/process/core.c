@@ -20,8 +20,8 @@ static DECLARE_WAIT_QUEUE_HEAD(wq);
 static atomic_t atomic_process_id = ATOMIC_INIT(0);
 
 #define PROCESS_PERM_MASK 0xFF
-#define PROCESS_PERM_SIZE (PROCESS_PERM_MASK + 1) // 256
-#define PROCESS_PERM_HASH(id) (id & (PROCESS_PERM_MASK)) // 散列函数
+#define PROCESS_PERM_SIZE (PROCESS_PERM_MASK + 1) /* 256 */
+#define PROCESS_PERM_HASH(id) (id & (PROCESS_PERM_MASK)) /* 散列函数 */
 
 static process_perm_head_t process_perm_hlist[PROCESS_PERM_SIZE];
 static DEFINE_RWLOCK(process_perm_hlist_lock);

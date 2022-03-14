@@ -176,16 +176,13 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 	if (error == -EFAULT)
 		goto errout;
 
-	// 相对路径先获取前缀
 	if (is_relative_path(filename)) {
 		get_path_prefix(dirfd, path);
 		strcat(path, "/");
 	}
 	strncat(path, filename, PATH_MAX);
 
-	// 移除路径中的../和./
 	path = adjust_absolute_path(path);
-	// 移除路径中连续的//和末尾的/.
 	path = post_adjust_absolute_path(path);
 	retval = get_root_path_alloc();
 	strcat(retval, path);

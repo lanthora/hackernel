@@ -202,7 +202,7 @@ static int net_policy_extra(const struct hknf_buff *buff,
 			goto miss;
 		break;
 	default:
-		// 不支持的协议认为端口号命中
+		/* 不支持的协议认为端口号命中 */
 		break;
 	}
 	return NET_POLICY_CONTINUE;

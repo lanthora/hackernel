@@ -38,8 +38,8 @@ typedef u32 response_t;
 typedef u32 policy_id_t;
 typedef s8 priority_t;
 
-#define NET_POLICY_DROP NF_DROP // 0
-#define NET_POLICY_ACCEPT NF_ACCEPT // 1
+#define NET_POLICY_DROP NF_DROP /* 0 */
+#define NET_POLICY_ACCEPT NF_ACCEPT /* 1 */
 #define NET_POLICY_CONTINUE 1
 #define NET_POLICY_MISS 0
 
@@ -99,7 +99,7 @@ struct hknf_buff {
 	const struct nf_hook_state *state;
 };
 
-// 内部会复制policy,需要自行释放入参的内存
+/* 内部会复制policy,需要自行释放入参的内存 */
 int net_policy_insert(struct net_policy_t *policy);
 int net_policy_delete(policy_id_t id);
 
