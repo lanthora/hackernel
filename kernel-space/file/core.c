@@ -314,12 +314,13 @@ static int sys_open_helper(int dirfd, char __user *pathname, int flags,
 	if (is_forbidden)
 		goto out;
 
-	if (!(flags & O_CREAT))
+	/**
+	 * 文件已经存在或者打开文件不带O_CREAT时,不写入父目录文件.所以不需要校验.
+	 * 这个策略存在的一个现象是:
+	 * 	禁止某个目录读权限,可以通过绝对路径读写目录下已经存在的文件
+	 */
+	if (file_exist(data) || !(flags & O_CREAT))
 		goto out;
-
-	if (file_exist(data)) {
-		goto out;
-	}
 
 	is_forbidden = parent_write_protect_check(data);
 
