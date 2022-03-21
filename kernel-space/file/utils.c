@@ -161,7 +161,9 @@ static int is_relative_path(const char *filename)
 
 char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 {
-	char *filename, *path, *retval;
+	char *filename = NULL;
+	char *path = NULL;
+	char *retval = NULL;
 	int error;
 
 	path = kzalloc(PATH_MAX, GFP_KERNEL);
@@ -182,8 +184,7 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 	}
 	strncat(path, filename, PATH_MAX);
 
-	path = adjust_absolute_path(path);
-	path = post_adjust_absolute_path(path);
+	path = adjust_path(path);
 	retval = get_root_path_alloc();
 	strcat(retval, path);
 
