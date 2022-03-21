@@ -266,24 +266,41 @@ out:
 	return error;
 }
 
+static bool is_server_process(pid_t nr)
+{
+	struct task_struct *task = NULL;
+	struct pid *pid = NULL;
+	int retval = false;
+
+	if (nr <= 0)
+		goto out;
+	pid = find_get_pid(nr);
+	if (!pid)
+		goto out;
+
+	task = get_pid_task(pid, PIDTYPE_PID);
+	if (!task)
+		goto out;
+
+	if (task->tgid != hackernel_tgid)
+		goto out;
+	retval = true;
+out:
+	if (pid)
+		put_pid(pid);
+	if (task)
+		put_task_struct(task);
+	return retval;
+}
+
 static int self_protect(pid_t nr, int sig)
 {
-	struct task_struct *task;
-	struct pid *pid;
-
 	if (!conn_check_living())
 		return 0;
 
-	if (nr <= 0)
+	if (!is_server_process(nr))
 		return 0;
-	pid = find_get_pid(nr);
-	if (!pid)
-		return 0;
-	task = get_pid_task(pid, PIDTYPE_PID);
-	if (!task)
-		return 0;
-	if (task->tgid != hackernel_tgid)
-		return 0;
+
 	if (sig == SIGKILL || sig == SIGSTOP)
 		return -EPERM;
 	return 0;
