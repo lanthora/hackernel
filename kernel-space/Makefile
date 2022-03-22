@@ -16,7 +16,7 @@ else
 
 KERNELRELEASE ?= $(shell uname -r)
 KDIR ?= /lib/modules/$(KERNELRELEASE)/build
-DRIVER_VERSION := 1.0.0
+DRIVER_VERSION := 1.1.0
 
 release:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
@@ -37,8 +37,7 @@ install: clean
 	dkms status
 
 remove:
-	dkms remove hackernel/$(DRIVER_VERSION) --all
+	dkms remove -m hackernel -v $(DRIVER_VERSION) --all
 	rm -rf /usr/src/hackernel-$(DRIVER_VERSION)
-	rm -rf /var/lib/dkms/hackernel
 
 endif 
