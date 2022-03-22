@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 #ifndef HACKERNEL_JSON_H
 #define HACKERNEL_JSON_H
 

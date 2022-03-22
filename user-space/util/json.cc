@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 #include "hackernel/json.h"
 #include "hackernel/lru.h"
 

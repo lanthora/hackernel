@@ -1,3 +1,4 @@
+/* SPDX-License-Identifier: GPL-2.0-only */
 #include "file/audit.h"
 #include "hackernel/ipc.h"
 #include "hackernel/json.h"
