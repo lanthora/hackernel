@@ -3,6 +3,7 @@
 #include "hackernel/handshake.h"
 #include "hackernel/process.h"
 #include "hackernel/watchdog.h"
+#include "hackernel/log.h"
 #include <linux/binfmts.h>
 
 extern struct genl_family genl_family;

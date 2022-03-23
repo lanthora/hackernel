@@ -2,19 +2,10 @@
 #include "file/utils.h"
 #include "hackernel/file.h"
 #include "hackernel/handshake.h"
+#include "hackernel/syscall.h"
 #include "hackernel/watchdog.h"
-#include <linux/binfmts.h>
-#include <linux/dcache.h>
-#include <linux/file.h>
-#include <linux/fs.h>
-#include <linux/fs_struct.h>
-#include <linux/gfp.h>
-#include <linux/list.h>
 #include <linux/namei.h>
 #include <linux/rbtree.h>
-#include <linux/sched.h>
-#include <linux/slab.h>
-#include <linux/types.h>
 
 static struct rb_root file_perm_tree = RB_ROOT;
 static DEFINE_RWLOCK(file_perm_tree_lock);

@@ -4,7 +4,6 @@
 
 #include "hackernel/define.h"
 #include "hackernel/log.h"
-#include <linux/kernel.h>
 
 typedef unsigned long (*kallsyms_lookup_name_t)(const char *name);
 

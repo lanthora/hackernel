@@ -8,10 +8,7 @@
 #include "hackernel/watchdog.h"
 #include "process/utils.h"
 #include <linux/binfmts.h>
-#include <linux/gfp.h>
-#include <linux/list.h>
-#include <linux/rbtree.h>
-#include <linux/slab.h>
+#include <linux/sched.h>
 #include <linux/types.h>
 
 extern pid_t hackernel_tgid;

@@ -2,10 +2,7 @@
 #ifndef HACKERNEL_NET_H
 #define HACKERNEL_NET_H
 
-#include <linux/kernel.h>
 #include <net/genetlink.h>
-#include <net/netlink.h>
-#include <uapi/linux/types.h>
 
 enum {
 	NET_A_UNSPEC,

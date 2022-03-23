@@ -2,9 +2,6 @@
 #ifndef HACKERNEL_WATCHDOG_API_H
 #define HACKERNEL_WATCHDOG_API_H
 
-#include <generated/autoconf.h>
-#include <linux/err.h>
-#include <linux/kthread.h>
 #include <linux/sched.h>
 
 struct watchdog {

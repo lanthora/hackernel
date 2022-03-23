@@ -7,7 +7,6 @@
 #include "hackernel/process.h"
 #include "hackernel/syscall.h"
 #include <net/genetlink.h>
-#include <net/netlink.h>
 
 u32 hackernel_portid = 0;
 struct net *hackernel_net = NULL;

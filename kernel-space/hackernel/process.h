@@ -2,9 +2,7 @@
 #ifndef HACKERNEL_PROCESS_H
 #define HACKERNEL_PROCESS_H
 
-#include "hackernel/syscall.h"
 #include <net/genetlink.h>
-#include <net/netlink.h>
 
 enum {
 	PROCESS_A_UNSPEC,

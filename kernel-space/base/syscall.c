@@ -1,11 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "hackernel/syscall.h"
-#include <linux/kernel.h>
 #include <linux/kprobes.h>
 #include <linux/pgtable.h>
-#include <linux/sched.h>
-#include <linux/uuid.h>
-#include <linux/version.h>
 
 unsigned long *g_sys_call_table = NULL;
 

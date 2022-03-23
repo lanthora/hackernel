@@ -1,12 +1,10 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "file/utils.h"
-#include <linux/fcntl.h>
 #include <linux/file.h>
 #include <linux/fs_struct.h>
 #include <linux/namei.h>
 #include <linux/slab.h>
 #include <linux/statfs.h>
-#include <linux/uaccess.h>
 
 char *get_pwd_path_alloc(void)
 {

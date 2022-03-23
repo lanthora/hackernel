@@ -1,7 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "hackernel/netlink.h"
+#include "hackernel/define.h"
 #include "hackernel/file.h"
 #include "hackernel/handshake.h"
+#include "hackernel/log.h"
 #include "hackernel/watchdog.h"
 #include <linux/version.h>
 

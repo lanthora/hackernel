@@ -2,7 +2,6 @@
 #ifndef HACKERNEL_HANDSHAKE_H
 #define HACKERNEL_HANDSHAKE_H
 
-#include <linux/kernel.h>
 #include <net/genetlink.h>
 
 enum {

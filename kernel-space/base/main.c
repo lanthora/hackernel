@@ -4,6 +4,7 @@
 #include "hackernel/net.h"
 #include "hackernel/netlink.h"
 #include "hackernel/process.h"
+#include "hackernel/syscall.h"
 #include "hackernel/watchdog.h"
 #include <linux/module.h>
 
