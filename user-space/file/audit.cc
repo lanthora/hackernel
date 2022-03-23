@@ -128,6 +128,7 @@ int Auditor::Init() {
     });
 
     Load();
+    Save();
     SetAutoSaveTimer();
 
     if (enabled_) {
