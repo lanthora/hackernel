@@ -255,6 +255,7 @@ int Auditor::Save() {
     output.close();
 
     last_save_time = last_update_time_;
+    DBG("process.json update success");
     return 0;
 }
 

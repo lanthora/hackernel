@@ -61,6 +61,7 @@ int Auditor::Save() {
     output.close();
 
     last_save_time = last_update_time_;
+    DBG("file.json update success");
     return 0;
 }
 
@@ -109,6 +110,8 @@ int Auditor::InitDefender() {
     perms_["/var"] = FLAG_FILE_DISABLE_RENAME;
     perms_["/var/lib"] = FLAG_FILE_DISABLE_RENAME;
     perms_["/var/lib/hackernel"] = FLAG_FILE_DISABLE_ALL;
+    perms_["/var/lib/hackernel/file.json"] = FLAG_FILE_DISABLE_ALL;
+    perms_["/var/lib/hackernel/process.json"] = FLAG_FILE_DISABLE_ALL;
     MarkChanged();
     return 0;
 }
