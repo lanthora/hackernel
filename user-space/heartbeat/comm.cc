@@ -22,7 +22,7 @@ void HeartbeatExit() {
 
 int HeartbeatHelper(int interval) {
     struct nl_msg *msg = NULL;
-    pid_t tgid = getpgrp();
+    pid_t tgid = getpid();
 
     // 仅能有一个发送心跳的线程
     if (running)
