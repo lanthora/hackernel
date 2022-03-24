@@ -1,4 +1,4 @@
-# 设计文档
+# 预备知识
 
 ## 内核通用数据结构
 
@@ -60,29 +60,9 @@ struct rb_node {
 
 ## 系统调用
 
-找到了一张很棒的图,hook系统调用就是将图中sys_call_table数组中的函数指针替换为自己实现的版本.这部分内存开了写保护,修改时需要关闭写保护.开关写保护的方式不同处理器架构不同,在x86架构中,是要将cr0寄存器的第16位设置为0.其他内容不再赘述.
+找到了一张很棒的图,hook系统调用就是将图中sys_call_table数组中的函数指针替换为自己实现的版本.这部分内存开了写保护,修改时需要关闭写保护.开关写保护的方式不同处理器架构不同,在x86架构中,是要将cr0寄存器的第16位设置为0.
 
 ![系统调用流程](images/syscall.png)
-
-放一个简单的demo
-
-### 系统调用hook方式
-
-```c
-// 自己实现的系统调用,某些情况下返回无执行权限,其他情况执行原本的系统调用
-asmlinkage u64 sys_openat_wrapper(struct pt_regs *regs)
-{
-	int dirfd = (int)regs->di;
-	char *pathname = (char *)regs->si;
-	int flags = (int)regs->dx;
-	mode_t mode = (mode_t)regs->r10;
-
-	if (sys_openat_hook(dirfd, pathname, flags, mode)) {
-		return -EPERM;
-	}
-	return __x64_sys_openat(regs);
-}
-```
 
 ### 系统调用功能
 
@@ -92,54 +72,10 @@ rename: 重命名文件
 
 at结尾的系统调用,第一个参数是目录文件描述符,后续路径参数是相对于打开目录的相对路径.此外,AT_FDCWD是个特殊的文件描述符,用来表示当前进程的工作目录作为第一个参数的目录.这个路径可以通过当前任务的上下文获得.
 
-```c
-char *get_cw_path(void *buffer, size_t buffer_size)
-{
-	struct path base_path;
-	base_path = current->fs->pwd;
-	return d_path(&base_path, buffer, buffer_size);
-}
-```
-
 ## 文件系统
 
 在内核中可以通过文件系统id和inode id,定位除内存文件系统中的任意文件.
 
-根据路径名获取文件系统id和inode id的方法如下
-
-```c
-unsigned long get_fsid(const char *name)
-{
-	int error;
-	struct path path;
-	struct kstatfs kstatfs;
-	unsigned long retval;
-
-	error = kern_path(name, LOOKUP_OPEN, &path);
-	if (error) {
-		return 0;
-	}
-
-	path.mnt->mnt_sb->s_op->statfs(path.dentry, &kstatfs);
-	memcpy(&retval, &kstatfs.f_fsid, sizeof(unsigned long));
-	path_put(&path);
-	return retval;
-}
-
-unsigned long get_ino(const char *name)
-{
-	struct path path;
-	int error;
-	unsigned long retval;
-	error = kern_path(name, LOOKUP_OPEN, &path);
-	if (error) {
-		return 0;
-	}
-	retval = path.dentry->d_inode->i_ino;
-	path_put(&path);
-	return retval;
-}
-```
 
 ## 进程调度
 
@@ -164,4 +100,4 @@ wake_up(&wq);
 
 genl实现了从命令(通过宏定义的一个整数,范围应该是没有限制)到回调函数的功能,用户只需要指定命令的回调函数即可,用户态在发送请求时携带这个命令.genl还提供了属性的概念,属性也是一个整数到基本数据类型的映射.通过属性传递数据,通过命令确定回调函数,就可以方便的处理用户态数据.
 
-相比之下,更底层的netlink处理起这部分内容就比较复杂
+相比之下,更底层的netlink使用方式相对复杂.

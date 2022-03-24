@@ -30,7 +30,7 @@
 
 # 其他
 
-* [准备知识](prepare.md)
+* [预备知识](prepare.md)
 * [设计文档](design.md)
 * [接口文档](api.md)
 * [关于](about.md)
