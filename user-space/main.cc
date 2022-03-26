@@ -11,7 +11,6 @@
 #include "hackernel/timer.h"
 #include "nlc/netlink.h"
 #include "process/audit.h"
-#include <arpa/inet.h>
 #include <signal.h>
 #include <thread>
 

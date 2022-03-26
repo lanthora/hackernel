@@ -16,7 +16,7 @@ else
 
 KERNELRELEASE ?= $(shell uname -r)
 KDIR ?= /lib/modules/$(KERNELRELEASE)/build
-DRIVER_VERSION := 1.1.0
+DRIVER_VERSION := $(shell grep -Po '(?<=^PACKAGE_VERSION=")(.*)(?="$)' dkms.conf)
 
 release:
 	$(MAKE) -C $(KDIR) M=$(PWD) modules
