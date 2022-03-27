@@ -84,7 +84,7 @@ static void file_perm_tree_delete(fsid_t fsid, ino_t ino)
 	struct rb_node *node = file_perm_tree.rb_node;
 	const struct file_perm_node tmp = { .fsid = fsid, .ino = ino };
 
-	read_lock(&file_perm_tree_lock);
+	write_lock(&file_perm_tree_lock);
 	while (node) {
 		struct file_perm_node *this;
 		this = container_of(node, struct file_perm_node, node);
@@ -99,7 +99,7 @@ static void file_perm_tree_delete(fsid_t fsid, ino_t ino)
 			break;
 		}
 	}
-	read_unlock(&file_perm_tree_lock);
+	write_unlock(&file_perm_tree_lock);
 }
 
 static int file_perm_tree_clear(void)
