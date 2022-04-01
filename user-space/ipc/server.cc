@@ -155,7 +155,7 @@ int IpcServer::UnixDomainSocketWait() {
     const char *SOCK_PATH = "/tmp/hackernel.sock";
     const int BUFFER_SIZE = 1024;
 
-    char buffer[BUFFER_SIZE];
+    char buffer[BUFFER_SIZE + 1];
     struct sockaddr_un server;
 
     socket_ = socket(AF_UNIX, SOCK_DGRAM, 0);
