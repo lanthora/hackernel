@@ -26,7 +26,7 @@ static int get_path_prefix(int dirfd, char *prefix)
 {
 	struct file *file;
 	char *buffer;
-	char *d_path_base;
+	char *tmp;
 
 	if (!prefix)
 		return -EINVAL;
@@ -41,15 +41,12 @@ static int get_path_prefix(int dirfd, char *prefix)
 	if (!file)
 		return -EINVAL;
 
-	d_path_base = d_path(&file->f_path, prefix, PATH_MAX);
+	tmp = d_path(&file->f_path, prefix, PATH_MAX);
 	fput(file);
 
-	if (IS_ERR(d_path_base))
+	if (IS_ERR(tmp))
 		return -EINVAL;
-
-	if (prefix != d_path_base)
-		strncpy(prefix, d_path_base, PATH_MAX);
-
+	memmove(prefix, tmp, strnlen(tmp, PATH_MAX) + 1);
 	return 0;
 }
 
