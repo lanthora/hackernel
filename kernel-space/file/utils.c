@@ -46,7 +46,7 @@ static int get_path_prefix(int dirfd, char *prefix)
 
 	if (IS_ERR(tmp))
 		return -EINVAL;
-	memmove(prefix, tmp, strnlen(tmp, PATH_MAX) + 1);
+	memmove(prefix, tmp, strnlen(tmp, PATH_MAX - 1) + 1);
 	return 0;
 }
 
