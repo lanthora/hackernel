@@ -19,6 +19,11 @@ namespace ipc {
 
 typedef LRUCache<Session, UserConn> ConnCache;
 
+struct SectionUserCounter {
+    UserConn conn;
+    int counter;
+};
+
 class IpcServer {
 public:
     static IpcServer &GetInstance();
@@ -41,7 +46,7 @@ private:
     std::shared_ptr<Receiver> receiver_ = nullptr;
     bool running_;
     int socket_ = 0;
-    std::map<std::string, std::list<UserConn>> sub_;
+    std::map<std::string, std::list<SectionUserCounter>> sub_;
     std::mutex sub_lock_;
     std::atomic<Session> id_ = SYSTEM_SESSION;
     std::string token_;

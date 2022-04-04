@@ -110,17 +110,28 @@ int IpcServer::SendMsgToClient(UserConn conn, const std::string &msg) {
 
 int IpcServer::MsgSub(const std::string &section, const UserConn &user) {
     std::lock_guard<std::mutex> lock(sub_lock_);
-    sub_[section].push_back(user);
+    auto cmp = [&](const SectionUserCounter &item) {
+        return strcmp(user.peer->sun_path, item.conn.peer->sun_path) == 0;
+    };
+    auto it = std::find_if(sub_[section].begin(), sub_[section].end(), cmp);
+    if (it == sub_[section].end()) {
+        sub_[section].emplace_back(user, 1);
+    } else
+        ++it->counter;
     return 0;
 }
 
 int IpcServer::MsgUnsub(const std::string &section, const UserConn &user) {
     std::lock_guard<std::mutex> lock(sub_lock_);
-    auto cmp = [&](const UserConn &item) { return strcmp(user.peer->sun_path, item.peer->sun_path) == 0; };
+    auto cmp = [&](const SectionUserCounter &item) {
+        return strcmp(user.peer->sun_path, item.conn.peer->sun_path) == 0;
+    };
     auto it = std::find_if(sub_[section].begin(), sub_[section].end(), cmp);
     if (it == sub_[section].end())
         return -EPERM;
-    sub_[section].erase(it);
+    if (--it->counter <= 0) {
+        sub_[section].erase(it);
+    }
     return 0;
 }
 
@@ -136,8 +147,9 @@ int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string
     std::lock_guard<std::mutex> lock(sub_lock_);
 
     for (auto it = sub_[section].begin(); it != sub_[section].end();) {
-        peer = (struct sockaddr *)it->peer.get();
-        len = it->len;
+        UserConn &conn = it->conn;
+        peer = (struct sockaddr *)conn.peer.get();
+        len = conn.len;
 
         if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1)
             it = sub_[section].erase(it);
