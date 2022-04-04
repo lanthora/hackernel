@@ -20,7 +20,8 @@ IpcServer &IpcServer::GetInstance() {
 }
 
 ConnCache &IpcServer::GetConnCache() {
-    static ConnCache cache;
+    const size_t CONCURRENT_MAX = 1024;
+    static ConnCache cache(CONCURRENT_MAX);
     return cache;
 }
 
