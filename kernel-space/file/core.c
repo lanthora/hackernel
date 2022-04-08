@@ -236,28 +236,6 @@ static int file_exist(struct file_perm_data *data)
 	return data->ino > BAD_INO;
 }
 
-static int real_path_from_symlink(char *filename, char *real)
-{
-	char *ptr;
-	struct path path;
-	int error = 0;
-	int failed = 1;
-
-	error = kern_path(filename, LOOKUP_FOLLOW, &path);
-	if (!error) {
-		ptr = d_path(&path, real, PATH_MAX);
-		if (!IS_ERR(ptr)) {
-			strcpy(real, ptr);
-			failed = 0;
-		}
-		path_put(&path);
-	}
-	if (failed)
-		strcpy(real, filename);
-
-	return 0;
-}
-
 static int protect_check_with_flags(struct file_perm_data *data,
 				    const int flags)
 {
