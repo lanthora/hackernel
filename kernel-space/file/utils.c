@@ -15,7 +15,7 @@ char *get_pwd_path_alloc(void)
 
 	get_fs_pwd(current->fs, &pwd);
 	tmp = d_path(&pwd, buffer, PATH_MAX);
-	strcpy(buffer, tmp);
+	memmove(buffer, tmp, strnlen(tmp, PATH_MAX - 1) + 1);
 
 	path_put(&pwd);
 
@@ -67,7 +67,7 @@ static char *get_root_path_alloc(void)
 	char *tmp, *buffer;
 	buffer = kzalloc(PATH_MAX, GFP_KERNEL);
 	tmp = get_root_path(buffer, PATH_MAX);
-	strcpy(buffer, tmp);
+	memmove(buffer, tmp, strnlen(tmp, PATH_MAX - 1) + 1);
 	return buffer;
 }
 
@@ -196,23 +196,23 @@ errout:
 
 char *get_parent_path_alloc(const char *path)
 {
-	char *parent_path;
+	char *parent;
 	size_t len;
 
-	parent_path = kzalloc(PATH_MAX, GFP_KERNEL);
-	if (!parent_path)
+	parent = kzalloc(PATH_MAX, GFP_KERNEL);
+	if (!parent)
 		goto errout;
 
-	strcpy(parent_path, path);
-	len = strlen(parent_path);
-	while (len > 0 && parent_path[len] != '/')
+	memmove(parent, path, strnlen(path, PATH_MAX - 1) + 1);
+	len = strlen(parent);
+	while (len > 0 && parent[len] != '/')
 		--len;
 
-	parent_path[len] = '\0';
+	parent[len] = '\0';
 
-	return parent_path;
+	return parent;
 errout:
-	kfree(parent_path);
+	kfree(parent);
 	return NULL;
 }
 
@@ -232,5 +232,27 @@ int file_id_get(const char *name, unsigned long *fsid, unsigned long *ino)
 	memcpy(fsid, &kstatfs.f_fsid, sizeof(unsigned long));
 	*ino = path.dentry->d_inode->i_ino;
 	path_put(&path);
+	return 0;
+}
+
+int real_path_from_symlink(char *filename, char *real)
+{
+	char *ptr;
+	struct path path;
+	int error = 0;
+	int failed = 1;
+
+	error = kern_path(filename, LOOKUP_FOLLOW, &path);
+	if (!error) {
+		ptr = d_path(&path, real, PATH_MAX);
+		if (!IS_ERR(ptr)) {
+			memmove(real, ptr, strnlen(ptr, PATH_MAX - 1) + 1);
+			failed = 0;
+		}
+		path_put(&path);
+	}
+	if (failed)
+		strcpy(real, filename);
+
 	return 0;
 }
