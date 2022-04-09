@@ -16,11 +16,11 @@ static inline bool file_perm_node_cmp(const struct file_perm_node *a,
 	return a->fsid == b->fsid ? a->ino < b->ino : a->fsid < b->fsid;
 }
 
-static int file_perm_tree_insert_or_update(fsid_t fsid, ino_t ino,
-					   file_perm_t perm)
+static int file_perm_tree_update(fsid_t fsid, ino_t ino, file_perm_t perm)
 {
 	struct rb_node **new, *parent;
 	struct file_perm_node *data;
+	struct file_perm_node *this;
 
 	data = kzalloc(sizeof(struct file_perm_node), GFP_KERNEL);
 	if (!data)
@@ -33,72 +33,81 @@ static int file_perm_tree_insert_or_update(fsid_t fsid, ino_t ino,
 	new = &file_perm_tree.rb_node;
 	parent = NULL;
 	while (*new) {
-		struct file_perm_node *this;
-
 		this = container_of(*new, struct file_perm_node, node);
 		parent = *new;
 		if (file_perm_node_cmp(data, this))
 			new = &((*new)->rb_left);
 		else if (file_perm_node_cmp(this, data))
 			new = &((*new)->rb_right);
-		else {
-			this->perm = perm;
-			kfree(data);
-			goto updateout;
-		}
+		else
+			break;
 	}
-	rb_link_node(&data->node, parent, new);
-	rb_insert_color(&data->node, &file_perm_tree);
 
-updateout:
+	if (*new) {
+		this->perm = perm;
+		kfree(data);
+	} else {
+		rb_link_node(&data->node, parent, new);
+		rb_insert_color(&data->node, &file_perm_tree);
+	}
+
 	write_unlock(&file_perm_tree_lock);
 	return 0;
 }
 
 static file_perm_t file_perm_tree_search(fsid_t fsid, ino_t ino)
 {
-	struct rb_node *node = file_perm_tree.rb_node;
 	const struct file_perm_node tmp = { .fsid = fsid, .ino = ino };
-	file_perm_t perm = INVAILD_PERM;
+	struct rb_node *node;
+	struct file_perm_node *this;
+	file_perm_t perm;
 
 	read_lock(&file_perm_tree_lock);
+	node = file_perm_tree.rb_node;
 	while (node) {
-		struct file_perm_node *this;
 		this = container_of(node, struct file_perm_node, node);
 
-		if (file_perm_node_cmp(&tmp, this)) {
+		if (file_perm_node_cmp(&tmp, this))
 			node = node->rb_left;
-		} else if (file_perm_node_cmp(this, &tmp)) {
+		else if (file_perm_node_cmp(this, &tmp))
 			node = node->rb_right;
-		} else {
-			perm = this->perm;
+		else
 			break;
-		}
 	}
+
+	if (node)
+		perm = this->perm;
+	else
+		perm = INVAILD_PERM;
+
 	read_unlock(&file_perm_tree_lock);
 	return perm;
 }
 
 static void file_perm_tree_delete(fsid_t fsid, ino_t ino)
 {
-	struct rb_node *node = file_perm_tree.rb_node;
 	const struct file_perm_node tmp = { .fsid = fsid, .ino = ino };
+	struct rb_node *node;
+	struct file_perm_node *this;
 
 	write_lock(&file_perm_tree_lock);
+	node = file_perm_tree.rb_node;
 	while (node) {
-		struct file_perm_node *this;
 		this = container_of(node, struct file_perm_node, node);
 
-		if (file_perm_node_cmp(&tmp, this)) {
+		if (file_perm_node_cmp(&tmp, this))
 			node = node->rb_left;
-		} else if (file_perm_node_cmp(this, &tmp)) {
+		else if (file_perm_node_cmp(this, &tmp))
 			node = node->rb_right;
-		} else {
-			rb_erase(&this->node, &file_perm_tree);
-			kfree(this);
+		else
 			break;
-		}
 	}
+
+	if (node) {
+		rb_erase(&this->node, &file_perm_tree);
+		kfree(this);
+	}
+
 	write_unlock(&file_perm_tree_lock);
 }
 
@@ -125,7 +134,8 @@ static int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm)
 {
 	if (fsid == BAD_FSID || ino == BAD_INO)
 		return -EINVAL;
-	return file_perm_tree_insert_or_update(fsid, ino, perm);
+
+	return file_perm_tree_update(fsid, ino, perm);
 }
 
 int file_perm_set_path(const char *path, file_perm_t perm)
