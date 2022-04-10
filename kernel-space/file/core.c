@@ -113,14 +113,11 @@ static void file_perm_tree_delete(fsid_t fsid, ino_t ino)
 
 static int file_perm_tree_clear(void)
 {
-	struct file_perm_node *data;
+	struct file_perm_node *data, *n;
 	write_lock(&file_perm_tree_lock);
-	while (!RB_EMPTY_ROOT(&file_perm_tree)) {
-		data = container_of(rb_first(&file_perm_tree),
-				    struct file_perm_node, node);
-		rb_erase(&data->node, &file_perm_tree);
+	rbtree_postorder_for_each_entry_safe (data, n, &file_perm_tree, node)
 		kfree(data);
-	}
+	file_perm_tree = RB_ROOT;
 	write_unlock(&file_perm_tree_lock);
 	return 0;
 }
