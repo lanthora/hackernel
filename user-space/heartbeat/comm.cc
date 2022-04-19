@@ -48,8 +48,7 @@ int Handshake() {
 int HeartbeatWait() {
     ThreadNameUpdate("heartbeat");
     DBG("heartbeat enter");
-    const int heartbeat_interval = 1000;
-    int error = HeartbeatHelper(heartbeat_interval);
+    int error = HeartbeatHelper(HEARTBEAT_INTERVAL);
     DBG("heartbeat exit");
     return error;
 }
