@@ -178,14 +178,10 @@ int NetlinkWait() {
     running = RUNNING();
     while (running) {
         const nfds_t nfds = 1;
-        const int timeout = 100;
+        const int timeout = HEARTBEAT_INTERVAL * 2;
 
         error = poll(&fds, nfds, timeout);
-        if (error == 0) {
-            continue;
-        }
-
-        if (error < 0) {
+        if (error <= 0) {
             ERR("poll failed");
             SHUTDOWN(HACKERNEL_NETLINK_WAIT);
             break;

@@ -16,15 +16,10 @@ namespace file {
 class Auditor {
 
 public:
-    int Save();
     int Init();
 
 private:
-    int InitDefender();
-    int Load();
-    int SetAutoSaveTimer();
     bool Handler(const std::string &msg);
-    void MarkChanged();
 
 public:
     static Auditor &GetInstance();
@@ -32,11 +27,9 @@ public:
 private:
     Auditor();
     ~Auditor();
-    bool enabled_ = true;
-    std::mutex sl_mutex_; // 锁配置文件
+    bool enabled_ = false;
     std::shared_ptr<Receiver> receiver_ = nullptr;
-    std::chrono::system_clock::time_point last_update_time_;
-    std::shared_mutex perms_mutex_; // 锁map
+    std::shared_mutex mutex_;
     std::map<std::string, FilePerm> perms_;
 };
 
