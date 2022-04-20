@@ -27,8 +27,8 @@ private:
 private:
     std::weak_ptr<Broadcaster> bind_broadcaster_;
     std::queue<std::string> message_queue_;
-    std::mutex message_queue_mutex_;
-    std::condition_variable signal_;
+    std::mutex mutex_;
+    std::condition_variable cv_;
     bool running_ = false;
     std::list<std::function<bool(const std::string &)>> handlers_;
 };

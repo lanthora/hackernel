@@ -36,7 +36,7 @@ private:
     std::priority_queue<Element, std::vector<Element>, Compare> queue_;
     std::mutex queue_mutex_;
     std::mutex sync_mutex_;
-    std::condition_variable signal_;
+    std::condition_variable cv_;
     bool running_;
 
 public:

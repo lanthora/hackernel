@@ -9,9 +9,12 @@ void Receiver::SetBroadcaster(std::weak_ptr<Broadcaster> broadcaster) {
 void Receiver::NewMessage(std::string message) {
     if (!running_)
         return;
-    const std::lock_guard<std::mutex> lock(message_queue_mutex_);
+
+    mutex_.lock();
     message_queue_.push(message);
-    signal_.notify_one();
+    mutex_.unlock();
+
+    cv_.notify_one();
 }
 
 void Receiver::ConsumeWait() {
@@ -31,8 +34,11 @@ void Receiver::ConsumeWait() {
 }
 
 void Receiver::Exit() {
+    mutex_.lock();
     running_ = false;
-    signal_.notify_one();
+    mutex_.unlock();
+
+    cv_.notify_one();
 }
 
 void Receiver::AddHandler(std::function<bool(const std::string &)> new_handler) {
@@ -50,9 +56,8 @@ void Receiver::AddHandler(std::function<bool(const std::string &)> new_handler) 
 int Receiver::PopMessageWait(std::string &message) {
     using namespace std::chrono_literals;
 
-    std::unique_lock<std::mutex> lock(message_queue_mutex_);
-    if (message_queue_.empty())
-        signal_.wait(lock);
+    std::unique_lock<std::mutex> lock(mutex_);
+    cv_.wait(lock, [&] { return !running_ || !message_queue_.empty(); });
 
     if (!running_)
         return -EPERM;

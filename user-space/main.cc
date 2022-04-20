@@ -27,7 +27,7 @@ void SHUTDOWN(int code) {
         return;
     running = false;
 
-    DBG("exit start ,code=[%d]", code);
+    DBG("exit start, code=[%d]", code);
 
     // 停止接受外部用户输入
     IpcExit();

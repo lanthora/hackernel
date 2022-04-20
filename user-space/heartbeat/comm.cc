@@ -11,13 +11,16 @@
 
 namespace hackernel {
 
-static std::mutex exit_mutex;
-static std::condition_variable exit_signal;
+static std::mutex mutex;
+static std::condition_variable cv;
 static bool running = false;
 
 void HeartbeatExit() {
+    mutex.lock();
     running = false;
-    exit_signal.notify_one();
+    mutex.unlock();
+
+    cv.notify_one();
 }
 
 int HeartbeatHelper(int interval) {
@@ -34,8 +37,8 @@ int HeartbeatHelper(int interval) {
         nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_TGID, tgid);
         NetlinkSend(msg);
 
-        std::unique_lock<std::mutex> lock(exit_mutex);
-        exit_signal.wait_for(lock, std::chrono::milliseconds(running ? interval : 0));
+        std::unique_lock<std::mutex> lock(mutex);
+        cv.wait_for(lock, std::chrono::milliseconds(interval), [&]() { return !running; });
     } while (running);
 
     return 0;
