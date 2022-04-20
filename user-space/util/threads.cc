@@ -8,7 +8,6 @@ Threads &Threads::GetInstance() {
     return instance;
 }
 
-// FIXME: 当主线程已经开始等待退出后,某个子线程调用AddThread会造成无限等待
 void Threads::WaitAllThreadsExit() {
     for (auto &&t : threads_)
         t.join();

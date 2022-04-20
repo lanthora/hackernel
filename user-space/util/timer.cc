@@ -9,7 +9,7 @@ int Timer::Insert(const Element &element) {
     queue_.push(element);
     queue_mutex_.unlock();
 
-    signal_.notify_one();
+    cv_.notify_one();
     return 0;
 }
 
@@ -17,13 +17,12 @@ int Timer::RunWait() {
     running_ = RUNNING();
     while (running_) {
         std::unique_lock<std::mutex> lock(sync_mutex_);
-        if (queue_.empty()) {
-            signal_.wait(lock);
-            continue;
-        }
+        cv_.wait(lock, [&]() { return !queue_.empty() || !running_; });
+        if (!running_)
+            break;
 
         if (std::chrono::system_clock::now() < queue_.top().time_point) {
-            signal_.wait_until(lock, queue_.top().time_point);
+            cv_.wait_until(lock, queue_.top().time_point);
             continue;
         }
 
@@ -38,8 +37,11 @@ int Timer::RunWait() {
 }
 
 int Timer::Exit() {
+    sync_mutex_.lock();
     running_ = false;
-    signal_.notify_one();
+    sync_mutex_.unlock();
+
+    cv_.notify_one();
     return 0;
 }
 
