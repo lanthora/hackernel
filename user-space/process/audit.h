@@ -24,6 +24,7 @@ private:
     int Report(const std::string &cmd);
     int TrustedCmdInsert(const std::string &cmd);
     int TrustedCmdDelete(const std::string &cmd);
+    int TrustedCmdClear();
     bool IsTrusted(const std::string &cmd);
     bool Handler(const std::string &msg);
 
