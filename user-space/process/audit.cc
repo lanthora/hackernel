@@ -22,15 +22,22 @@ bool Auditor::IsTrusted(const std::string &cmd) {
 
 int Auditor::TrustedCmdInsert(const std::string &cmd) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
-    DBG("trust insert, cmd=[%s]", cmd.data());
+    DBG("trusted insert, cmd=[%s]", cmd.data());
     trusted_.insert(cmd);
     return 0;
 }
 
 int Auditor::TrustedCmdDelete(const std::string &cmd) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
-    DBG("trust delete, cmd=[%s]", cmd.data());
+    DBG("trusted delete, cmd=[%s]", cmd.data());
     trusted_.erase(cmd);
+    return 0;
+}
+
+int Auditor::TrustedCmdClear() {
+    std::unique_lock<std::shared_mutex> lock(mutex_);
+    DBG("trusted clear");
+    trusted_.clear();
     return 0;
 }
 
@@ -71,28 +78,37 @@ bool Auditor::Handler(const std::string &msg) {
         return false;
     const std::string &type = doc["type"];
 
-    if (type.starts_with("user::proc::trusted::")) {
+    if (type == "user::proc::trusted::insert") {
         nlohmann::json &data = doc["data"];
         if (!data["cmd"].is_string())
             return false;
-
         std::string cmd = data["cmd"];
-        if (type.ends_with("::insert")) {
-            data["code"] = TrustedCmdInsert(cmd);
-        } else if (type.ends_with("::delete")) {
-            data["code"] = TrustedCmdDelete(cmd);
-        } else {
+        data["code"] = TrustedCmdInsert(cmd);
+        ipc::IpcServer::GetInstance().SendMsgToClient(doc);
+        return true;
+    }
+
+    if (type == "user::proc::trusted::delete") {
+        nlohmann::json &data = doc["data"];
+        if (!data["cmd"].is_string())
             return false;
-        }
+        std::string cmd = data["cmd"];
+        data["code"] = TrustedCmdDelete(cmd);
+        ipc::IpcServer::GetInstance().SendMsgToClient(doc);
+        return true;
+    }
+
+    if (type == "user::proc::trusted::clear") {
+        nlohmann::json &data = doc["data"];
+        data["code"] = TrustedCmdClear();
         ipc::IpcServer::GetInstance().SendMsgToClient(doc);
         return true;
     }
 
     if (type == "user::proc::judge") {
         nlohmann::json &data = doc["data"];
-        if (!data["judge"].is_number_integer()) {
+        if (!data["judge"].is_number_integer())
             return false;
-        }
         judge_ = data["judge"];
         data["code"] = 0;
         ipc::IpcServer::GetInstance().SendMsgToClient(doc);
@@ -108,8 +124,6 @@ bool Auditor::Handler(const std::string &msg) {
         enabled_ = false;
         return true;
     }
-
-    // TODO: 处理其他会引起进程配置变更的广播消息
 
     return false;
 }
