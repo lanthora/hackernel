@@ -31,7 +31,7 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 
 ```json
 {
-	"type": "user::test::echo"
+    "type": "user::test::echo"
 }
 ```
 
@@ -39,8 +39,8 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 
 ```json
 {
-	"type": "user::test::echo",
-	"extra": 1
+    "type": "user::test::echo",
+    "extra": 1
 }
 ```
 
@@ -48,11 +48,11 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 
 ```json
 {
-	"type": "user::test::echo",
-	"extra": [
-		"Alice",
-		"Bob"
-	]
+    "type": "user::test::echo",
+    "extra": [
+        "Alice",
+        "Bob"
+    ]
 }
 ```
 
@@ -60,10 +60,10 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 
 ```json
 {
-	"type": "user::test::echo",
-	"extra": {
-		"reply_to": "Alice"
-	}
+    "type": "user::test::echo",
+    "extra": {
+        "reply_to": "Alice"
+    }
 }
 ```
 
@@ -73,7 +73,7 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 
 ```json
 {
-	"type": "user::proc::enable"
+    "type": "user::proc::enable"
 }
 ```
 
@@ -83,8 +83,8 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 
 ```json
 {
-	"type": "user::msg::sub",
-	"section": "kernel::proc::report"
+    "type": "user::msg::sub",
+    "section": "kernel::proc::report"
 }
 ```
 
@@ -94,18 +94,17 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 
 ```json
 {
-	"type": "kernel::proc::report",
-	"cmd": "/root\u001f/usr/bin/ls\u001fls"
+    "type": "kernel::proc::report",
+    "cmd": "/root\u001f/usr/bin/ls\u001fls"
 }
 ```
-
 
 ### 取消订阅进程创建事件
 
 ```json
 {
-	"type": "user::msg::unsub",
-	"section": "kernel::proc::report"
+    "type": "user::msg::unsub",
+    "section": "kernel::proc::report"
 }
 ```
 
@@ -118,8 +117,8 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 
 ```json
 {
-	"type": "user::msg::sub",
-	"section": "audit::proc::report"
+    "type": "user::msg::sub",
+    "section": "audit::proc::report"
 }
 ```
 
@@ -132,13 +131,12 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 2. 禁止执行并上报防御事件
 
 这里的审计事件对应 `"section":"audit::proc::report"` 的订阅.
-在没有白名单时,配置`"judge": 1` 将导致无法创建新进程.
-__在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统变化__.
+在没有白名单时,配置`"judge": 2` 将导致无法创建新进程.
 
 ```json
 {
-	"type": "user::proc::judge",
-	"judge": 1
+    "type": "user::proc::judge",
+    "judge": 1
 }
 ```
 
@@ -148,8 +146,8 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::proc::trusted::insert",
-	"cmd": "/root\u001f/usr/bin/ls\u001fls"
+    "type": "user::proc::trusted::insert",
+    "cmd": "/root\u001f/usr/bin/ls\u001fls"
 }
 ```
 
@@ -157,8 +155,8 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::proc::trusted::delete",
-	"cmd": "/root\u001f/usr/bin/ls\u001fls"
+    "type": "user::proc::trusted::delete",
+    "cmd": "/root\u001f/usr/bin/ls\u001fls"
 }
 ```
 
@@ -166,7 +164,7 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::proc::trusted::clear"
+    "type": "user::proc::trusted::clear"
 }
 ```
 
@@ -174,7 +172,7 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::proc::disable"
+    "type": "user::proc::disable"
 }
 ```
 
@@ -184,7 +182,7 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::file::enable"
+    "type": "user::file::enable"
 }
 ```
 
@@ -206,9 +204,9 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::file::set",
-	"path": "/etc/fstab",
-	"perm": 14
+    "type": "user::file::set",
+    "path": "/etc/fstab",
+    "perm": 14
 }
 ```
 
@@ -216,8 +214,8 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::msg::sub",
-	"section": "kernel::file::report"
+    "type": "user::msg::sub",
+    "section": "kernel::file::report"
 }
 ```
 
@@ -225,9 +223,9 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "kernel::file::report",
-	"name": "/etc/fstab",
-	"perm": 4
+    "type": "kernel::file::report",
+    "name": "/etc/fstab",
+    "perm": 4
 }
 ```
 
@@ -237,7 +235,7 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::file::disable"
+    "type": "user::file::disable"
 }
 ```
 
@@ -247,7 +245,7 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::net::enable"
+    "type": "user::net::enable"
 }
 ```
 
@@ -262,35 +260,35 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::net::insert",
-	"id": 0,
-	"priority": 0,
-	"addr": {
-		"src": {
-			"begin": "0.0.0.0",
-			"end": "255.255.255.255"
-		},
-		"dst": {
-			"begin": "0.0.0.0",
-			"end": "255.255.255.255"
-		}
-	},
-	"protocol": {
-		"begin": 6,
-		"end": 6
-	},
-	"port": {
-		"src": {
-			"begin": 0,
-			"end": 65535
-		},
-		"dst": {
-			"begin": 22,
-			"end": 22
-		}
-	},
-	"flags": 1,
-	"response": 1
+    "type": "user::net::insert",
+    "id": 0,
+    "priority": 0,
+    "addr": {
+        "src": {
+            "begin": "0.0.0.0",
+            "end": "255.255.255.255"
+        },
+        "dst": {
+            "begin": "0.0.0.0",
+            "end": "255.255.255.255"
+        }
+    },
+    "protocol": {
+        "begin": 6,
+        "end": 6
+    },
+    "port": {
+        "src": {
+            "begin": 0,
+            "end": 65535
+        },
+        "dst": {
+            "begin": 22,
+            "end": 22
+        }
+    },
+    "flags": 1,
+    "response": 1
 }
 ```
 
@@ -298,8 +296,8 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::net::delete",
-	"id": 0
+    "type": "user::net::delete",
+    "id": 0
 }
 ```
 
@@ -309,6 +307,6 @@ __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统�
 
 ```json
 {
-	"type": "user::net::disable"
+    "type": "user::net::disable"
 }
 ```
