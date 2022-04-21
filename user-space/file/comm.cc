@@ -70,7 +70,7 @@ static int FileReportJsonGen(const char *name, FilePerm perm, std::string &msg) 
     doc["type"] = "kernel::file::report";
     doc["name"] = name;
     doc["perm"] = perm;
-    msg = msg = InternalJsonWrapper(doc);
+    msg = InternalJsonWrapper(doc);
     return 0;
 }
 
