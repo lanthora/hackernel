@@ -17,34 +17,46 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 
 ## 辅助字段
 
-由于请求和响应是纯异步的,请求增加了一个与业务无关(任何一个请求都可以携带这个字段)的 "extra" 字段,这个字段中的值再响应时原样返回,方便进行异步的操作,当不携带 "extra" 字段时,返回的值为 null.
+由于请求和响应是纯异步的,请求增加了一个与业务无关(任何一个请求都可以携带这个字段)的 "extra" 字段,这个字段中的值再响应时原样返回,方便进行异步的操作,其中可以保存任何合法的Json数据结构.当不携带 "extra" 字段时,返回的值为 null.确定响应所对应的请求的唯一方法就是使用 "extra" 字段添加标识, 服务不保证按序对请求进行响应.
 
 不携带参数
 
 ```json
-{"type":"user::test::echo"}
-{"extra":null,"type":"user::test::echo"}
+{
+	"type": "user::test::echo"
+}
 ```
 
 携带基本数据类型
 
 ```json
-{"type":"user::test::echo","extra":true}
-{"extra":true,"type":"user::test::echo"}
+{
+	"type": "user::test::echo",
+	"extra": 1
+}
 ```
 
 携带数组
 
 ```json
-{"type":"user::test::echo","extra":[1,2,3]}
-{"extra":[1,2,3],"type":"user::test::echo"}
+{
+	"type": "user::test::echo",
+	"extra": [
+		"Alice",
+		"Bob"
+	]
+}
 ```
 
 携带对象
 
 ```json
-{"type":"user::test::echo","extra":{"key":"value"}}
-{"extra":{"key":"value"},"type":"user::test::echo"}
+{
+	"type": "user::test::echo",
+	"extra": {
+		"reply_to": "Alice"
+	}
+}
 ```
 
 ## 进程类
@@ -52,68 +64,97 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 开启进程防护功能,返回 code 为 0 表示开启成功.
 
 ```json
-{"type":"user::proc::enable"}
-{"code":0,"extra":null,"type":"kernel::proc::enable"}
+{
+	"type": "user::proc::enable"
+}
 ```
 
 进程创建事件订阅.订阅成功后执行任意命令可以收到事件.
 "cmd" 字段通过 \u001f 分割,分别表示：当前进程所在路径,可执行文件路径,进程启动的参数.示例中以 ls 命令为例.
 
 ```json
-{"type":"user::msg::sub","section":"kernel::proc::report"}
-{"code":0,"extra":null,"section":"kernel::proc::report","type":"user::msg::sub"}
-{"cmd":"/root\u001f/usr/bin/ls\u001fls","type":"kernel::proc::report"}
+{
+	"type": "user::msg::sub",
+	"section": "kernel::proc::report"
+}
 ```
+
+收到的进程创建事件
+
+```json
+{
+	"type": "kernel::proc::report",
+	"cmd": "/root\u001f/usr/bin/ls\u001fls"
+}
+```
+
 
 取消进程创建事件订阅.
 
 ```json
-{"type":"user::msg::unsub","section":"kernel::proc::report"}
-{"code":0,"extra":null,"section":"kernel::proc::report","type":"user::msg::unsub"}
+{
+	"type": "user::msg::unsub",
+	"section": "kernel::proc::report"
+}
 ```
 
 进程审计事件订阅,退订流程与上述操作一致,不做赘述.仅 section 字段不同,同属于订阅退订功能,与上述功能的差异在后面的接口描述中进行说明.
 订阅后将根据事件持续推送,单个进程可多次订阅,但每个事件仅发送一次消息,退订次数与订阅次数一致时会停止推送.连接断开也会停止推送.
 
 ```json
-{"type":"user::msg::sub","section":"audit::proc::report"}
-{"code":0,"extra":null,"section":"audit::proc::report","type":"user::msg::sub"}
+{
+	"type": "user::msg::sub",
+	"section": "audit::proc::report"
+}
 ```
 
-调整白名单外进程执行策略,白名单的概念在后续内容中说明在.
-1.允许执行并上报审计事件; 2.禁止执行并审计事件; 其他值允许执行但不上报. 这里的审计事件对应 `"section":"audit::proc::report"` 的订阅.在没有白名单时,配置`"judge":2` 将导致无法创建新进程. __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统变化__.
+调整白名单外进程执行策略 judge ,白名单的概念在后续内容中说明在.
+
+0. 允许执行但不上报,即关闭该功能
+1. 允许执行并上报审计事件
+2. 禁止执行并上报防御事件
+
+ 其他值 这里的审计事件对应 `"section":"audit::proc::report"` 的订阅.在没有白名单时,配置`"judge": 1` 将导致无法创建新进程. __在确定能发送请求调整 judge 后,可以尝试设置为 2 观察系统变化__.
 
 ```json
-{"type":"user::proc::judge","judge":1}
-{"code":0,"extra":null,"judge":1,"type":"user::proc::judge"}
+{
+	"type": "user::proc::judge",
+	"judge": 1
+}
 ```
 
 插入白名单, "cmd" 字段内容应该与进程审计事件中内容完全一致.
 
 ```json
-{"type":"user::proc::trusted::insert","cmd":"/root\u001f/usr/bin/ls\u001fls"}
-{"cmd":"/root\u001f/usr/bin/ls\u001fls","code":0,"extra":null,"type":"user::proc::trusted::insert"}
+{
+	"type": "user::proc::trusted::insert",
+	"cmd": "/root\u001f/usr/bin/ls\u001fls"
+}
 ```
 
 移出白名单.
 
 ```json
-{"type":"user::proc::trusted::delete","cmd":"/root\u001f/usr/bin/ls\u001fls"}
-{"cmd":"/root\u001f/usr/bin/ls\u001fls","code":0,"extra":null,"type":"user::proc::trusted::delete"}
+{
+	"type": "user::proc::trusted::delete",
+	"cmd": "/root\u001f/usr/bin/ls\u001fls"
+}
 ```
 
 清空白名单
 
 ```json
-{"type":"user::proc::trusted::clear"}
-{"code":0,"extra":null,"type":"user::proc::trusted::clear"}
+{
+	"type": "user::proc::trusted::clear"
+}
 ```
 
 关闭进程防护功能.
 
 ```json
-{"type":"user::proc::disable"}
-{"code":0,"extra":null,"type":"kernel::proc::disable"}
+{
+	"type": "user::proc::disable"
+}
 ```
 
 ## 文件类
