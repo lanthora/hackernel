@@ -67,6 +67,39 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 }
 ```
 
+## 控制类
+
+### 设置 token
+
+设置 token 后的请求都需要携带 token 字段.
+文档中的其他接口按照没有设置 token 的方式给出, 如果设置了token 需要自行添加.
+
+```json
+{
+    "type": "user::ctrl::token",
+    "new": "this is the token"
+}
+```
+
+再次设置token,此时需要携带之前设置的token.
+后台保持最近两个token有效,解决更换token时存在的多个进程间token不一致导致的问题.
+
+```json
+{
+    "type": "user::ctrl::token",
+    "token": "this is the token",
+    "new": "this is another token"
+}
+```
+
+### 退出服务进程
+
+```json
+{
+    "type": "user::ctrl::exit"
+}
+```
+
 ## 进程类
 
 ### 开启进程防护功能

@@ -8,6 +8,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <shared_mutex>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unordered_map>
@@ -22,6 +23,17 @@ typedef LRUCache<Session, UserConn> ConnCache;
 struct SectionUserCounter {
     UserConn conn;
     int counter;
+};
+
+class Token {
+public:
+    int Update(const std::string &token);
+    bool IsVaild(const std::string &token);
+    bool IsEnabled();
+
+private:
+    std::shared_mutex mutex_;
+    std::list<std::string> tokens_;
 };
 
 class IpcServer {
@@ -47,9 +59,9 @@ private:
     bool running_;
     int socket_ = 0;
     std::map<std::string, std::list<SectionUserCounter>> sub_;
-    std::mutex sub_lock_;
+    std::mutex sub_mutex_;
     std::atomic<Session> id_ = SYSTEM_SESSION;
-    std::string token_;
+    Token token_;
 
 private:
     int UnixDomainSocketWait();
