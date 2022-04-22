@@ -19,16 +19,16 @@ file_protector::file_protector() {}
 file_protector::~file_protector() {}
 
 int file_protector::start() {
-    receiver_ = std::make_shared<audience>();
-    if (!receiver_) {
+    audience_ = std::make_shared<audience>();
+    if (!audience_) {
         ERR("make audience failed");
         return -ENOMEM;
     }
-    receiver_->add_msg_handler([&](const std::string &msg) { return handle_file_proc_msg(msg); });
-    broadcaster::global().add_audience(receiver_);
+    audience_->add_msg_handler([&](const std::string &msg) { return handle_file_proc_msg(msg); });
+    broadcaster::global().add_audience(audience_);
 
     change_thread_name("file");
-    receiver_->start_consume_msg();
+    audience_->start_consume_msg();
 
     return 0;
 }

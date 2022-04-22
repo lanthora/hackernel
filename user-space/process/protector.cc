@@ -127,20 +127,20 @@ bool process_protector::handle_proc_msg(const std::string &msg) {
 }
 
 int process_protector::init() {
-    receiver_ = std::make_shared<audience>();
-    if (!receiver_) {
+    audience_ = std::make_shared<audience>();
+    if (!audience_) {
         ERR("make audience failed");
         return -ENOMEM;
     }
 
-    receiver_->add_msg_handler([&](const std::string &msg) { return handle_proc_msg(msg); });
-    broadcaster::global().add_audience(receiver_);
+    audience_->add_msg_handler([&](const std::string &msg) { return handle_proc_msg(msg); });
+    broadcaster::global().add_audience(audience_);
     return 0;
 }
 
 int process_protector::start() {
     change_thread_name("process");
-    receiver_->start_consume_msg();
+    audience_->start_consume_msg();
     return 0;
 }
 

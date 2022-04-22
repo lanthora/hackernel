@@ -39,7 +39,7 @@ private:
     std::shared_mutex mutex_;
     ProcPerm judge_ = PROCESS_ACCEPT;
     bool enabled_ = false;
-    std::shared_ptr<audience> receiver_ = nullptr;
+    std::shared_ptr<audience> audience_ = nullptr;
 };
 
 }; // namespace hackernel

@@ -44,7 +44,7 @@ void stop_server(int code) {
 
     // 关闭定时器
     stop_timer();
-    stop_all_receiver();
+    stop_all_audience();
 }
 
 static void handle_signal(int sig) {
