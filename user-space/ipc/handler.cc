@@ -10,12 +10,12 @@ namespace hackernel {
 
 using namespace ipc;
 
-bool UserTestEcho(const std::string &msg) {
+bool handle_user_test_echo_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::test::echo")
         return false;
 
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
 
@@ -30,13 +30,13 @@ errout:
     return -EINVAL;
 }
 
-bool UserMsgSub(const std::string &msg) {
+bool handle_user_sub_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::msg::sub")
         return false;
 
-    UserConn conn;
-    if (IpcServer::GetConnCache().Get(doc["session"], conn))
+    user_conn conn;
+    if (ipc_server::global().clients.get(doc["session"], conn))
         return false;
 
     nlohmann::json &data = doc["data"];
@@ -44,12 +44,12 @@ bool UserMsgSub(const std::string &msg) {
         return false;
     const std::string &section = data["section"];
 
-    data["code"] = IpcServer::GetInstance().MsgSub(section, conn);
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    data["code"] = ipc_server::global().handle_msg_sub(section, conn);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
 
-static int UserMsgUnsubCheck(const nlohmann::json &data) {
+static int check_user_msg_unsub_data(const nlohmann::json &data) {
     if (!data["section"].is_string())
         goto errout;
 
@@ -60,35 +60,35 @@ errout:
     return -EINVAL;
 }
 
-bool UserMsgUnsub(const std::string &msg) {
+bool handle_user_unsub_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::msg::unsub")
         return false;
 
-    UserConn conn;
-    if (IpcServer::GetConnCache().Get(doc["session"], conn))
+    user_conn conn;
+    if (ipc_server::global().clients.get(doc["session"], conn))
         return false;
 
     nlohmann::json &data = doc["data"];
-    if (UserMsgUnsubCheck(data))
+    if (check_user_msg_unsub_data(data))
         return false;
     const std::string &section = data["section"];
 
-    data["code"] = IpcServer::GetInstance().MsgUnsub(section, conn);
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    data["code"] = ipc_server::global().handle_msg_unsub(section, conn);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
 
-bool UserCtrlExit(const std::string &msg) {
+bool handle_user_ctrl_exit_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::ctrl::exit")
         return false;
 
-    SHUTDOWN(HACKERNEL_SUCCESS);
+    stop_server(HACKERNEL_SUCCESS);
     return true;
 }
 
-static int UserCtrlTokenCheck(const nlohmann::json &data) {
+static int check_user_ctrl_token_data(const nlohmann::json &data) {
     if (!data["new"].is_string())
         goto errout;
 
@@ -99,123 +99,123 @@ errout:
     return -EINVAL;
 }
 
-bool UserCtrlToken(const std::string &msg) {
+bool handle_user_ctrl_token_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::ctrl::token")
         return false;
 
     nlohmann::json &data = doc["data"];
-    if (UserCtrlTokenCheck(data))
+    if (check_user_ctrl_token_data(data))
         return false;
     std::string token = data["new"];
 
-    data["code"] = IpcServer::GetInstance().TokenUpdate(token);
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    data["code"] = ipc_server::global().update_token(token);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
 
-bool KernelProcReport(const std::string &msg) {
+bool handle_kernel_proc_report_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::proc::report")
         return false;
 
-    IpcServer::GetInstance().SendMsgToSubscriber(doc);
+    ipc_server::global().broadcast_msg_to_subscriber(doc);
     return true;
 }
 
-bool KernelProcEnable(const std::string &msg) {
+bool handle_kernel_proc_enable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::proc::enable")
         return false;
 
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
 
-bool KernelProcDisable(const std::string &msg) {
+bool handle_kernel_proc_disable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::proc::disable")
         return false;
 
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
 
-bool KernelFileReport(const std::string &msg) {
+bool handle_kernel_file_report_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::file::report")
         return false;
 
-    IpcServer::GetInstance().SendMsgToSubscriber(doc);
+    ipc_server::global().broadcast_msg_to_subscriber(doc);
     return true;
 }
 
-bool KernelFileSet(const std::string &msg) {
+bool handle_kernel_file_set_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::file::set")
         return false;
 
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
-bool KernelFileEnable(const std::string &msg) {
+bool handle_kernel_file_enable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::file::enable")
         return false;
 
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
 
-bool KernelFileDisable(const std::string &msg) {
+bool handle_kernel_file_disable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::file::disable")
         return false;
 
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
 
-bool KernelNetInsert(const std::string &msg) {
+bool handle_kernel_net_insert_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::insert")
         return false;
 
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
 
-bool KernelNetDelete(const std::string &msg) {
+bool handle_kernel_net_delete_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::delete")
         return false;
 
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
-bool KernelNetEnable(const std::string &msg) {
+bool handle_kernel_net_enable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::enable")
         return false;
 
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
-bool KernelNetDisable(const std::string &msg) {
+bool handle_kernel_net_disable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::disable")
         return false;
 
-    IpcServer::GetInstance().SendMsgToClient(doc);
+    ipc_server::global().send_msg_to_client(doc);
     return true;
 }
 
-bool AuditProcReport(const std::string &msg) {
+bool handle_audit_proc_report_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "audit::proc::report")
         return false;
 
-    IpcServer::GetInstance().SendMsgToSubscriber(doc);
+    ipc_server::global().broadcast_msg_to_subscriber(doc);
     return true;
 }
 

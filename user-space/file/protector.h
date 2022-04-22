@@ -11,29 +11,27 @@
 
 namespace hackernel {
 
-namespace file {
-
-class Auditor {
+class file_protector {
 
 public:
-    int Init();
+    int start();
 
 private:
-    bool Handler(const std::string &msg);
+    bool handle_file_proc_msg(const std::string &msg);
 
 public:
-    static Auditor &GetInstance();
+    static file_protector &global();
 
 private:
-    Auditor();
-    ~Auditor();
+    file_protector();
+    ~file_protector();
     bool enabled_ = false;
-    std::shared_ptr<Receiver> receiver_ = nullptr;
+    std::shared_ptr<audience> receiver_ = nullptr;
     std::shared_mutex mutex_;
-    std::map<std::string, FilePerm> perms_;
+    std::map<std::string, file_perm> perms_;
 };
 
-}; // namespace file
+int start_file_protector();
 
 }; // namespace hackernel
 

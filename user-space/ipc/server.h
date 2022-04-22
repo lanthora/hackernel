@@ -18,54 +18,57 @@ namespace hackernel {
 
 namespace ipc {
 
-typedef LRUCache<Session, UserConn> ConnCache;
+typedef lru<session, user_conn> conn_cache;
 
-struct SectionUserCounter {
-    UserConn conn;
+struct user_conn_counter {
+    user_conn conn;
     int counter;
 };
 
-class Token {
+class token {
 public:
-    int Update(const std::string &token);
-    bool IsVaild(const std::string &token);
-    bool IsEnabled();
+    int update(const std::string &token);
+    bool is_vaild(const std::string &token);
+    bool is_enabled();
 
 private:
     std::shared_mutex mutex_;
     std::list<std::string> tokens_;
 };
 
-class IpcServer {
+class ipc_server {
 public:
-    static IpcServer &GetInstance();
-    static ConnCache &GetConnCache();
-    int Init();
-    int StartWait();
-    int Stop();
-    int SendMsgToClient(const nlohmann::json &doc);
-    int MsgSub(const std::string &section, const UserConn &user);
-    int MsgUnsub(const std::string &section, const UserConn &user);
-    int SendMsgToSubscriber(const nlohmann::json &doc);
-    int TokenUpdate(const std::string &token);
+    static ipc_server &global();
+    conn_cache clients;
+
+    int init();
+    int start();
+    int stop();
+
+    int handle_msg_sub(const std::string &section, const user_conn &user);
+    int handle_msg_unsub(const std::string &section, const user_conn &user);
+    int send_msg_to_client(const nlohmann::json &doc);
+    int broadcast_msg_to_subscriber(const nlohmann::json &doc);
+
+    int update_token(const std::string &token);
 
 private:
-    int SendMsgToClient(UserConn conn, const std::string &msg);
-    int SendMsgToSubscriber(const std::string &section, const std::string &msg);
+    int send_msg_to_client(user_conn conn, const std::string &msg);
+    int broadcast_msg_to_subscriber(const std::string &section, const std::string &msg);
 
 private:
-    IpcServer() {}
-    std::shared_ptr<Receiver> receiver_ = nullptr;
+    ipc_server() {}
+    std::shared_ptr<audience> receiver_ = nullptr;
     bool running_;
     int socket_ = 0;
-    std::map<std::string, std::list<SectionUserCounter>> sub_;
+    std::map<std::string, std::list<user_conn_counter>> sub_;
     std::mutex sub_mutex_;
-    std::atomic<Session> id_ = SYSTEM_SESSION;
-    Token token_;
+    std::atomic<session> id_ = SYSTEM_SESSION;
+    token token_;
 
 private:
-    int UnixDomainSocketWait();
-    Session NewUserSession();
+    int start_unix_domain_socket();
+    session generate_user_session();
 };
 
 }; // namespace ipc

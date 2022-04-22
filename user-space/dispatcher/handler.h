@@ -6,15 +6,17 @@
 
 namespace hackernel {
 
-bool UserProcEnable(const std::string &msg);
-bool UserProcDisable(const std::string &msg);
-bool UserFileEnable(const std::string &msg);
-bool UserFileDisable(const std::string &msg);
-bool UserFileSet(const std::string &msg);
-bool UserNetEnable(const std::string &msg);
-bool UserNetDisable(const std::string &msg);
-bool UserNetInsert(const std::string &msg);
-bool UserNetDelete(const std::string &msg);
+bool handle_proc_prot_enable_msg(const std::string &msg);
+bool handle_proc_prot_disable_msg(const std::string &msg);
+
+bool handle_file_prot_enable_msg(const std::string &msg);
+bool handle_file_prot_disable_msg(const std::string &msg);
+bool handle_file_prot_set_msg(const std::string &msg);
+
+bool handle_net_prot_enable_msg(const std::string &msg);
+bool handle_net_prot_disable_msg(const std::string &msg);
+bool handle_net_prot_insert_msg(const std::string &msg);
+bool handle_net_prot_delete_msg(const std::string &msg);
 
 } // namespace hackernel
 

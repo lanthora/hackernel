@@ -14,42 +14,42 @@ namespace hackernel {
 
 namespace timer {
 
-struct Element {
+struct element {
     std::chrono::time_point<std::chrono::system_clock> time_point;
     std::function<void()> func;
 };
 
-struct Compare {
-    bool operator()(Element a, Element b) {
+struct compare {
+    bool operator()(element a, element b) {
         return a.time_point > b.time_point;
     }
 };
 
-class Timer {
+class timer {
 
 public:
-    int Insert(const Element &element);
-    int RunWait();
-    int Exit();
+    int insert(const element &element);
+    int start();
+    int stop();
 
 private:
-    std::priority_queue<Element, std::vector<Element>, Compare> queue_;
+    std::priority_queue<element, std::vector<element>, compare> queue_;
     std::mutex queue_mutex_;
     std::mutex sync_mutex_;
     std::condition_variable cv_;
     bool running_;
 
 public:
-    static Timer &GetInstance();
+    static timer &global();
 
 private:
-    Timer() {}
+    timer() {}
 };
 
 } // namespace timer
 
-int TimerWait();
-void TimerExit();
+int start_timer();
+void stop_timer();
 
 }; // namespace hackernel
 

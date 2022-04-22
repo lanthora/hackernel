@@ -10,29 +10,29 @@
 
 namespace hackernel {
 
-static int NetProtectStatusUpdate(int32_t session, uint8_t status) {
+static int update_net_protect_status(int32_t session, uint8_t status) {
     struct nl_msg *message;
 
-    message = NetlinkMsgAlloc(HACKERNEL_C_NET_PROTECT);
+    message = alloc_hackernel_nlmsg(HACKERNEL_C_NET_PROTECT);
     nla_put_s32(message, NET_A_SESSION, session);
     nla_put_u8(message, NET_A_OP_TYPE, status);
-    NetlinkSend(message);
+    send_free_hackernel_nlmsg(message);
 
     return 0;
 }
 
-int NetProtectEnable(int32_t session) {
-    return NetProtectStatusUpdate(session, NET_PROTECT_ENABLE);
+int enable_net_prot(int32_t session) {
+    return update_net_protect_status(session, NET_PROTECT_ENABLE);
 }
 
-int NetProtectDisable(int32_t session) {
-    return NetProtectStatusUpdate(session, NET_PROTECT_DISABLE);
+int disable_net_prot(int32_t session) {
+    return update_net_protect_status(session, NET_PROTECT_DISABLE);
 }
 
-int NetPolicyInsert(int32_t session, const NetPolicy *policy) {
+int insert_net_policy(int32_t session, const net_policy *policy) {
     struct nl_msg *message;
 
-    message = NetlinkMsgAlloc(HACKERNEL_C_NET_PROTECT);
+    message = alloc_hackernel_nlmsg(HACKERNEL_C_NET_PROTECT);
 
     nla_put_s32(message, NET_A_SESSION, session);
     nla_put_u8(message, NET_A_OP_TYPE, NET_PROTECT_INSERT);
@@ -56,56 +56,57 @@ int NetPolicyInsert(int32_t session, const NetPolicy *policy) {
     nla_put_u32(message, NET_A_RESPONSE, policy->response);
     nla_put_s32(message, NET_A_FLAGS, policy->flags);
 
-    NetlinkSend(message);
+    send_free_hackernel_nlmsg(message);
 
     return 0;
 }
 
-int NetPolicyDelete(int32_t session, NetPolicyId id) {
+int delete_net_policy(int32_t session, net_policy_id id) {
     struct nl_msg *message;
 
-    message = NetlinkMsgAlloc(HACKERNEL_C_NET_PROTECT);
+    message = alloc_hackernel_nlmsg(HACKERNEL_C_NET_PROTECT);
     nla_put_s32(message, NET_A_SESSION, session);
     nla_put_u8(message, NET_A_OP_TYPE, NET_PROTECT_DELETE);
     nla_put_u32(message, NET_A_ID, id);
-    NetlinkSend(message);
+    send_free_hackernel_nlmsg(message);
 
     return 0;
 }
 
-static int NetEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int generate_net_prot_enable_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::enable";
     doc["code"] = code;
-    msg = UserJsonWrapper(session, doc);
+    msg = generate_broadcast_msg(session, doc);
     return 0;
 }
 
-static int NetDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int generate_net_prot_disable_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::disable";
     doc["code"] = code;
-    msg = UserJsonWrapper(session, doc);
+    msg = generate_broadcast_msg(session, doc);
     return 0;
 }
 
-static int NetInsertJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int generate_net_prot_insert_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::insert";
     doc["code"] = code;
-    msg = UserJsonWrapper(session, doc);
+    msg = generate_broadcast_msg(session, doc);
     return 0;
 }
 
-static int NetDeleteJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int generate_net_prot_delete_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::delete";
     doc["code"] = code;
-    msg = UserJsonWrapper(session, doc);
+    msg = generate_broadcast_msg(session, doc);
     return 0;
 }
 
-int NetProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
+int handle_genl_net_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
+                         void *arg) {
     u_int8_t type;
     int code;
     int32_t session;
@@ -116,32 +117,32 @@ int NetProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, st
     case NET_PROTECT_ENABLE:
         session = nla_get_s32(genl_info->attrs[NET_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
-        NetEnableJsonGen(session, code, msg);
-        Broadcaster::GetInstance().Notify(msg);
+        generate_net_prot_enable_msg(session, code, msg);
+        broadcaster::global().broadcast(msg);
         DBG("kernel::net::enable, session=[%d] code=[%d]", session, code);
         break;
 
     case NET_PROTECT_DISABLE:
         session = nla_get_s32(genl_info->attrs[NET_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
-        NetDisableJsonGen(session, code, msg);
-        Broadcaster::GetInstance().Notify(msg);
+        generate_net_prot_disable_msg(session, code, msg);
+        broadcaster::global().broadcast(msg);
         DBG("kernel::net::disable, session=[%d] code=[%d]", session, code);
         break;
 
     case NET_PROTECT_INSERT:
         session = nla_get_s32(genl_info->attrs[NET_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
-        NetInsertJsonGen(session, code, msg);
-        Broadcaster::GetInstance().Notify(msg);
+        generate_net_prot_insert_msg(session, code, msg);
+        broadcaster::global().broadcast(msg);
         DBG("kernel::net::insert, session=[%d] code=[%d]", session, code);
         break;
 
     case NET_PROTECT_DELETE:
         session = nla_get_s32(genl_info->attrs[NET_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
-        NetDeleteJsonGen(session, code, msg);
-        Broadcaster::GetInstance().Notify(msg);
+        generate_net_prot_delete_msg(session, code, msg);
+        broadcaster::global().broadcast(msg);
         DBG("kernel::net::delete, session=[%d] code=[%d]", session, code);
         break;
 

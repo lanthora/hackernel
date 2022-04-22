@@ -87,7 +87,7 @@ static struct genl_ops hackernel_genl_ops = {
     .o_ncmds = ARRAY_SIZE(hackernel_genl_cmds),
 };
 
-void NetlinkServerInit() {
+void init_netlink_server() {
     int error;
 
     if (nl_sock) {
@@ -155,12 +155,12 @@ errout:
         nl_sock = NULL;
     }
 
-    SHUTDOWN(HACKERNEL_NETLINK_INIT);
+    stop_server(HACKERNEL_NETLINK_INIT);
 }
 
-static bool running = false;
+static bool is_running = false;
 
-int NetlinkWait() {
+int start_netlink() {
     int error;
 
     if (!nl_sock) {
@@ -173,23 +173,23 @@ int NetlinkWait() {
         .events = POLLIN,
     };
 
-    ThreadNameUpdate("netlink");
+    change_thread_name("netlink");
     DBG("netlink enter");
-    running = RUNNING();
-    while (running) {
+    is_running = get_running_status();
+    while (is_running) {
         const nfds_t nfds = 1;
         const int timeout = HEARTBEAT_INTERVAL * 2;
 
         error = poll(&fds, nfds, timeout);
         if (error <= 0) {
             ERR("poll failed");
-            SHUTDOWN(HACKERNEL_NETLINK_WAIT);
+            stop_server(HACKERNEL_NETLINK_WAIT);
             break;
         }
         error = nl_recvmsgs_default(nl_sock);
         if (error) {
             ERR("error=[%d] msg=[%s]", error, nl_geterror(error));
-            SHUTDOWN(HACKERNEL_NETLINK_WAIT);
+            stop_server(HACKERNEL_NETLINK_WAIT);
             break;
         }
     }
@@ -203,12 +203,12 @@ int NetlinkWait() {
     return 0;
 }
 
-int NetlinkExit() {
-    running = false;
+int stop_netlink() {
+    is_running = false;
     return 0;
 }
 
-struct nl_msg *NetlinkMsgAlloc(uint8_t cmd) {
+struct nl_msg *alloc_hackernel_nlmsg(uint8_t cmd) {
     struct nl_msg *message;
 
     message = nlmsg_alloc();
@@ -216,7 +216,7 @@ struct nl_msg *NetlinkMsgAlloc(uint8_t cmd) {
     return message;
 }
 
-int NetlinkSend(struct nl_msg *message) {
+int send_free_hackernel_nlmsg(struct nl_msg *message) {
     int error = 0;
 
     if (!nl_sock)

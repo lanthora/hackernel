@@ -2,9 +2,23 @@
 #include "hackernel/timer.h"
 
 namespace hackernel {
+
+int start_timer() {
+    change_thread_name("timer");
+    DBG("timer enter");
+    timer::timer::global().start();
+    DBG("timer exit");
+    return 0;
+}
+
+void stop_timer() {
+    timer::timer::global().stop();
+    return;
+}
+
 namespace timer {
 
-int Timer::Insert(const Element &element) {
+int timer::insert(const element &element) {
     queue_mutex_.lock();
     queue_.push(element);
     queue_mutex_.unlock();
@@ -13,8 +27,8 @@ int Timer::Insert(const Element &element) {
     return 0;
 }
 
-int Timer::RunWait() {
-    running_ = RUNNING();
+int timer::start() {
+    running_ = get_running_status();
     while (running_) {
         std::unique_lock<std::mutex> lock(sync_mutex_);
         cv_.wait(lock, [&]() { return !queue_.empty() || !running_; });
@@ -27,7 +41,7 @@ int Timer::RunWait() {
         }
 
         queue_mutex_.lock();
-        Element element = queue_.top();
+        element element = queue_.top();
         queue_.pop();
         queue_mutex_.unlock();
 
@@ -36,7 +50,7 @@ int Timer::RunWait() {
     return 0;
 }
 
-int Timer::Exit() {
+int timer::stop() {
     sync_mutex_.lock();
     running_ = false;
     sync_mutex_.unlock();
@@ -45,24 +59,11 @@ int Timer::Exit() {
     return 0;
 }
 
-Timer &Timer::GetInstance() {
-    static Timer instance;
+timer &timer::global() {
+    static timer instance;
     return instance;
 }
 
 }; // namespace timer
-
-int TimerWait() {
-    ThreadNameUpdate("timer");
-    DBG("timer enter");
-    timer::Timer::GetInstance().RunWait();
-    DBG("timer exit");
-    return 0;
-}
-
-void TimerExit() {
-    timer::Timer::GetInstance().Exit();
-    return;
-}
 
 }; // namespace hackernel

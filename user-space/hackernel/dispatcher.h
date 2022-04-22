@@ -4,8 +4,8 @@
 
 namespace hackernel {
 
-int DispatcherWait();
-void DispatcherExit();
+int start_dispatcher();
+void stop_dispatcher();
 
 }; // namespace hackernel
 

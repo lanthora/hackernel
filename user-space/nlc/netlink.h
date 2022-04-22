@@ -24,12 +24,12 @@ enum {
 };
 #define HACKERNEL_C_MAX (__HACKERNEL_C_MAX - 1)
 
-void NetlinkServerInit(void);
-int NetlinkWait(void);
-int NetlinkExit(void);
+void init_netlink_server(void);
+int start_netlink(void);
+int stop_netlink(void);
 
-struct nl_msg *NetlinkMsgAlloc(uint8_t cmd);
-int NetlinkSend(struct nl_msg *message);
+struct nl_msg *alloc_hackernel_nlmsg(uint8_t cmd);
+int send_free_hackernel_nlmsg(struct nl_msg *message);
 
 EXTERN_C_END
 

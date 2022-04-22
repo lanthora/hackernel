@@ -10,47 +10,47 @@
 
 namespace hackernel {
 
-bool UserProcEnable(const std::string &msg) {
+bool handle_proc_prot_enable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::proc::enable")
         return false;
 
     int32_t session = doc["session"];
-    ProcProtectEnable(session);
+    enable_proc_protect(session);
     return true;
 }
 
-bool UserProcDisable(const std::string &msg) {
+bool handle_proc_prot_disable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::proc::disable")
         return false;
 
     int32_t session = doc["session"];
-    ProcProtectDisable(session);
+    disable_proc_protect(session);
     return true;
 }
 
-bool UserFileEnable(const std::string &msg) {
+bool handle_file_prot_enable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::file::enable")
         return false;
 
     int32_t session = doc["session"];
-    FileProtectEnable(session);
+    enable_file_prot(session);
     return true;
 }
 
-bool UserFileDisable(const std::string &msg) {
+bool handle_file_prot_disable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::file::disable")
         return false;
 
     int32_t session = doc["session"];
-    FileProtectDisable(session);
+    disable_file_prot(session);
     return true;
 }
 
-static int UserFileSetCheck(const nlohmann::json &data) {
+static int check_user_file_set_data(const nlohmann::json &data) {
     if (!data["path"].is_string())
         goto errout;
 
@@ -64,7 +64,7 @@ errout:
     return -EINVAL;
 }
 
-bool UserFileSet(const std::string &msg) {
+bool handle_file_prot_set_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::file::set")
         return false;
@@ -72,36 +72,36 @@ bool UserFileSet(const std::string &msg) {
     int32_t session = doc["session"];
     nlohmann::json data = doc["data"];
 
-    if (UserFileSetCheck(data))
+    if (check_user_file_set_data(data))
         return false;
 
     std::string path = data["path"];
     int32_t perm = data["perm"];
-    FileProtectSet(session, path.data(), perm);
+    set_file_prot(session, path.data(), perm);
     return true;
 }
 
-bool UserNetEnable(const std::string &msg) {
+bool handle_net_prot_enable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::net::enable")
         return false;
 
     int32_t session = doc["session"];
-    NetProtectEnable(session);
+    enable_net_prot(session);
     return true;
 }
 
-bool UserNetDisable(const std::string &msg) {
+bool handle_net_prot_disable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::net::disable")
         return false;
 
     int32_t session = doc["session"];
-    NetProtectDisable(session);
+    disable_net_prot(session);
     return true;
 }
 
-static int UserNetInsertCheck(const nlohmann::json &data) {
+static int check_net_prot_insert(const nlohmann::json &data) {
 
     if (!data["id"].is_number_integer())
         goto errout;
@@ -152,16 +152,16 @@ errout:
     return -EINVAL;
 }
 
-bool UserNetInsert(const std::string &msg) {
+bool handle_net_prot_insert_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::net::insert")
         return false;
 
     int32_t session = doc["session"];
     nlohmann::json data = doc["data"];
-    if (UserNetInsertCheck(data))
+    if (check_net_prot_insert(data))
         return false;
-    NetPolicy policy;
+    net_policy policy;
     policy.id = data["id"];
     policy.priority = data["priority"];
     policy.addr.src.begin = ntohl(inet_addr(std::string(data["addr"]["src"]["begin"]).data()));
@@ -177,11 +177,11 @@ bool UserNetInsert(const std::string &msg) {
     policy.flags = data["flags"];
     policy.response = data["response"];
 
-    NetPolicyInsert(session, &policy);
+    insert_net_policy(session, &policy);
     return true;
 }
 
-static int UserNetDeleteCheck(const nlohmann::json &data) {
+static int check_net_prot_delete(const nlohmann::json &data) {
     if (!data["id"].is_number_integer())
         goto errout;
     return 0;
@@ -190,7 +190,7 @@ errout:
     return -EINVAL;
 }
 
-bool UserNetDelete(const std::string &msg) {
+bool handle_net_prot_delete_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::net::delete")
         return false;
@@ -198,11 +198,11 @@ bool UserNetDelete(const std::string &msg) {
     int32_t session = doc["session"];
 
     nlohmann::json data = doc["data"];
-    if (UserNetDeleteCheck(data))
+    if (check_net_prot_delete(data))
         return false;
 
     uint32_t id = data["id"];
-    NetPolicyDelete(session, id);
+    delete_net_policy(session, id);
     return true;
 }
 

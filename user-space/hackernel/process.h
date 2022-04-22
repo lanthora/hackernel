@@ -18,13 +18,14 @@ enum { PROCESS_PROTECT_UNSPEC, PROCESS_PROTECT_REPORT, PROCESS_PROTECT_ENABLE, P
 #define PROCESS_ACCEPT 1
 #define PROCESS_REJECT 2
 
-int ProcProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg);
+int handle_genl_proc_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
+                          void *arg);
 
-int ProcProtectEnable(int32_t session);
-int ProcProtectDisable(int32_t session);
+int enable_proc_protect(int32_t session);
+int disable_proc_protect(int32_t session);
 
-ProcPerm ProcPermCheck(char *cmd);
-int ProcPermReply(ProcPermID id, ProcPerm perm);
+ProcPerm check_proc_perm(char *cmd);
+int reply_proc_perm(ProcPermID id, ProcPerm perm);
 
 }; // namespace hackernel
 

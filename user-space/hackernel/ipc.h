@@ -11,19 +11,19 @@
 
 namespace hackernel {
 
-typedef int32_t Session;
-typedef std::shared_ptr<struct sockaddr_un> UserID;
-typedef int UserIDSize;
+typedef int32_t session;
+typedef std::shared_ptr<struct sockaddr_un> user_id;
+typedef int user_id_size;
 
-struct UserConn {
-    UserID peer;
-    UserIDSize len;
+struct user_conn {
+    user_id peer;
+    user_id_size len;
     nlohmann::json extra;
 };
 
-const Session SYSTEM_SESSION = 0;
+const session SYSTEM_SESSION = 0;
 
-static inline std::string UserJsonWrapper(const int32_t &session, const nlohmann::json &data) {
+static inline std::string generate_broadcast_msg(const int32_t &session, const nlohmann::json &data) {
     nlohmann::json doc;
     doc["session"] = session;
     doc["type"] = data["type"];
@@ -31,12 +31,12 @@ static inline std::string UserJsonWrapper(const int32_t &session, const nlohmann
     return json::dump(doc);
 }
 
-static inline std::string InternalJsonWrapper(const nlohmann::json &data) {
-    return UserJsonWrapper(SYSTEM_SESSION, data);
+static inline std::string generate_system_broadcast_msg(const nlohmann::json &data) {
+    return generate_broadcast_msg(SYSTEM_SESSION, data);
 }
 
-int IpcWait();
-void IpcExit();
+int start_ipc_server();
+void stop_ipc_server();
 
 }; // namespace hackernel
 

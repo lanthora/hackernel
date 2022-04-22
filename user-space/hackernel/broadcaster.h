@@ -10,22 +10,26 @@
 #include <mutex>
 #include <queue>
 
-class Broadcaster;
-class Receiver;
+namespace hackernel {
 
-class Receiver {
+int stop_all_receiver();
+
+class broadcaster;
+class audience;
+
+class audience {
 public:
-    void SetBroadcaster(std::weak_ptr<Broadcaster> broadcaster);
-    void NewMessage(std::string message);
-    void ConsumeWait();
-    void AddHandler(std::function<bool(const std::string &)> new_handler);
-    void Exit();
+    void set_broadcaster(std::weak_ptr<broadcaster> broadcaster);
+    void save_message(std::string message);
+    void start_consume_msg();
+    void add_msg_handler(std::function<bool(const std::string &)> new_handler);
+    void stop_consume_msg();
 
 private:
-    int PopMessageWait(std::string &message);
+    int wait_message(std::string &message);
 
 private:
-    std::weak_ptr<Broadcaster> bind_broadcaster_;
+    std::weak_ptr<broadcaster> bind_broadcaster_;
     std::queue<std::string> message_queue_;
     std::mutex mutex_;
     std::condition_variable cv_;
@@ -33,18 +37,20 @@ private:
     std::list<std::function<bool(const std::string &)>> handlers_;
 };
 
-class Broadcaster : public std::enable_shared_from_this<Broadcaster> {
+class broadcaster : public std::enable_shared_from_this<broadcaster> {
 public:
-    static Broadcaster &GetInstance();
-    void AddReceiver(std::shared_ptr<Receiver> receiver);
-    void DelReceiver(std::shared_ptr<Receiver> receiver);
-    void Notify(std::string message);
-    void ExitAllReceiver();
+    static broadcaster &global();
+    void add_audience(std::shared_ptr<audience> audience);
+    void del_audience(std::shared_ptr<audience> audience);
+    void broadcast(std::string message);
+    void notify_audience_stop();
 
 private:
-    Broadcaster() {}
-    std::list<std::shared_ptr<Receiver>> receivers_;
-    std::mutex receivers_mutex_;
+    broadcaster() {}
+    std::list<std::shared_ptr<audience>> audience_;
+    std::mutex mutex_;
 };
+
+}; // namespace hackernel
 
 #endif

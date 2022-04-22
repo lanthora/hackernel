@@ -8,10 +8,10 @@
 
 namespace hackernel {
 
-int HeartbeatHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg);
-int HeartbeatWait(void);
-void HeartbeatExit(void);
-int Handshake(void);
+int handle_heartbeat(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg);
+int start_heartbeat(void);
+void stop_heartbeat(void);
+int handshake_with_kernel(void);
 
 }; // namespace hackernel
 

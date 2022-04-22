@@ -3,7 +3,7 @@
 #include "hackernel/ipc.h"
 #include "hackernel/process.h"
 #include "nlc/netlink.h"
-#include "process/audit.h"
+#include "process/protector.h"
 #include <netlink/genl/genl.h>
 #include <netlink/msg.h>
 #include <nlohmann/json.hpp>
@@ -11,68 +11,67 @@
 
 namespace hackernel {
 
-using namespace process;
-
-int ProcProtectStatusUpdate(int32_t session, uint8_t status) {
+int update_proc_prot_status(int32_t session, uint8_t status) {
     struct nl_msg *message = NULL;
 
-    message = NetlinkMsgAlloc(HACKERNEL_C_PROCESS_PROTECT);
+    message = alloc_hackernel_nlmsg(HACKERNEL_C_PROCESS_PROTECT);
 
     nla_put_s32(message, PROCESS_A_SESSION, session);
     nla_put_u8(message, PROCESS_A_OP_TYPE, status);
 
-    NetlinkSend(message);
+    send_free_hackernel_nlmsg(message);
     return 0;
 }
 
-int ProcProtectEnable(int32_t session) {
-    return ProcProtectStatusUpdate(session, PROCESS_PROTECT_ENABLE);
+int enable_proc_protect(int32_t session) {
+    return update_proc_prot_status(session, PROCESS_PROTECT_ENABLE);
 }
-int ProcProtectDisable(int32_t session) {
-    return ProcProtectStatusUpdate(session, PROCESS_PROTECT_DISABLE);
-}
-
-ProcPerm ProcPermCheck(char *cmd) {
-    auto &auditor = Auditor::GetInstance();
-    return auditor.HandleNewCmd(cmd);
+int disable_proc_protect(int32_t session) {
+    return update_proc_prot_status(session, PROCESS_PROTECT_DISABLE);
 }
 
-int ProcPermReply(ProcPermID id, ProcPerm perm) {
+ProcPerm check_proc_perm(char *cmd) {
+    auto &auditor = process_protector::global();
+    return auditor.handle_new_cmd(cmd);
+}
+
+int reply_proc_perm(ProcPermID id, ProcPerm perm) {
     struct nl_msg *message = NULL;
 
-    message = NetlinkMsgAlloc(HACKERNEL_C_PROCESS_PROTECT);
+    message = alloc_hackernel_nlmsg(HACKERNEL_C_PROCESS_PROTECT);
     nla_put_u8(message, PROCESS_A_OP_TYPE, PROCESS_PROTECT_REPORT);
     nla_put_s32(message, PROCESS_A_ID, id);
     nla_put_s32(message, PROCESS_A_PERM, perm);
-    NetlinkSend(message);
+    send_free_hackernel_nlmsg(message);
     return 0;
 }
 
-static int ProcReportJsonGen(const std::string &cmd, std::string &msg) {
+static int generate_proc_prot_report_msg(const std::string &cmd, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::proc::report";
     doc["cmd"] = cmd;
-    msg = InternalJsonWrapper(doc);
+    msg = generate_system_broadcast_msg(doc);
     return 0;
 }
 
-static int ProcEnableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int generate_proc_prot_enable_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::proc::enable";
     doc["code"] = code;
-    msg = UserJsonWrapper(session, doc);
+    msg = generate_broadcast_msg(session, doc);
     return 0;
 }
 
-static int ProcDisableJsonGen(const int32_t &session, const int32_t &code, std::string &msg) {
+static int generate_proc_prot_disable_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::proc::disable";
     doc["code"] = code;
-    msg = UserJsonWrapper(session, doc);
+    msg = generate_broadcast_msg(session, doc);
     return 0;
 }
 
-int ProcProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
+int handle_genl_proc_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
+                          void *arg) {
     u_int8_t type = nla_get_u8(genl_info->attrs[PROCESS_A_OP_TYPE]);
     int error, id, code, session;
     char *name;
@@ -82,16 +81,16 @@ int ProcProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
     case PROCESS_PROTECT_ENABLE:
         session = nla_get_s32(genl_info->attrs[PROCESS_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[PROCESS_A_STATUS_CODE]);
-        ProcEnableJsonGen(session, code, msg);
-        Broadcaster::GetInstance().Notify(msg);
+        generate_proc_prot_enable_msg(session, code, msg);
+        broadcaster::global().broadcast(msg);
         DBG("kernel::proc::enable, session=[%d] code=[%d]", session, code);
         break;
 
     case PROCESS_PROTECT_DISABLE:
         session = nla_get_s32(genl_info->attrs[PROCESS_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[PROCESS_A_STATUS_CODE]);
-        ProcDisableJsonGen(session, code, msg);
-        Broadcaster::GetInstance().Notify(msg);
+        generate_proc_prot_disable_msg(session, code, msg);
+        broadcaster::global().broadcast(msg);
         DBG("kernel::proc::disable, session=[%d] code=[%d]", session, code);
         break;
 
@@ -100,10 +99,10 @@ int ProcProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, s
         name = nla_get_string(genl_info->attrs[PROCESS_A_NAME]);
         DBG("kernel::proc::report, id=[%d] name=[%s]", id, name);
 
-        ProcReportJsonGen(name, msg);
-        Broadcaster::GetInstance().Notify(msg);
+        generate_proc_prot_report_msg(name, msg);
+        broadcaster::global().broadcast(msg);
 
-        error = ProcPermReply(id, ProcPermCheck(name));
+        error = reply_proc_perm(id, check_proc_perm(name));
         if (error)
             WARN("reply_process_perm failed, id=[%d] name=[%s]", id, name);
 

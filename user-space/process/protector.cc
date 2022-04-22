@@ -1,8 +1,8 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "process/audit.h"
+#include "process/protector.h"
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
-#include "hackernel/threads.h"
+#include "hackernel/thread.h"
 #include "hackernel/timer.h"
 #include "hackernel/util.h"
 #include "ipc/server.h"
@@ -13,66 +13,64 @@
 
 namespace hackernel {
 
-namespace process {
-
-bool Auditor::IsTrusted(const std::string &cmd) {
+bool process_protector::is_trusted(const std::string &cmd) {
     std::shared_lock<std::shared_mutex> lock(mutex_);
     return trusted_.contains(cmd);
 }
 
-int Auditor::TrustedCmdInsert(const std::string &cmd) {
+int process_protector::insert_trusted_cmd(const std::string &cmd) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
     DBG("trusted insert, cmd=[%s]", cmd.data());
     trusted_.insert(cmd);
     return 0;
 }
 
-int Auditor::TrustedCmdDelete(const std::string &cmd) {
+int process_protector::delete_trusted_cmd(const std::string &cmd) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
     DBG("trusted delete, cmd=[%s]", cmd.data());
     trusted_.erase(cmd);
     return 0;
 }
 
-int Auditor::TrustedCmdClear() {
+int process_protector::clear_trusted_cmd() {
     std::unique_lock<std::shared_mutex> lock(mutex_);
     DBG("trusted clear");
     trusted_.clear();
     return 0;
 }
 
-ProcPerm Auditor::HandleNewCmd(const std::string &cmd) {
+ProcPerm process_protector::handle_new_cmd(const std::string &cmd) {
     if (judge_ != PROCESS_ACCEPT && judge_ != PROCESS_REJECT)
         return PROCESS_ACCEPT;
 
-    if (IsTrusted(cmd))
+    if (is_trusted(cmd))
         return PROCESS_ACCEPT;
 
-    Report(cmd);
+    report(cmd);
     return judge_;
 }
 
-int Auditor::Report(const std::string &cmd) {
+int process_protector::report(const std::string &cmd) {
     nlohmann::json doc;
     doc["type"] = "audit::proc::report";
     doc["cmd"] = cmd.data();
     doc["judge"] = judge_;
-    std::string msg = InternalJsonWrapper(doc);
-    Broadcaster::GetInstance().Notify(msg);
+    std::string msg = generate_system_broadcast_msg(doc);
+    broadcaster::global().broadcast(msg);
 
     DBG("audit=[%s]", msg.data());
     return 0;
 }
 
-Auditor &Auditor::GetInstance() {
-    static Auditor instance;
+process_protector &process_protector::global() {
+    static process_protector instance;
     return instance;
 }
 
-Auditor::Auditor() {}
+process_protector::process_protector() {}
 
 // 根据广播中的消息更新配置,消息产生与配置更新解耦
-bool Auditor::Handler(const std::string &msg) {
+bool process_protector::handle_proc_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (!doc["type"].is_string())
         return false;
@@ -83,8 +81,8 @@ bool Auditor::Handler(const std::string &msg) {
         if (!data["cmd"].is_string())
             return false;
         std::string cmd = data["cmd"];
-        data["code"] = TrustedCmdInsert(cmd);
-        ipc::IpcServer::GetInstance().SendMsgToClient(doc);
+        data["code"] = insert_trusted_cmd(cmd);
+        ipc::ipc_server::global().send_msg_to_client(doc);
         return true;
     }
 
@@ -93,15 +91,15 @@ bool Auditor::Handler(const std::string &msg) {
         if (!data["cmd"].is_string())
             return false;
         std::string cmd = data["cmd"];
-        data["code"] = TrustedCmdDelete(cmd);
-        ipc::IpcServer::GetInstance().SendMsgToClient(doc);
+        data["code"] = delete_trusted_cmd(cmd);
+        ipc::ipc_server::global().send_msg_to_client(doc);
         return true;
     }
 
     if (type == "user::proc::trusted::clear") {
         nlohmann::json &data = doc["data"];
-        data["code"] = TrustedCmdClear();
-        ipc::IpcServer::GetInstance().SendMsgToClient(doc);
+        data["code"] = clear_trusted_cmd();
+        ipc::ipc_server::global().send_msg_to_client(doc);
         return true;
     }
 
@@ -111,7 +109,7 @@ bool Auditor::Handler(const std::string &msg) {
             return false;
         judge_ = data["judge"];
         data["code"] = 0;
-        ipc::IpcServer::GetInstance().SendMsgToClient(doc);
+        ipc::ipc_server::global().send_msg_to_client(doc);
         return true;
     }
 
@@ -128,25 +126,30 @@ bool Auditor::Handler(const std::string &msg) {
     return false;
 }
 
-int Auditor::Init() {
-    receiver_ = std::make_shared<Receiver>();
+int process_protector::init() {
+    receiver_ = std::make_shared<audience>();
     if (!receiver_) {
-        ERR("make receiver failed");
+        ERR("make audience failed");
         return -ENOMEM;
     }
 
-    receiver_->AddHandler([&](const std::string &msg) { return Handler(msg); });
-    Broadcaster::GetInstance().AddReceiver(receiver_);
-    Threads::GetInstance().AddThread([&]() {
-        ThreadNameUpdate("process");
-        receiver_->ConsumeWait();
-    });
-
+    receiver_->add_msg_handler([&](const std::string &msg) { return handle_proc_msg(msg); });
+    broadcaster::global().add_audience(receiver_);
     return 0;
 }
 
-Auditor::~Auditor() {}
+int process_protector::start() {
+    change_thread_name("process");
+    receiver_->start_consume_msg();
+    return 0;
+}
 
-} // namespace process
+process_protector::~process_protector() {}
+
+int start_process_protector() {
+    process_protector::global().init();
+    process_protector::global().start();
+    return 0;
+}
 
 }; // namespace hackernel
