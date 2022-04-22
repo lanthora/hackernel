@@ -14,6 +14,35 @@ namespace hackernel {
 
 using namespace ipc;
 
+int Token::Update(const std::string &token) {
+    static const int RESERVED_MAX = 2;
+
+    std::unique_lock<std::shared_mutex> lock(mutex_);
+    if (token.empty()) {
+        tokens_.clear();
+        return 0;
+    }
+
+    tokens_.push_front(token);
+    while (tokens_.size() > RESERVED_MAX)
+        tokens_.pop_back();
+    return 0;
+}
+
+bool Token::IsVaild(const std::string &token) {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    for (const std::string &t : tokens_) {
+        if (t == token)
+            return true;
+    }
+    return false;
+}
+
+bool Token::IsEnabled() {
+    std::shared_lock<std::shared_mutex> lock(mutex_);
+    return !tokens_.empty();
+}
+
 IpcServer &IpcServer::GetInstance() {
     static IpcServer instance;
     return instance;
@@ -109,7 +138,7 @@ int IpcServer::SendMsgToClient(UserConn conn, const std::string &msg) {
 }
 
 int IpcServer::MsgSub(const std::string &section, const UserConn &user) {
-    std::lock_guard<std::mutex> lock(sub_lock_);
+    std::lock_guard<std::mutex> lock(sub_mutex_);
     auto cmp = [&](const SectionUserCounter &item) {
         return strcmp(user.peer->sun_path, item.conn.peer->sun_path) == 0;
     };
@@ -122,7 +151,7 @@ int IpcServer::MsgSub(const std::string &section, const UserConn &user) {
 }
 
 int IpcServer::MsgUnsub(const std::string &section, const UserConn &user) {
-    std::lock_guard<std::mutex> lock(sub_lock_);
+    std::lock_guard<std::mutex> lock(sub_mutex_);
     auto cmp = [&](const SectionUserCounter &item) {
         return strcmp(user.peer->sun_path, item.conn.peer->sun_path) == 0;
     };
@@ -144,7 +173,7 @@ int IpcServer::SendMsgToSubscriber(const nlohmann::json &doc) {
 int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string &msg) {
     struct sockaddr *peer;
     socklen_t len;
-    std::lock_guard<std::mutex> lock(sub_lock_);
+    std::lock_guard<std::mutex> lock(sub_mutex_);
 
     for (auto it = sub_[section].begin(); it != sub_[section].end();) {
         UserConn &conn = it->conn;
@@ -160,7 +189,7 @@ int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string
 }
 
 int IpcServer::TokenUpdate(const std::string &token) {
-    token_ = token;
+    token_.Update(token);
     return 0;
 }
 
@@ -215,7 +244,7 @@ int IpcServer::UnixDomainSocketWait() {
             continue;
         }
 
-        if (!token_.empty() && (!data["token"].is_string() || data["token"] != token_)) {
+        if (token_.IsEnabled() && (!data["token"].is_string() || !token_.IsVaild(data["token"]))) {
             WARN("invalid token, buffer=[%s]", buffer);
             continue;
         }
