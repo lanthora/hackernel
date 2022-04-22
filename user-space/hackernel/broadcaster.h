@@ -12,7 +12,7 @@
 
 namespace hackernel {
 
-int stop_all_receiver();
+int stop_all_audience();
 
 class broadcaster;
 class audience;

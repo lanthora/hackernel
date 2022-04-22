@@ -4,7 +4,7 @@
 
 namespace hackernel {
 
-int stop_all_receiver() {
+int stop_all_audience() {
     broadcaster::global().notify_audience_stop();
     return 0;
 }
@@ -54,7 +54,7 @@ void audience::add_msg_handler(std::function<bool(const std::string &)> new_hand
             return new_handler(msg);
         } catch (std::exception &ex) {
             ERR("handler error, request msg=[%s]", msg.data());
-            stop_server(HACKERNEL_BAD_RECEIVER);
+            stop_server(HACKERNEL_BAD_AUDIENCE);
             return false;
         }
     });

@@ -52,36 +52,36 @@ ipc_server &ipc_server::global() {
 int ipc_server::init() {
     clients.set_capacity(1024);
 
-    receiver_ = std::make_shared<audience>();
+    audience_ = std::make_shared<audience>();
 
-    receiver_->add_msg_handler(handle_kernel_proc_report_msg);
-    receiver_->add_msg_handler(handle_audit_proc_report_msg);
-    receiver_->add_msg_handler(handle_kernel_file_report_msg);
-    receiver_->add_msg_handler(handle_kernel_proc_enable_msg);
-    receiver_->add_msg_handler(handle_kernel_proc_disable_msg);
-    receiver_->add_msg_handler(handle_kernel_file_set_msg);
-    receiver_->add_msg_handler(handle_kernel_file_enable_msg);
-    receiver_->add_msg_handler(handle_kernel_file_disable_msg);
-    receiver_->add_msg_handler(handle_kernel_net_insert_msg);
-    receiver_->add_msg_handler(handle_kernel_net_delete_msg);
-    receiver_->add_msg_handler(handle_kernel_net_enable_msg);
-    receiver_->add_msg_handler(handle_kernel_net_disable_msg);
-    receiver_->add_msg_handler(handle_user_sub_msg);
-    receiver_->add_msg_handler(handle_user_unsub_msg);
-    receiver_->add_msg_handler(handle_user_ctrl_exit_msg);
-    receiver_->add_msg_handler(handle_user_ctrl_token_msg);
-    receiver_->add_msg_handler(handle_user_test_echo_msg);
+    audience_->add_msg_handler(handle_kernel_proc_report_msg);
+    audience_->add_msg_handler(handle_audit_proc_report_msg);
+    audience_->add_msg_handler(handle_kernel_file_report_msg);
+    audience_->add_msg_handler(handle_kernel_proc_enable_msg);
+    audience_->add_msg_handler(handle_kernel_proc_disable_msg);
+    audience_->add_msg_handler(handle_kernel_file_set_msg);
+    audience_->add_msg_handler(handle_kernel_file_enable_msg);
+    audience_->add_msg_handler(handle_kernel_file_disable_msg);
+    audience_->add_msg_handler(handle_kernel_net_insert_msg);
+    audience_->add_msg_handler(handle_kernel_net_delete_msg);
+    audience_->add_msg_handler(handle_kernel_net_enable_msg);
+    audience_->add_msg_handler(handle_kernel_net_disable_msg);
+    audience_->add_msg_handler(handle_user_sub_msg);
+    audience_->add_msg_handler(handle_user_unsub_msg);
+    audience_->add_msg_handler(handle_user_ctrl_exit_msg);
+    audience_->add_msg_handler(handle_user_ctrl_token_msg);
+    audience_->add_msg_handler(handle_user_test_echo_msg);
 
-    broadcaster::global().add_audience(receiver_);
+    broadcaster::global().add_audience(audience_);
     return 0;
 }
 
 int ipc_server::start() {
     thread_manager::global().create_thread([&]() {
-        change_thread_name("recevier");
-        DBG("recevier enter");
-        receiver_->start_consume_msg();
-        DBG("recevier exit");
+        change_thread_name("audience");
+        DBG("audience enter");
+        audience_->start_consume_msg();
+        DBG("audience exit");
     });
 
     thread_manager::global().create_thread([&]() {
@@ -99,8 +99,8 @@ int ipc_server::stop() {
     if (socket_ && shutdown(socket_, SHUT_RDWR))
         DBG("close socket failed");
 
-    if (receiver_)
-        receiver_->stop_consume_msg();
+    if (audience_)
+        audience_->stop_consume_msg();
     return 0;
 }
 

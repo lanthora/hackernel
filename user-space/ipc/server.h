@@ -58,7 +58,7 @@ private:
 
 private:
     ipc_server() {}
-    std::shared_ptr<audience> receiver_ = nullptr;
+    std::shared_ptr<audience> audience_ = nullptr;
     bool running_;
     int socket_ = 0;
     std::map<std::string, std::list<user_conn_counter>> sub_;

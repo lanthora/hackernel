@@ -26,7 +26,7 @@ private:
     file_protector();
     ~file_protector();
     bool enabled_ = false;
-    std::shared_ptr<audience> receiver_ = nullptr;
+    std::shared_ptr<audience> audience_ = nullptr;
     std::shared_mutex mutex_;
     std::map<std::string, file_perm> perms_;
 };
