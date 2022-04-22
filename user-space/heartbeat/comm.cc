@@ -15,7 +15,7 @@ static std::mutex mutex;
 static std::condition_variable cv;
 static bool running = false;
 
-void HeartbeatExit() {
+void stop_heartbeat() {
     mutex.lock();
     running = false;
     mutex.unlock();
@@ -23,7 +23,7 @@ void HeartbeatExit() {
     cv.notify_one();
 }
 
-int HeartbeatHelper(int interval) {
+int send_pid_to_kernel(int interval) {
     struct nl_msg *msg = NULL;
     pid_t tgid = getpid();
 
@@ -31,11 +31,11 @@ int HeartbeatHelper(int interval) {
     if (running)
         return -EPERM;
 
-    running = interval ? RUNNING() : 0;
+    running = interval ? get_running_status() : 0;
     do {
-        msg = NetlinkMsgAlloc(HACKERNEL_C_HANDSHAKE);
+        msg = alloc_hackernel_nlmsg(HACKERNEL_C_HANDSHAKE);
         nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_TGID, tgid);
-        NetlinkSend(msg);
+        send_free_hackernel_nlmsg(msg);
 
         std::unique_lock<std::mutex> lock(mutex);
         cv.wait_for(lock, std::chrono::milliseconds(interval), [&]() { return !running; });
@@ -44,26 +44,25 @@ int HeartbeatHelper(int interval) {
     return 0;
 }
 
-int Handshake() {
-    return HeartbeatHelper(0);
+int handshake_with_kernel() {
+    return send_pid_to_kernel(0);
 }
 
-int HeartbeatWait() {
-    ThreadNameUpdate("heartbeat");
+int start_heartbeat() {
+    change_thread_name("heartbeat");
     DBG("heartbeat enter");
-    int error = HeartbeatHelper(HEARTBEAT_INTERVAL);
+    int error = send_pid_to_kernel(HEARTBEAT_INTERVAL);
     DBG("heartbeat exit");
     return error;
 }
 
-int HeartbeatHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
+int handle_heartbeat(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
     int code = nla_get_s32(genl_info->attrs[HANDSHAKE_A_STATUS_CODE]);
     if (code) {
         ERR("handshake response code=[%d]", code);
         ERR("handshake failed. exit");
-        SHUTDOWN(HACKERNEL_HEARTBEAT);
+        stop_server(HACKERNEL_HEARTBEAT);
     }
-
     return 0;
 }
 

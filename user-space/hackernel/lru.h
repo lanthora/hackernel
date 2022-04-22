@@ -9,15 +9,7 @@
 
 namespace hackernel {
 
-template <typename Key, typename Value> class LRUData {
-    typedef std::list<std::pair<Key, Value>> lru_list;
-
-public:
-    lru_list raw;
-    size_t capacity;
-};
-
-template <typename Key, typename Value> class LRUCache {
+template <typename Key, typename Value> class lru {
     typedef std::list<std::pair<Key, Value>> lru_list;
     typedef std::unordered_map<Key, typename lru_list::iterator> lru_map;
 
@@ -28,10 +20,10 @@ private:
     std::mutex lru_lock_;
 
 public:
-    LRUCache() {}
-    LRUCache(size_t capacity) : lru_capacity_(capacity) {}
+    lru() {}
+    lru(size_t capacity) : lru_capacity_(capacity) {}
 
-    int Get(const Key &key, Value &value) {
+    int get(const Key &key, Value &value) {
         std::lock_guard<std::mutex> lock(lru_lock_);
 
         typename lru_map::iterator lru_map_it = lru_map_.find(key);
@@ -46,8 +38,27 @@ public:
         return 0;
     }
 
+    int put(const Key &key, const Value &value) {
+        std::lock_guard<std::mutex> lock(lru_lock_);
+        return unlocked_put(key, value);
+    }
+
+    int set_capacity(size_t capacity) {
+        std::lock_guard<std::mutex> lock(lru_lock_);
+
+        lru_capacity_ = capacity;
+        return 0;
+    }
+
+    int get_capacity(size_t &capacity) {
+        std::lock_guard<std::mutex> lock(lru_lock_);
+
+        capacity = lru_capacity_;
+        return 0;
+    }
+
 private:
-    int UnlockedPut(const Key &key, const Value &value) {
+    int unlocked_put(const Key &key, const Value &value) {
         typename lru_map::iterator lru_map_it = lru_map_.find(key);
 
         if (lru_map_it != lru_map_.end()) {
@@ -67,50 +78,10 @@ private:
         }
         return 0;
     }
-
-public:
-    int Put(const Key &key, const Value &value) {
-        std::lock_guard<std::mutex> lock(lru_lock_);
-        return UnlockedPut(key, value);
-    }
-
-    int SetCapacity(size_t capacity) {
-        std::lock_guard<std::mutex> lock(lru_lock_);
-
-        lru_capacity_ = capacity;
-        return 0;
-    }
-
-    int GetCapacity(size_t &capacity) {
-        std::lock_guard<std::mutex> lock(lru_lock_);
-
-        capacity = lru_capacity_;
-        return 0;
-    }
-
-    int Export(LRUData<Key, Value> &data) {
-        std::lock_guard<std::mutex> lock(lru_lock_);
-
-        data.raw = lru_list_;
-        data.capacity = lru_capacity_;
-        return 0;
-    }
-
-    int Import(const LRUData<Key, Value> &data) {
-        std::lock_guard<std::mutex> lock(lru_lock_);
-
-        lru_capacity_ = data.capacity;
-        for (typename lru_list::const_reverse_iterator it = data.raw.rbegin(); it != data.raw.rend(); ++it) {
-            UnlockedPut(it->first, it->second);
-        }
-        return 0;
-    }
-
-private:
     std::function<void(const std::pair<Key, Value> &)> on_earse_ = nullptr;
 
 public:
-    int SetOnEarseHandler(std::function<void(const std::pair<Key, Value> &item)> on_earse) {
+    int set_on_earse_handler(std::function<void(const std::pair<Key, Value> &item)> on_earse) {
         on_earse_ = on_earse;
         return 0;
     }

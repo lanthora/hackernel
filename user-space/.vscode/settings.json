@@ -11,4 +11,5 @@
                 "/usr/include/libnl3",
                 "${workspaceFolder}"
         ],
+        "editor.formatOnSave": true,
 }

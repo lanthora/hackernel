@@ -1,42 +1,39 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-#include "file/audit.h"
+#include "file/protector.h"
 #include "hackernel/ipc.h"
 #include "hackernel/json.h"
-#include "hackernel/threads.h"
+#include "hackernel/thread.h"
 #include "hackernel/timer.h"
 #include "hackernel/util.h"
 #include <fstream>
 
 namespace hackernel {
 
-namespace file {
-
-Auditor &Auditor::GetInstance() {
-    static Auditor instance;
+file_protector &file_protector::global() {
+    static file_protector instance;
     return instance;
 }
 
-Auditor::Auditor() {}
+file_protector::file_protector() {}
 
-Auditor::~Auditor() {}
+file_protector::~file_protector() {}
 
-int Auditor::Init() {
-    receiver_ = std::make_shared<Receiver>();
+int file_protector::start() {
+    receiver_ = std::make_shared<audience>();
     if (!receiver_) {
-        ERR("make receiver failed");
+        ERR("make audience failed");
         return -ENOMEM;
     }
-    receiver_->AddHandler([&](const std::string &msg) { return Handler(msg); });
-    Broadcaster::GetInstance().AddReceiver(receiver_);
-    Threads::GetInstance().AddThread([&]() {
-        ThreadNameUpdate("file");
-        receiver_->ConsumeWait();
-    });
+    receiver_->add_msg_handler([&](const std::string &msg) { return handle_file_proc_msg(msg); });
+    broadcaster::global().add_audience(receiver_);
+
+    change_thread_name("file");
+    receiver_->start_consume_msg();
 
     return 0;
 }
 
-bool Auditor::Handler(const std::string &msg) {
+bool file_protector::handle_file_proc_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (!doc["type"].is_string())
         return false;
@@ -57,7 +54,7 @@ bool Auditor::Handler(const std::string &msg) {
         if (!data["path"].is_string() || !data["perm"].is_number_unsigned())
             return false;
         const std::string path = data["path"];
-        const FilePerm perm = data["perm"];
+        const file_perm perm = data["perm"];
 
         std::unique_lock<std::shared_mutex> lock(mutex_);
         if (perm) {
@@ -71,6 +68,9 @@ bool Auditor::Handler(const std::string &msg) {
     return false;
 }
 
-} // namespace file
+int start_file_protector() {
+    file_protector::global().start();
+    return 0;
+}
 
 } // namespace hackernel

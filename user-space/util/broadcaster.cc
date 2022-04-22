@@ -2,11 +2,18 @@
 #include "hackernel/broadcaster.h"
 #include "hackernel/util.h"
 
-void Receiver::SetBroadcaster(std::weak_ptr<Broadcaster> broadcaster) {
+namespace hackernel {
+
+int stop_all_receiver() {
+    broadcaster::global().notify_audience_stop();
+    return 0;
+}
+
+void audience::set_broadcaster(std::weak_ptr<broadcaster> broadcaster) {
     this->bind_broadcaster_ = broadcaster;
 }
 
-void Receiver::NewMessage(std::string message) {
+void audience::save_message(std::string message) {
     if (!running_)
         return;
 
@@ -17,12 +24,12 @@ void Receiver::NewMessage(std::string message) {
     cv_.notify_one();
 }
 
-void Receiver::ConsumeWait() {
+void audience::start_consume_msg() {
     std::string message;
 
-    running_ = RUNNING();
+    running_ = get_running_status();
     while (running_) {
-        if (PopMessageWait(message))
+        if (wait_message(message))
             continue;
 
         for (const auto &handler : handlers_) {
@@ -33,7 +40,7 @@ void Receiver::ConsumeWait() {
     }
 }
 
-void Receiver::Exit() {
+void audience::stop_consume_msg() {
     mutex_.lock();
     running_ = false;
     mutex_.unlock();
@@ -41,19 +48,19 @@ void Receiver::Exit() {
     cv_.notify_one();
 }
 
-void Receiver::AddHandler(std::function<bool(const std::string &)> new_handler) {
+void audience::add_msg_handler(std::function<bool(const std::string &)> new_handler) {
     handlers_.push_back([=](const std::string &msg) -> bool {
         try {
             return new_handler(msg);
         } catch (std::exception &ex) {
             ERR("handler error, request msg=[%s]", msg.data());
-            SHUTDOWN(HACKERNEL_BAD_RECEIVER);
+            stop_server(HACKERNEL_BAD_RECEIVER);
             return false;
         }
     });
 }
 
-int Receiver::PopMessageWait(std::string &message) {
+int audience::wait_message(std::string &message) {
     using namespace std::chrono_literals;
 
     std::unique_lock<std::mutex> lock(mutex_);
@@ -67,32 +74,33 @@ int Receiver::PopMessageWait(std::string &message) {
     return 0;
 }
 
-Broadcaster &Broadcaster::GetInstance() {
-    static Broadcaster instance;
+broadcaster &broadcaster::global() {
+    static broadcaster instance;
     return instance;
 }
 
-void Broadcaster::AddReceiver(std::shared_ptr<Receiver> receiver) {
-    receiver->SetBroadcaster(weak_from_this());
-    const std::lock_guard<std::mutex> lock(receivers_mutex_);
-    receivers_.push_back(receiver);
+void broadcaster::add_audience(std::shared_ptr<audience> audience) {
+    audience->set_broadcaster(weak_from_this());
+    const std::lock_guard<std::mutex> lock(mutex_);
+    audience_.push_back(audience);
 }
 
-void Broadcaster::DelReceiver(std::shared_ptr<Receiver> receiver) {
-    const std::lock_guard<std::mutex> lock(receivers_mutex_);
-    receivers_.remove(receiver);
+void broadcaster::del_audience(std::shared_ptr<audience> audience) {
+    const std::lock_guard<std::mutex> lock(mutex_);
+    audience_.remove(audience);
 }
 
-void Broadcaster::Notify(std::string message) {
-    const std::lock_guard<std::mutex> lock(receivers_mutex_);
-    for (auto &receiver : receivers_)
-        receiver->NewMessage(message);
+void broadcaster::broadcast(std::string message) {
+    const std::lock_guard<std::mutex> lock(mutex_);
+    for (auto &audience : audience_)
+        audience->save_message(message);
 }
 
-void Broadcaster::ExitAllReceiver() {
-    const std::lock_guard<std::mutex> lock(receivers_mutex_);
-    for (auto &receiver : receivers_)
-        receiver->Exit();
-
-    receivers_.clear();
+void broadcaster::notify_audience_stop() {
+    const std::lock_guard<std::mutex> lock(mutex_);
+    for (auto &audience : audience_)
+        audience->stop_consume_msg();
+    audience_.clear();
 }
+
+}; // namespace hackernel

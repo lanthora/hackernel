@@ -6,27 +6,27 @@
 
 namespace hackernel {
 
-bool UserMsgSub(const std::string &msg);
-bool UserMsgUnsub(const std::string &msg);
-bool UserCtrlExit(const std::string &msg);
-bool UserCtrlToken(const std::string &msg);
-bool UserTestEcho(const std::string &msg);
+bool handle_user_sub_msg(const std::string &msg);
+bool handle_user_unsub_msg(const std::string &msg);
+bool handle_user_ctrl_exit_msg(const std::string &msg);
+bool handle_user_ctrl_token_msg(const std::string &msg);
+bool handle_user_test_echo_msg(const std::string &msg);
 
-bool KernelProcReport(const std::string &msg);
-bool KernelProcEnable(const std::string &msg);
-bool KernelProcDisable(const std::string &msg);
+bool handle_kernel_proc_report_msg(const std::string &msg);
+bool handle_kernel_proc_enable_msg(const std::string &msg);
+bool handle_kernel_proc_disable_msg(const std::string &msg);
 
-bool KernelFileReport(const std::string &msg);
-bool KernelFileSet(const std::string &msg);
-bool KernelFileEnable(const std::string &msg);
-bool KernelFileDisable(const std::string &msg);
+bool handle_kernel_file_report_msg(const std::string &msg);
+bool handle_kernel_file_set_msg(const std::string &msg);
+bool handle_kernel_file_enable_msg(const std::string &msg);
+bool handle_kernel_file_disable_msg(const std::string &msg);
 
-bool KernelNetInsert(const std::string &msg);
-bool KernelNetDelete(const std::string &msg);
-bool KernelNetEnable(const std::string &msg);
-bool KernelNetDisable(const std::string &msg);
+bool handle_kernel_net_insert_msg(const std::string &msg);
+bool handle_kernel_net_delete_msg(const std::string &msg);
+bool handle_kernel_net_enable_msg(const std::string &msg);
+bool handle_kernel_net_disable_msg(const std::string &msg);
 
-bool AuditProcReport(const std::string &msg);
+bool handle_audit_proc_report_msg(const std::string &msg);
 
 }; // namespace hackernel
 

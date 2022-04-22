@@ -10,7 +10,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int KernelModuleInsert(const char *filename) {
+int insert_kernel_module(const char *filename) {
     int error = -1;
     struct stat st;
     int fd;
@@ -47,7 +47,7 @@ out:
     return error;
 }
 
-int KernelModuleRemove(const char *module) {
+int remove_kernel_module(const char *module) {
     int error;
     error = syscall(__NR_delete_module, module);
     return error;

@@ -2,6 +2,7 @@
 #include "ipc/server.h"
 #include "hackernel/broadcaster.h"
 #include "hackernel/ipc.h"
+#include "hackernel/thread.h"
 #include "ipc/handler.h"
 #include <algorithm>
 #include <errno.h>
@@ -14,7 +15,7 @@ namespace hackernel {
 
 using namespace ipc;
 
-int Token::Update(const std::string &token) {
+int token::update(const std::string &token) {
     static const int RESERVED_MAX = 2;
 
     std::unique_lock<std::shared_mutex> lock(mutex_);
@@ -29,7 +30,7 @@ int Token::Update(const std::string &token) {
     return 0;
 }
 
-bool Token::IsVaild(const std::string &token) {
+bool token::is_vaild(const std::string &token) {
     std::shared_lock<std::shared_mutex> lock(mutex_);
     for (const std::string &t : tokens_) {
         if (t == token)
@@ -38,94 +39,85 @@ bool Token::IsVaild(const std::string &token) {
     return false;
 }
 
-bool Token::IsEnabled() {
+bool token::is_enabled() {
     std::shared_lock<std::shared_mutex> lock(mutex_);
     return !tokens_.empty();
 }
 
-IpcServer &IpcServer::GetInstance() {
-    static IpcServer instance;
+ipc_server &ipc_server::global() {
+    static ipc_server instance;
     return instance;
 }
 
-ConnCache &IpcServer::GetConnCache() {
-    const size_t CONCURRENT_MAX = 1024;
-    static ConnCache cache(CONCURRENT_MAX);
-    return cache;
-}
+int ipc_server::init() {
+    clients.set_capacity(1024);
 
-int IpcServer::Init() {
-    receiver_ = std::make_shared<Receiver>();
+    receiver_ = std::make_shared<audience>();
 
-    receiver_->AddHandler(KernelProcReport);
-    receiver_->AddHandler(AuditProcReport);
-    receiver_->AddHandler(KernelFileReport);
-    receiver_->AddHandler(KernelProcEnable);
-    receiver_->AddHandler(KernelProcDisable);
-    receiver_->AddHandler(KernelFileSet);
-    receiver_->AddHandler(KernelFileEnable);
-    receiver_->AddHandler(KernelFileDisable);
-    receiver_->AddHandler(KernelNetInsert);
-    receiver_->AddHandler(KernelNetDelete);
-    receiver_->AddHandler(KernelNetEnable);
-    receiver_->AddHandler(KernelNetDisable);
-    receiver_->AddHandler(UserMsgSub);
-    receiver_->AddHandler(UserMsgUnsub);
-    receiver_->AddHandler(UserCtrlExit);
-    receiver_->AddHandler(UserCtrlToken);
-    receiver_->AddHandler(UserTestEcho);
+    receiver_->add_msg_handler(handle_kernel_proc_report_msg);
+    receiver_->add_msg_handler(handle_audit_proc_report_msg);
+    receiver_->add_msg_handler(handle_kernel_file_report_msg);
+    receiver_->add_msg_handler(handle_kernel_proc_enable_msg);
+    receiver_->add_msg_handler(handle_kernel_proc_disable_msg);
+    receiver_->add_msg_handler(handle_kernel_file_set_msg);
+    receiver_->add_msg_handler(handle_kernel_file_enable_msg);
+    receiver_->add_msg_handler(handle_kernel_file_disable_msg);
+    receiver_->add_msg_handler(handle_kernel_net_insert_msg);
+    receiver_->add_msg_handler(handle_kernel_net_delete_msg);
+    receiver_->add_msg_handler(handle_kernel_net_enable_msg);
+    receiver_->add_msg_handler(handle_kernel_net_disable_msg);
+    receiver_->add_msg_handler(handle_user_sub_msg);
+    receiver_->add_msg_handler(handle_user_unsub_msg);
+    receiver_->add_msg_handler(handle_user_ctrl_exit_msg);
+    receiver_->add_msg_handler(handle_user_ctrl_token_msg);
+    receiver_->add_msg_handler(handle_user_test_echo_msg);
 
-    Broadcaster::GetInstance().AddReceiver(receiver_);
+    broadcaster::global().add_audience(receiver_);
     return 0;
 }
 
-int IpcServer::StartWait() {
-    ThreadNameUpdate("ipc-wait");
-    DBG("ipc-wait enter");
-    std::thread receiver_thread([&]() {
-        ThreadNameUpdate("ipc-recevier");
-        DBG("ipc-recevier enter");
-        receiver_->ConsumeWait();
-        DBG("ipc-recevier exit");
-    });
-    std::thread socket_thread([&]() {
-        ThreadNameUpdate("ipc-socket");
-        DBG("ipc-socket enter");
-        UnixDomainSocketWait();
-        DBG("ipc-socket exit");
+int ipc_server::start() {
+    thread_manager::global().create_thread([&]() {
+        change_thread_name("recevier");
+        DBG("recevier enter");
+        receiver_->start_consume_msg();
+        DBG("recevier exit");
     });
 
-    receiver_thread.join();
-    socket_thread.join();
-    DBG("ipc-wait exit");
+    thread_manager::global().create_thread([&]() {
+        change_thread_name("socket");
+        DBG("socket enter");
+        start_unix_domain_socket();
+        DBG("socket exit");
+    });
     return 0;
 }
 
-int IpcServer::Stop() {
+int ipc_server::stop() {
     running_ = false;
 
     if (socket_ && shutdown(socket_, SHUT_RDWR))
         DBG("close socket failed");
 
     if (receiver_)
-        receiver_->Exit();
+        receiver_->stop_consume_msg();
     return 0;
 }
 
-int IpcServer::SendMsgToClient(const nlohmann::json &doc) {
-    UserConn conn;
-    Session session = doc["session"];
+int ipc_server::send_msg_to_client(const nlohmann::json &doc) {
+    user_conn conn;
+    session session = doc["session"];
 
-    if (IpcServer::GetConnCache().Get(session, conn))
+    if (ipc_server::global().clients.get(session, conn))
         return -ESRCH;
 
     nlohmann::json data = doc["data"];
     data["extra"] = conn.extra;
 
-    return SendMsgToClient(conn, json::dump(data));
+    return send_msg_to_client(conn, json::dump(data));
 }
 
-int IpcServer::SendMsgToClient(UserConn conn, const std::string &msg) {
+int ipc_server::send_msg_to_client(user_conn conn, const std::string &msg) {
     socklen_t len;
     struct sockaddr *peer;
     peer = (struct sockaddr *)conn.peer.get();
@@ -137,9 +129,9 @@ int IpcServer::SendMsgToClient(UserConn conn, const std::string &msg) {
     return 0;
 }
 
-int IpcServer::MsgSub(const std::string &section, const UserConn &user) {
+int ipc_server::handle_msg_sub(const std::string &section, const user_conn &user) {
     std::lock_guard<std::mutex> lock(sub_mutex_);
-    auto cmp = [&](const SectionUserCounter &item) {
+    auto cmp = [&](const user_conn_counter &item) {
         return strcmp(user.peer->sun_path, item.conn.peer->sun_path) == 0;
     };
     auto it = std::find_if(sub_[section].begin(), sub_[section].end(), cmp);
@@ -150,9 +142,9 @@ int IpcServer::MsgSub(const std::string &section, const UserConn &user) {
     return 0;
 }
 
-int IpcServer::MsgUnsub(const std::string &section, const UserConn &user) {
+int ipc_server::handle_msg_unsub(const std::string &section, const user_conn &user) {
     std::lock_guard<std::mutex> lock(sub_mutex_);
-    auto cmp = [&](const SectionUserCounter &item) {
+    auto cmp = [&](const user_conn_counter &item) {
         return strcmp(user.peer->sun_path, item.conn.peer->sun_path) == 0;
     };
     auto it = std::find_if(sub_[section].begin(), sub_[section].end(), cmp);
@@ -164,19 +156,19 @@ int IpcServer::MsgUnsub(const std::string &section, const UserConn &user) {
     return 0;
 }
 
-int IpcServer::SendMsgToSubscriber(const nlohmann::json &doc) {
+int ipc_server::broadcast_msg_to_subscriber(const nlohmann::json &doc) {
     std::string section = doc["type"];
     nlohmann::json data = doc["data"];
-    return SendMsgToSubscriber(section, json::dump(data));
+    return broadcast_msg_to_subscriber(section, json::dump(data));
 }
 
-int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string &msg) {
+int ipc_server::broadcast_msg_to_subscriber(const std::string &section, const std::string &msg) {
     struct sockaddr *peer;
     socklen_t len;
     std::lock_guard<std::mutex> lock(sub_mutex_);
 
     for (auto it = sub_[section].begin(); it != sub_[section].end();) {
-        UserConn &conn = it->conn;
+        user_conn &conn = it->conn;
         peer = (struct sockaddr *)conn.peer.get();
         len = conn.len;
 
@@ -188,12 +180,12 @@ int IpcServer::SendMsgToSubscriber(const std::string &section, const std::string
     return 0;
 }
 
-int IpcServer::TokenUpdate(const std::string &token) {
-    token_.Update(token);
+int ipc_server::update_token(const std::string &token) {
+    token_.update(token);
     return 0;
 }
 
-int IpcServer::UnixDomainSocketWait() {
+int ipc_server::start_unix_domain_socket() {
     const char *SOCK_PATH = "/tmp/hackernel.sock";
     const int BUFFER_SIZE = 1024;
 
@@ -217,7 +209,7 @@ int IpcServer::UnixDomainSocketWait() {
 
     socklen_t len;
     struct sockaddr_un peer;
-    running_ = RUNNING();
+    running_ = get_running_status();
     while (running_) {
         len = sizeof(peer);
         int size = recvfrom(socket_, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&peer, &len);
@@ -244,23 +236,23 @@ int IpcServer::UnixDomainSocketWait() {
             continue;
         }
 
-        if (token_.IsEnabled() && (!data["token"].is_string() || !token_.IsVaild(data["token"]))) {
+        if (token_.is_enabled() && (!data["token"].is_string() || !token_.is_vaild(data["token"]))) {
             WARN("invalid token, buffer=[%s]", buffer);
             continue;
         }
 
-        UserConn conn;
+        user_conn conn;
         conn.peer = std::make_shared<struct sockaddr_un>(peer);
         conn.len = len;
         conn.extra = data["extra"];
-        Session session = NewUserSession();
-        IpcServer::GetConnCache().Put(session, conn);
+        session session = generate_user_session();
+        ipc_server::global().clients.put(session, conn);
 
         nlohmann::json doc;
         doc["session"] = session;
         doc["type"] = std::string(data["type"]);
         doc["data"] = data;
-        Broadcaster::GetInstance().Notify(json::dump(doc));
+        broadcaster::global().broadcast(json::dump(doc));
     }
 
     close(socket_);
@@ -268,26 +260,26 @@ int IpcServer::UnixDomainSocketWait() {
 
 errout:
     close(socket_);
-    SHUTDOWN(HACKERNEL_UNIX_DOMAIN_SOCKET);
+    stop_server(HACKERNEL_UNIX_DOMAIN_SOCKET);
     return -EPERM;
 }
 
-Session IpcServer::NewUserSession() {
+session ipc_server::generate_user_session() {
     do {
         ++id_;
     } while (id_ == SYSTEM_SESSION);
     return id_;
 }
 
-int IpcWait() {
-    IpcServer::GetInstance().Init();
-    IpcServer::GetInstance().StartWait();
+int start_ipc_server() {
+    ipc_server::global().init();
+    ipc_server::global().start();
     return 0;
 }
 
-void IpcExit() {
+void stop_ipc_server() {
     DBG("IpcExit Exit");
-    IpcServer::GetInstance().Stop();
+    ipc_server::global().stop();
     return;
 }
 

@@ -8,15 +8,16 @@
 
 namespace hackernel {
 
-int FileProtectHandler(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg);
+int handle_genl_file_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
+                          void *arg);
 
 enum { FILE_PROTECT_UNSPEC, FILE_PROTECT_REPORT, FILE_PROTECT_ENABLE, FILE_PROTECT_DISABLE, FILE_PROTECT_SET };
 
-typedef int32_t FilePerm;
+typedef int32_t file_perm;
 
-int FileProtectEnable(int32_t session);
-int FileProtectDisable(int32_t session);
-int FileProtectSet(int32_t session, const char *path, FilePerm perm);
+int enable_file_prot(int32_t session);
+int disable_file_prot(int32_t session);
+int set_file_prot(int32_t session, const char *path, file_perm perm);
 
 #define FLAG_FILE_DISABLE_READ (0b00000001)
 #define FLAG_FILE_DISABLE_WRITE (0b00000010)
