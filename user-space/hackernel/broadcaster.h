@@ -21,9 +21,9 @@ class audience {
 public:
     void set_broadcaster(std::weak_ptr<broadcaster> broadcaster);
     void save_message(std::string message);
-    void start_consume_msg();
-    void add_msg_handler(std::function<bool(const std::string &)> new_handler);
-    void stop_consume_msg();
+    void start_consuming_message();
+    void add_message_handler(std::function<bool(const std::string &)> new_handler);
+    void stop_consuming_message();
 
 private:
     int wait_message(std::string &message);

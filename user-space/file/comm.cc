@@ -10,7 +10,7 @@
 
 namespace hackernel {
 
-static int update_file_protect_status(int32_t session, uint8_t status) {
+static int update_file_protection_status(int32_t session, uint8_t status) {
     struct nl_msg *message;
 
     message = alloc_hackernel_nlmsg(HACKERNEL_C_FILE_PROTECT);
@@ -21,15 +21,15 @@ static int update_file_protect_status(int32_t session, uint8_t status) {
     return 0;
 }
 
-int enable_file_prot(int32_t session) {
-    return update_file_protect_status(session, FILE_PROTECT_ENABLE);
+int enable_file_protection(int32_t session) {
+    return update_file_protection_status(session, FILE_PROTECT_ENABLE);
 }
 
-int disable_file_prot(int32_t session) {
-    return update_file_protect_status(session, FILE_PROTECT_DISABLE);
+int disable_file_protection(int32_t session) {
+    return update_file_protection_status(session, FILE_PROTECT_DISABLE);
 }
 
-int set_file_prot(int32_t session, const char *path, file_perm perm) {
+int set_file_protection(int32_t session, const char *path, file_perm perm) {
     struct nl_msg *message;
 
     message = alloc_hackernel_nlmsg(HACKERNEL_C_FILE_PROTECT);
@@ -41,7 +41,7 @@ int set_file_prot(int32_t session, const char *path, file_perm perm) {
     return 0;
 }
 
-static int generate_file_prot_enable_msg(const int32_t &session, const int32_t &code, std::string &msg) {
+static int generate_file_protection_enable_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::enable";
     doc["code"] = code;
@@ -49,7 +49,7 @@ static int generate_file_prot_enable_msg(const int32_t &session, const int32_t &
     return 0;
 }
 
-static int generate_file_prot_disable_msg(const int32_t &session, const int32_t &code, std::string &msg) {
+static int generate_file_protection_disable_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::disable";
     doc["code"] = code;
@@ -57,7 +57,7 @@ static int generate_file_prot_disable_msg(const int32_t &session, const int32_t 
     return 0;
 }
 
-static int generate_file_prot_set_msg(const int32_t &session, const int32_t &code, std::string &msg) {
+static int generate_file_protection_set_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::set";
     doc["code"] = code;
@@ -65,7 +65,7 @@ static int generate_file_prot_set_msg(const int32_t &session, const int32_t &cod
     return 0;
 }
 
-static int generate_file_prot_report_msg(const char *name, file_perm perm, std::string &msg) {
+static int generate_file_protection_report_msg(const char *name, file_perm perm, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::report";
     doc["name"] = name;
@@ -74,8 +74,8 @@ static int generate_file_prot_report_msg(const char *name, file_perm perm, std::
     return 0;
 }
 
-int handle_genl_file_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
-                          void *arg) {
+int handle_genl_file_protection(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
+                                void *arg) {
     u_int8_t type;
     char *name;
     file_perm perm;
@@ -88,7 +88,7 @@ int handle_genl_file_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd
     case FILE_PROTECT_ENABLE:
         session = nla_get_s32(genl_info->attrs[FILE_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
-        generate_file_prot_enable_msg(session, code, msg);
+        generate_file_protection_enable_msg(session, code, msg);
         broadcaster::global().broadcast(msg);
         DBG("kernel::file::enable, session=[%d] code=[%d]", session, code);
         break;
@@ -96,7 +96,7 @@ int handle_genl_file_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd
     case FILE_PROTECT_DISABLE:
         session = nla_get_s32(genl_info->attrs[FILE_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
-        generate_file_prot_disable_msg(session, code, msg);
+        generate_file_protection_disable_msg(session, code, msg);
         broadcaster::global().broadcast(msg);
         DBG("kernel::file::disable, session=[%d] code=[%d]", session, code);
         break;
@@ -104,7 +104,7 @@ int handle_genl_file_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd
     case FILE_PROTECT_SET:
         session = nla_get_s32(genl_info->attrs[FILE_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
-        generate_file_prot_set_msg(session, code, msg);
+        generate_file_protection_set_msg(session, code, msg);
         broadcaster::global().broadcast(msg);
         DBG("kernel::file::set, session=[%d] code=[%d]", session, code);
         break;
@@ -112,7 +112,7 @@ int handle_genl_file_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd
     case FILE_PROTECT_REPORT:
         name = nla_get_string(genl_info->attrs[FILE_A_NAME]);
         perm = nla_get_s32(genl_info->attrs[FILE_A_PERM]);
-        generate_file_prot_report_msg(name, perm, msg);
+        generate_file_protection_report_msg(name, perm, msg);
         broadcaster::global().broadcast(msg);
         DBG("kernel::file::report, name=[%s] perm=[%d]", name, perm);
         break;

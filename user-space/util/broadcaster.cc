@@ -24,7 +24,7 @@ void audience::save_message(std::string message) {
     cv_.notify_one();
 }
 
-void audience::start_consume_msg() {
+void audience::start_consuming_message() {
     std::string message;
 
     running_ = get_running_status();
@@ -40,7 +40,7 @@ void audience::start_consume_msg() {
     }
 }
 
-void audience::stop_consume_msg() {
+void audience::stop_consuming_message() {
     mutex_.lock();
     running_ = false;
     mutex_.unlock();
@@ -48,7 +48,7 @@ void audience::stop_consume_msg() {
     cv_.notify_one();
 }
 
-void audience::add_msg_handler(std::function<bool(const std::string &)> new_handler) {
+void audience::add_message_handler(std::function<bool(const std::string &)> new_handler) {
     handlers_.push_back([=](const std::string &msg) -> bool {
         try {
             return new_handler(msg);
@@ -99,7 +99,7 @@ void broadcaster::broadcast(std::string message) {
 void broadcaster::notify_audience_stop() {
     const std::lock_guard<std::mutex> lock(mutex_);
     for (auto &audience : audience_)
-        audience->stop_consume_msg();
+        audience->stop_consuming_message();
     audience_.clear();
 }
 

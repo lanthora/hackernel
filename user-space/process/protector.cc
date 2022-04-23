@@ -39,7 +39,7 @@ int process_protector::clear_trusted_cmd() {
     return 0;
 }
 
-ProcPerm process_protector::handle_new_cmd(const std::string &cmd) {
+proc_perm process_protector::handle_new_cmd(const std::string &cmd) {
     if (judge_ != PROCESS_ACCEPT && judge_ != PROCESS_REJECT)
         return PROCESS_ACCEPT;
 
@@ -70,7 +70,7 @@ process_protector &process_protector::global() {
 process_protector::process_protector() {}
 
 // 根据广播中的消息更新配置,消息产生与配置更新解耦
-bool process_protector::handle_proc_msg(const std::string &msg) {
+bool process_protector::handle_process_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (!doc["type"].is_string())
         return false;
@@ -133,14 +133,14 @@ int process_protector::init() {
         return -ENOMEM;
     }
 
-    audience_->add_msg_handler([&](const std::string &msg) { return handle_proc_msg(msg); });
+    audience_->add_message_handler([&](const std::string &msg) { return handle_process_msg(msg); });
     broadcaster::global().add_audience(audience_);
     return 0;
 }
 
 int process_protector::start() {
     change_thread_name("process");
-    audience_->start_consume_msg();
+    audience_->start_consuming_message();
     return 0;
 }
 

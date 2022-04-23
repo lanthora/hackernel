@@ -12,9 +12,9 @@ bool handle_user_ctrl_exit_msg(const std::string &msg);
 bool handle_user_ctrl_token_msg(const std::string &msg);
 bool handle_user_test_echo_msg(const std::string &msg);
 
-bool handle_kernel_proc_report_msg(const std::string &msg);
-bool handle_kernel_proc_enable_msg(const std::string &msg);
-bool handle_kernel_proc_disable_msg(const std::string &msg);
+bool handle_kernel_process_report_msg(const std::string &msg);
+bool handle_kernel_process_enable_msg(const std::string &msg);
+bool handle_kernel_process_disable_msg(const std::string &msg);
 
 bool handle_kernel_file_report_msg(const std::string &msg);
 bool handle_kernel_file_set_msg(const std::string &msg);
@@ -26,7 +26,7 @@ bool handle_kernel_net_delete_msg(const std::string &msg);
 bool handle_kernel_net_enable_msg(const std::string &msg);
 bool handle_kernel_net_disable_msg(const std::string &msg);
 
-bool handle_audit_proc_report_msg(const std::string &msg);
+bool handle_audit_process_report_msg(const std::string &msg);
 
 }; // namespace hackernel
 

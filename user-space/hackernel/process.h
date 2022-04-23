@@ -8,8 +8,8 @@
 
 namespace hackernel {
 
-typedef int ProcPermID;
-typedef int32_t ProcPerm;
+typedef int proc_perm_id;
+typedef int32_t proc_perm;
 
 enum { PROCESS_PROTECT_UNSPEC, PROCESS_PROTECT_REPORT, PROCESS_PROTECT_ENABLE, PROCESS_PROTECT_DISABLE };
 
@@ -18,14 +18,14 @@ enum { PROCESS_PROTECT_UNSPEC, PROCESS_PROTECT_REPORT, PROCESS_PROTECT_ENABLE, P
 #define PROCESS_ACCEPT 1
 #define PROCESS_REJECT 2
 
-int handle_genl_proc_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
-                          void *arg);
+int handle_genl_process_protection(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
+                                   void *arg);
 
-int enable_proc_protect(int32_t session);
-int disable_proc_protect(int32_t session);
+int enable_process_protection(int32_t session);
+int disable_process_protection(int32_t session);
 
-ProcPerm check_proc_perm(char *cmd);
-int reply_proc_perm(ProcPermID id, ProcPerm perm);
+proc_perm check_process_permission(char *cmd);
+int reply_process_permission(proc_perm_id id, proc_perm perm);
 
 }; // namespace hackernel
 

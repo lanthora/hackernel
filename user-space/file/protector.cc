@@ -24,16 +24,16 @@ int file_protector::start() {
         ERR("make audience failed");
         return -ENOMEM;
     }
-    audience_->add_msg_handler([&](const std::string &msg) { return handle_file_proc_msg(msg); });
+    audience_->add_message_handler([&](const std::string &msg) { return handle_file_protection_msg(msg); });
     broadcaster::global().add_audience(audience_);
 
     change_thread_name("file");
-    audience_->start_consume_msg();
+    audience_->start_consuming_message();
 
     return 0;
 }
 
-bool file_protector::handle_file_proc_msg(const std::string &msg) {
+bool file_protector::handle_file_protection_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (!doc["type"].is_string())
         return false;

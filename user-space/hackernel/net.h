@@ -26,8 +26,8 @@ enum {
     NET_PROTECT_DELETE,
 };
 
-int handle_genl_net_prot(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
-                         void *arg);
+int handle_genl_net_protection(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
+                               void *arg);
 
 // 优先级(Priority)相同的情况下, 后添加的优先命中,多个net_policy可以有相同的id,
 // 根据Id可以批量删除 所有的数据都为主机序
@@ -66,8 +66,8 @@ struct net_policy {
     int flags;
 };
 
-int enable_net_prot(int32_t session);
-int disable_net_prot(int32_t session);
+int enable_net_protection(int32_t session);
+int disable_net_protection(int32_t session);
 int insert_net_policy(int32_t session, const struct net_policy *policy);
 int delete_net_policy(int32_t session, net_policy_id id);
 

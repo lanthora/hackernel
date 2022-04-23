@@ -6,17 +6,17 @@
 
 namespace hackernel {
 
-bool handle_proc_prot_enable_msg(const std::string &msg);
-bool handle_proc_prot_disable_msg(const std::string &msg);
+bool handle_process_protection_enable_msg(const std::string &msg);
+bool handle_process_protection_disable_msg(const std::string &msg);
 
-bool handle_file_prot_enable_msg(const std::string &msg);
-bool handle_file_prot_disable_msg(const std::string &msg);
-bool handle_file_prot_set_msg(const std::string &msg);
+bool handle_file_protection_enable_msg(const std::string &msg);
+bool handle_file_protection_disable_msg(const std::string &msg);
+bool handle_file_protection_set_msg(const std::string &msg);
 
-bool handle_net_prot_enable_msg(const std::string &msg);
-bool handle_net_prot_disable_msg(const std::string &msg);
-bool handle_net_prot_insert_msg(const std::string &msg);
-bool handle_net_prot_delete_msg(const std::string &msg);
+bool handle_net_protection_enable_msg(const std::string &msg);
+bool handle_net_protection_disable_msg(const std::string &msg);
+bool handle_net_protection_insert_msg(const std::string &msg);
+bool handle_net_protection_delete_msg(const std::string &msg);
 
 } // namespace hackernel
 

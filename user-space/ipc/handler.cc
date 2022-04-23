@@ -114,7 +114,7 @@ bool handle_user_ctrl_token_msg(const std::string &msg) {
     return true;
 }
 
-bool handle_kernel_proc_report_msg(const std::string &msg) {
+bool handle_kernel_process_report_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::proc::report")
         return false;
@@ -123,7 +123,7 @@ bool handle_kernel_proc_report_msg(const std::string &msg) {
     return true;
 }
 
-bool handle_kernel_proc_enable_msg(const std::string &msg) {
+bool handle_kernel_process_enable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::proc::enable")
         return false;
@@ -132,7 +132,7 @@ bool handle_kernel_proc_enable_msg(const std::string &msg) {
     return true;
 }
 
-bool handle_kernel_proc_disable_msg(const std::string &msg) {
+bool handle_kernel_process_disable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::proc::disable")
         return false;
@@ -210,7 +210,7 @@ bool handle_kernel_net_disable_msg(const std::string &msg) {
     return true;
 }
 
-bool handle_audit_proc_report_msg(const std::string &msg) {
+bool handle_audit_process_report_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "audit::proc::report")
         return false;

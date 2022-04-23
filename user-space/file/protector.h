@@ -17,7 +17,7 @@ public:
     int start();
 
 private:
-    bool handle_file_proc_msg(const std::string &msg);
+    bool handle_file_protection_msg(const std::string &msg);
 
 public:
     static file_protector &global();

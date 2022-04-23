@@ -17,7 +17,7 @@ int start_process_protector();
 class process_protector {
 
 public:
-    ProcPerm handle_new_cmd(const std::string &cmd);
+    proc_perm handle_new_cmd(const std::string &cmd);
     int init();
     int start();
 
@@ -27,7 +27,7 @@ private:
     int delete_trusted_cmd(const std::string &cmd);
     int clear_trusted_cmd();
     bool is_trusted(const std::string &cmd);
-    bool handle_proc_msg(const std::string &msg);
+    bool handle_process_msg(const std::string &msg);
 
 public:
     static process_protector &global();
@@ -37,7 +37,7 @@ private:
     ~process_protector();
     std::unordered_set<std::string> trusted_;
     std::shared_mutex mutex_;
-    ProcPerm judge_ = PROCESS_ACCEPT;
+    proc_perm judge_ = PROCESS_ACCEPT;
     bool enabled_ = false;
     std::shared_ptr<audience> audience_ = nullptr;
 };

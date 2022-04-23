@@ -34,9 +34,9 @@ void stop_server(int code) {
     stop_dispatcher();
 
     // 关闭内核中的功能模块
-    disable_file_prot(SYSTEM_SESSION);
-    disable_proc_protect(SYSTEM_SESSION);
-    disable_net_prot(SYSTEM_SESSION);
+    disable_file_protection(SYSTEM_SESSION);
+    disable_process_protection(SYSTEM_SESSION);
+    disable_net_protection(SYSTEM_SESSION);
 
     // 关闭心跳,断开与内核的通信
     stop_heartbeat();
