@@ -2,8 +2,8 @@
 
 ## 应用架构图
 
-<img src=images/app.svg width=100% />
+![app](images/app.svg)
 
 ## 线程视角
 
-<img src=images/threads.svg width=100% />
+![threads](images/threads.svg)

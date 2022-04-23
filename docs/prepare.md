@@ -62,7 +62,7 @@ struct rb_node {
 
 找到了一张很棒的图,hook系统调用就是将图中sys_call_table数组中的函数指针替换为自己实现的版本.这部分内存开了写保护,修改时需要关闭写保护.开关写保护的方式不同处理器架构不同,在x86架构中,是要将cr0寄存器的第16位设置为0.
 
-<img src=images/syscall.png width=100% />
+![syscall](images/syscall.png)
 
 ### 系统调用功能
 
