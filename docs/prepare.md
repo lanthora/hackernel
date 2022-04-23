@@ -16,17 +16,17 @@ struct list_head {
 };
 
 struct file_perm_list {
-	struct list_head node;
-	struct rb_root *root;
-	fsid_t fsid;
+    struct list_head node;
+    struct rb_root *root;
+    fsid_t fsid;
 };
 ```
 
 ```cpp
 // c++用户数据只关心用户数据本身,无需关注std::list底层实现
 struct file_perm {
-	rb_root *root;
-	fsid_t fsid;
+    rb_root *root;
+    fsid_t fsid;
 };
 std::list<file_perm> file_perm_list
 ```
@@ -41,9 +41,9 @@ std::list<file_perm> file_perm_list
 
 ```c
 struct rb_node {
-	unsigned long  __rb_parent_color;
-	struct rb_node *rb_right;
-	struct rb_node *rb_left;
+    unsigned long  __rb_parent_color;
+    struct rb_node *rb_right;
+    struct rb_node *rb_left;
 } __attribute__((aligned(sizeof(long))));
 
 // 抹除后两位后表示父节点的指针
@@ -62,7 +62,7 @@ struct rb_node {
 
 找到了一张很棒的图,hook系统调用就是将图中sys_call_table数组中的函数指针替换为自己实现的版本.这部分内存开了写保护,修改时需要关闭写保护.开关写保护的方式不同处理器架构不同,在x86架构中,是要将cr0寄存器的第16位设置为0.
 
-![系统调用流程](images/syscall.png)
+[<img src="images/syscall.png" width="100%"/>](images/syscall.png)
 
 ### 系统调用功能
 
@@ -75,7 +75,6 @@ at结尾的系统调用,第一个参数是目录文件描述符,后续路径参�
 ## 文件系统
 
 在内核中可以通过文件系统id和inode id,定位除内存文件系统中的任意文件.
-
 
 ## 进程调度
 
