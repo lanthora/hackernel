@@ -17,14 +17,14 @@
 
 using namespace hackernel;
 
-static std::atomic<bool> runing = true;
+static std::atomic<bool> running = true;
 
 bool current_service_status() {
-    return runing.load();
+    return running.load();
 }
 
 void shutdown_service(int status_code) {
-    if (!runing.exchange(false))
+    if (!running.exchange(false))
         return;
 
     DBG("exit start, status_code=[%d]", status_code);
