@@ -57,7 +57,6 @@ private:
     int broadcast_msg_to_subscriber(const std::string &section, const std::string &msg);
 
 private:
-    ipc_server() {}
     std::shared_ptr<audience> audience_ = nullptr;
     bool running_;
     int socket_ = 0;

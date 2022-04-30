@@ -11,23 +11,23 @@
 #include "hackernel/timer.h"
 #include "nlc/netlink.h"
 #include "process/protector.h"
+#include <atomic>
 #include <signal.h>
 #include <thread>
 
 using namespace hackernel;
 
-static bool is_running = true;
+static std::atomic<bool> runing = true;
 
-bool get_running_status() {
-    return is_running;
+bool current_service_status() {
+    return runing.load();
 }
 
-void stop_server(int code) {
-    if (!is_running)
+void shutdown_service(int status_code) {
+    if (!runing.exchange(false))
         return;
-    is_running = false;
 
-    DBG("exit start, code=[%d]", code);
+    DBG("exit start, status_code=[%d]", status_code);
 
     // 停止接受外部用户输入
     stop_ipc_server();
@@ -49,7 +49,7 @@ void stop_server(int code) {
 
 static void handle_signal(int sig) {
     DBG("received signal=[%d], exit now", sig);
-    stop_server(HACKERNEL_SIG);
+    shutdown_service(HACKERNEL_SIG);
 }
 
 static void register_signal_handler() {
@@ -62,7 +62,7 @@ static void register_signal_handler() {
 }
 
 int main() {
-    change_thread_name("main");
+    update_thread_name("main");
     register_signal_handler();
     init_netlink_server();
     handshake_with_kernel();
@@ -73,7 +73,7 @@ int main() {
     create_thread([&]() { start_ipc_server(); });
     create_thread([&]() { start_process_protector(); });
     create_thread([&]() { start_file_protector(); });
-    wait_all_thread_exit();
+    wait_thread_exit();
     DBG("exit done");
     return 0;
 }

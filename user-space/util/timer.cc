@@ -4,7 +4,7 @@
 namespace hackernel {
 
 int start_timer() {
-    change_thread_name("timer");
+    update_thread_name("timer");
     DBG("timer enter");
     timer::timer::global().start();
     DBG("timer exit");
@@ -28,7 +28,7 @@ int timer::insert(const element &element) {
 }
 
 int timer::start() {
-    running_ = get_running_status();
+    running_ = current_service_status();
     while (running_) {
         std::unique_lock<std::mutex> lock(sync_mutex_);
         cv_.wait(lock, [&]() { return !queue_.empty() || !running_; });

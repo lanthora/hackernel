@@ -41,9 +41,6 @@ private:
 
 public:
     static timer &global();
-
-private:
-    timer() {}
 };
 
 } // namespace timer

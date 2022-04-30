@@ -46,7 +46,6 @@ public:
     void notify_audience_stop();
 
 private:
-    broadcaster() {}
     std::list<std::shared_ptr<audience>> audience_;
     std::mutex mutex_;
 };

@@ -14,10 +14,6 @@ file_protector &file_protector::global() {
     return instance;
 }
 
-file_protector::file_protector() {}
-
-file_protector::~file_protector() {}
-
 int file_protector::start() {
     audience_ = std::make_shared<audience>();
     if (!audience_) {
@@ -27,7 +23,7 @@ int file_protector::start() {
     audience_->add_message_handler([&](const std::string &msg) { return handle_file_protection_msg(msg); });
     broadcaster::global().add_audience(audience_);
 
-    change_thread_name("file");
+    update_thread_name("file");
     audience_->start_consuming_message();
 
     return 0;

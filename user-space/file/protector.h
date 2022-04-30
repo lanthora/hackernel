@@ -23,8 +23,6 @@ public:
     static file_protector &global();
 
 private:
-    file_protector();
-    ~file_protector();
     bool enabled_ = false;
     std::shared_ptr<audience> audience_ = nullptr;
     std::shared_mutex mutex_;

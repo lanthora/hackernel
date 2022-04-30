@@ -108,7 +108,7 @@ void init_netlink_server() {
     }
 
     // 缓冲区大小设置为4MB
-    const int buff_size = 4 * 1024 * 1024;
+    static const int buff_size = 4 * 1024 * 1024;
     error = nl_socket_set_buffer_size(nl_sock, buff_size, buff_size);
     if (error) {
         ERR("nl_socket_set_buffer_size failed");
@@ -155,7 +155,7 @@ errout:
         nl_sock = NULL;
     }
 
-    stop_server(HACKERNEL_NETLINK_INIT);
+    shutdown_service(HACKERNEL_NETLINK_INIT);
 }
 
 static bool is_running = false;
@@ -173,23 +173,25 @@ int start_netlink() {
         .events = POLLIN,
     };
 
-    change_thread_name("netlink");
+    update_thread_name("netlink");
     DBG("netlink enter");
-    is_running = get_running_status();
+    is_running = current_service_status();
     while (is_running) {
-        const nfds_t nfds = 1;
-        const int timeout = HEARTBEAT_INTERVAL * 2;
+        static const nfds_t nfds = 1;
+        static const int timeout = HEARTBEAT_INTERVAL * 2;
 
         error = poll(&fds, nfds, timeout);
+        // 返回值等于0时表示超时,在有心跳存在的情况下,
+        // 等待时间超过两次心跳表示内核没有向上返回结果,是异常情况
         if (error <= 0) {
             ERR("poll failed");
-            stop_server(HACKERNEL_NETLINK_WAIT);
+            shutdown_service(HACKERNEL_NETLINK_WAIT);
             break;
         }
         error = nl_recvmsgs_default(nl_sock);
         if (error) {
             ERR("error=[%d] msg=[%s]", error, nl_geterror(error));
-            stop_server(HACKERNEL_NETLINK_WAIT);
+            shutdown_service(HACKERNEL_NETLINK_WAIT);
             break;
         }
     }

@@ -31,7 +31,7 @@ int send_pid_to_kernel(int interval) {
     if (running)
         return -EPERM;
 
-    running = interval ? get_running_status() : 0;
+    running = interval ? current_service_status() : 0;
     do {
         msg = alloc_hackernel_nlmsg(HACKERNEL_C_HANDSHAKE);
         nla_put_s32(msg, HANDSHAKE_A_SYS_SERVICE_TGID, tgid);
@@ -49,7 +49,7 @@ int handshake_with_kernel() {
 }
 
 int start_heartbeat() {
-    change_thread_name("heartbeat");
+    update_thread_name("heartbeat");
     DBG("heartbeat enter");
     int error = send_pid_to_kernel(HEARTBEAT_INTERVAL);
     DBG("heartbeat exit");
@@ -61,7 +61,7 @@ int handle_heartbeat(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, str
     if (code) {
         ERR("handshake response code=[%d]", code);
         ERR("handshake failed. exit");
-        stop_server(HACKERNEL_HEARTBEAT);
+        shutdown_service(HACKERNEL_HEARTBEAT);
     }
     return 0;
 }

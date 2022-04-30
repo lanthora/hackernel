@@ -21,7 +21,7 @@ void create_thread(std::function<void(void)> &&t) {
     thread_manager::global().create_thread(std::move(t));
 }
 
-void wait_all_thread_exit() {
+void wait_thread_exit() {
     thread_manager::global().wait_thread_exit();
 }
 

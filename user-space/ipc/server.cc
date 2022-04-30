@@ -78,14 +78,14 @@ int ipc_server::init() {
 
 int ipc_server::start() {
     thread_manager::global().create_thread([&]() {
-        change_thread_name("audience");
+        update_thread_name("audience");
         DBG("audience enter");
         audience_->start_consuming_message();
         DBG("audience exit");
     });
 
     thread_manager::global().create_thread([&]() {
-        change_thread_name("socket");
+        update_thread_name("socket");
         DBG("socket enter");
         start_unix_domain_socket();
         DBG("socket exit");
@@ -186,8 +186,8 @@ int ipc_server::update_token(const std::string &token) {
 }
 
 int ipc_server::start_unix_domain_socket() {
-    const char *SOCK_PATH = "/tmp/hackernel.sock";
-    const int BUFFER_SIZE = 1024;
+    static const char *SOCK_PATH = "/tmp/hackernel.sock";
+    static const int BUFFER_SIZE = 1024;
 
     char buffer[BUFFER_SIZE + 1];
     struct sockaddr_un server;
@@ -209,7 +209,7 @@ int ipc_server::start_unix_domain_socket() {
 
     socklen_t len;
     struct sockaddr_un peer;
-    running_ = get_running_status();
+    running_ = current_service_status();
     while (running_) {
         len = sizeof(peer);
         int size = recvfrom(socket_, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&peer, &len);
@@ -260,7 +260,7 @@ int ipc_server::start_unix_domain_socket() {
 
 errout:
     close(socket_);
-    stop_server(HACKERNEL_UNIX_DOMAIN_SOCKET);
+    shutdown_service(HACKERNEL_UNIX_DOMAIN_SOCKET);
     return -EPERM;
 }
 

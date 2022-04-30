@@ -67,8 +67,6 @@ process_protector &process_protector::global() {
     return instance;
 }
 
-process_protector::process_protector() {}
-
 // 根据广播中的消息更新配置,消息产生与配置更新解耦
 bool process_protector::handle_process_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
@@ -139,12 +137,10 @@ int process_protector::init() {
 }
 
 int process_protector::start() {
-    change_thread_name("process");
+    update_thread_name("process");
     audience_->start_consuming_message();
     return 0;
 }
-
-process_protector::~process_protector() {}
 
 int start_process_protector() {
     process_protector::global().init();

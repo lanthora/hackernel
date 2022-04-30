@@ -84,7 +84,7 @@ bool handle_user_ctrl_exit_msg(const std::string &msg) {
     if (doc["type"] != "user::ctrl::exit")
         return false;
 
-    stop_server(HACKERNEL_SUCCESS);
+    shutdown_service(HACKERNEL_SUCCESS);
     return true;
 }
 

@@ -27,7 +27,7 @@ void audience::save_message(std::string message) {
 void audience::start_consuming_message() {
     std::string message;
 
-    running_ = get_running_status();
+    running_ = current_service_status();
     while (running_) {
         if (wait_message(message))
             continue;
@@ -54,7 +54,7 @@ void audience::add_message_handler(std::function<bool(const std::string &)> new_
             return new_handler(msg);
         } catch (std::exception &ex) {
             ERR("handler error, request msg=[%s]", msg.data());
-            stop_server(HACKERNEL_BAD_AUDIENCE);
+            shutdown_service(HACKERNEL_BAD_AUDIENCE);
             return false;
         }
     });

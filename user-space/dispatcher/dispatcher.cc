@@ -12,7 +12,7 @@ namespace hackernel {
 static std::shared_ptr<audience> dispatcher = nullptr;
 
 int start_dispatcher() {
-    change_thread_name("dispatcher");
+    update_thread_name("dispatcher");
 
     dispatcher = std::make_shared<audience>();
     dispatcher->add_message_handler(handle_process_protection_enable_msg);

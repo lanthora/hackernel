@@ -21,7 +21,7 @@ private:
     std::list<std::thread> threads_;
 };
 
-void wait_all_thread_exit();
+void wait_thread_exit();
 void create_thread(std::function<void(void)> &&t);
 
 } // namespace hackernel

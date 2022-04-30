@@ -33,8 +33,6 @@ public:
     static process_protector &global();
 
 private:
-    process_protector();
-    ~process_protector();
     std::unordered_set<std::string> trusted_;
     std::shared_mutex mutex_;
     proc_perm judge_ = PROCESS_ACCEPT;

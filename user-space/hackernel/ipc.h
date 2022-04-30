@@ -21,7 +21,7 @@ struct user_conn {
     nlohmann::json extra;
 };
 
-const session SYSTEM_SESSION = 0;
+static const session SYSTEM_SESSION = 0;
 
 static inline std::string generate_broadcast_msg(const int32_t &session, const nlohmann::json &data) {
     nlohmann::json doc;

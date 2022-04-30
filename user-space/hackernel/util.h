@@ -45,7 +45,7 @@ EXTERN_C_BEGIN
         fflush(stderr);                                                                                                \
     } while (0)
 
-#define change_thread_name(name)                                                                                       \
+#define update_thread_name(name)                                                                                       \
     do {                                                                                                               \
         pthread_setname_np(pthread_self(), name);                                                                      \
     } while (0)
@@ -64,11 +64,11 @@ enum {
     HACKERNEL_BAD_AUDIENCE,
 };
 
-void stop_server(int code);
+void shutdown_service(int code);
 
 // Wait类函数进入循环前, 退出条件变量用RUNNING函数初始化.
 // 进程初始化过程中出现致命错误,将调用SHUTDOWN关闭各个线程
-bool get_running_status();
+bool current_service_status();
 
 EXTERN_C_END
 
