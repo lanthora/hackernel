@@ -21,6 +21,10 @@
 * [内核模块](kernel-space/Makefile)
 * [上层服务](user-space/CMakeLists.txt)
 
+## 相关项目
+
+* [uranus](https://github.com/lanthora/uranus)
+
 ## Licence
 
 [GPL-2.0-only](https://spdx.org/licenses/GPL-2.0-only.html)
