@@ -14,13 +14,13 @@ namespace hackernel {
 
 namespace timer {
 
-struct element {
+struct event {
     std::chrono::time_point<std::chrono::system_clock> time_point;
     std::function<void()> func;
 };
 
 struct compare {
-    bool operator()(element a, element b) {
+    bool operator()(event a, event b) {
         return a.time_point > b.time_point;
     }
 };
@@ -28,16 +28,15 @@ struct compare {
 class timer {
 
 public:
-    int insert(const element &element);
+    int insert(const event &element);
     int start();
     int stop();
 
 private:
-    std::priority_queue<element, std::vector<element>, compare> queue_;
-    std::mutex queue_mutex_;
-    std::mutex sync_mutex_;
-    std::condition_variable cv_;
+    std::priority_queue<event, std::vector<event>, compare> queue_;
     bool running_;
+    std::mutex mutex_;
+    std::condition_variable cv_;
 
 public:
     static timer &global();
