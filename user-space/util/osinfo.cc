@@ -1,7 +1,7 @@
 #include "hackernel/osinfo.h"
 #include "hackernel/util.h"
+#include <cstring>
 #include <fstream>
-#include <sys/sysinfo.h>
 
 namespace hackernel {
 
@@ -34,16 +34,35 @@ double osinfo_cpu::percentage(const osinfo_cpu &previous) {
 }
 
 int osinfo_mem::update() {
-    struct sysinfo info;
-    int err = sysinfo(&info);
-    if (err) {
-        ERR("sysinfo failed");
-        return err;
+    total = 0ULL;
+    available = 0ULL;
+
+    static const unsigned int BUFFER_SIZE = 64;
+    std::string line;
+    line.resize(BUFFER_SIZE);
+
+    std::ifstream ifs;
+    ifs.open("/proc/meminfo");
+    if (ifs.rdstate() & ifs.failbit) {
+        ERR("open /proc/meminfo failed");
+        return -ENOENT;
     }
 
-    total = info.totalram;
-    available = info.freeram;
+    while (ifs.getline(line.data(), BUFFER_SIZE - 1)) {
+        if (!total && line.starts_with("MemTotal:"))
+            total = atoll(line.data() + strlen("MemTotal:"));
 
+        if (!available && line.starts_with("MemAvailable:"))
+            available = atoll(line.data() + strlen("MemAvailable:"));
+
+        if (total && available)
+            break;
+    }
+    ifs.close();
+    if (ifs.rdstate() & ifs.failbit) {
+        ERR("close /proc/meminfo failed");
+        return -ENOENT;
+    }
     return 0;
 }
 
