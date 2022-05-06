@@ -6,6 +6,7 @@
 #include "hackernel/heartbeat.h"
 #include "hackernel/ipc.h"
 #include "hackernel/net.h"
+#include "hackernel/osinfo.h"
 #include "hackernel/process.h"
 #include "hackernel/thread.h"
 #include "hackernel/timer.h"
@@ -64,6 +65,7 @@ static void register_signal_handler() {
 int main() {
     update_thread_name("main");
     register_signal_handler();
+    register_osinfo_timer();
     init_netlink_server();
     handshake_with_kernel();
     create_thread([&]() { start_heartbeat(); });

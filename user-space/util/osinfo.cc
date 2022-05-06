@@ -1,4 +1,5 @@
 #include "hackernel/osinfo.h"
+#include "hackernel/timer.h"
 #include "hackernel/util.h"
 #include <cstring>
 #include <fstream>
@@ -29,7 +30,7 @@ long long osinfo_cpu::sum() const {
     return user + nice + system + idle + iowait + irq + softirq;
 }
 
-double osinfo_cpu::percentage(const osinfo_cpu &previous) {
+double osinfo_cpu::usage(const osinfo_cpu &previous) {
     return 1 - ((idle - previous.idle) * 1.0 / (sum() - previous.sum()));
 }
 
@@ -66,25 +67,39 @@ int osinfo_mem::update() {
     return 0;
 }
 
-double osinfo_mem::percentage() {
+double osinfo_mem::usage() {
     return 1 - (1.0 * available / total);
 }
 
 int osinfo::update() {
-    current_mem_status_.update();
-    current_cpu_status_.update();
-    mem_usage_percentage_ = current_mem_status_.percentage();
-    cpu_usage_percentage_ = current_cpu_status_.percentage(previous_cpu_status_);
-    previous_cpu_status_ = current_cpu_status_;
+    current_mem_usage_.update();
+    current_cpu_usage_.update();
+
+    mem_usage_ = current_mem_usage_.usage();
+    cpu_usage_ = current_cpu_usage_.usage(previous_cpu_usage_);
+
+    previous_cpu_usage_ = current_cpu_usage_;
     return 0;
 }
 
-double osinfo::get_mem_usage_percentage() {
-    return mem_usage_percentage_;
+double osinfo::get_mem_usage() {
+    return mem_usage_;
 }
 
-double osinfo::get_cpu_usage_percentage() {
-    return cpu_usage_percentage_;
+double osinfo::get_cpu_usage() {
+    return cpu_usage_;
+}
+
+void register_osinfo_timer() {
+    timer::event e;
+    e.time_point = std::chrono::system_clock::now() + std::chrono::minutes(1);
+    e.func = register_osinfo_timer;
+
+    static osinfo i;
+    i.update();
+    DBG("cpu=[%f], mem=[%f]", i.get_cpu_usage(), i.get_mem_usage());
+
+    timer::timer::global().insert(e);
 }
 
 }; // namespace hackernel

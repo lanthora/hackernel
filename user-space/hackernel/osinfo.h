@@ -14,7 +14,7 @@ struct osinfo_cpu {
 
     long long sum() const;
     int update();
-    double percentage(const osinfo_cpu &previous);
+    double usage(const osinfo_cpu &previous);
 };
 
 struct osinfo_mem {
@@ -22,23 +22,25 @@ struct osinfo_mem {
     unsigned long available;
 
     int update();
-    double percentage();
+    double usage();
 };
 
 class osinfo {
 public:
     int update();
-    double get_mem_usage_percentage();
-    double get_cpu_usage_percentage();
+    double get_mem_usage();
+    double get_cpu_usage();
 
 private:
-    double mem_usage_percentage_;
-    double cpu_usage_percentage_;
+    double mem_usage_;
+    double cpu_usage_;
 
-    osinfo_cpu current_cpu_status_;
-    osinfo_cpu previous_cpu_status_;
-    osinfo_mem current_mem_status_;
+    osinfo_cpu current_cpu_usage_;
+    osinfo_cpu previous_cpu_usage_;
+    osinfo_mem current_mem_usage_;
 };
+
+void register_osinfo_timer();
 
 } // namespace hackernel
 
