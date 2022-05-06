@@ -53,7 +53,6 @@ EXTERN_C_BEGIN
 int insert_kernel_module(const char *filename);
 int remove_kernel_module(const char *modulename);
 
-// 将各个线程的运行状态设置为退出
 enum {
     HACKERNEL_SUCCESS,
     HACKERNEL_SIG,
@@ -66,8 +65,6 @@ enum {
 
 void shutdown_service(int code);
 
-// Wait类函数进入循环前, 退出条件变量用RUNNING函数初始化.
-// 进程初始化过程中出现致命错误,将调用SHUTDOWN关闭各个线程
 bool current_service_status();
 
 EXTERN_C_END
