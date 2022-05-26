@@ -28,6 +28,8 @@ bool handle_kernel_net_disable_msg(const std::string &msg);
 
 bool handle_audit_process_report_msg(const std::string &msg);
 
+bool handle_osinfo_report_msg(const std::string &msg);
+
 }; // namespace hackernel
 
 #endif
