@@ -94,7 +94,7 @@ double osinfo::get_cpu_usage() {
 
 void register_osinfo_timer() {
     timer::event event;
-    event.time_point = std::chrono::system_clock::now() + std::chrono::minutes(1);
+    event.time_point = std::chrono::system_clock::now() + std::chrono::seconds(5);
     event.func = register_osinfo_timer;
 
     static osinfo info;
