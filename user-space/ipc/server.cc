@@ -54,6 +54,7 @@ int ipc_server::init() {
 
     audience_ = std::make_shared<audience>();
 
+    audience_->add_message_handler(handle_osinfo_report_msg);
     audience_->add_message_handler(handle_kernel_process_report_msg);
     audience_->add_message_handler(handle_audit_process_report_msg);
     audience_->add_message_handler(handle_kernel_file_report_msg);

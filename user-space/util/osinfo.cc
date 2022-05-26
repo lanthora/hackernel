@@ -1,8 +1,10 @@
 #include "hackernel/osinfo.h"
+#include "hackernel/ipc.h"
 #include "hackernel/timer.h"
 #include "hackernel/util.h"
 #include <cstring>
 #include <fstream>
+#include <nlohmann/json.hpp>
 
 namespace hackernel {
 
@@ -91,15 +93,22 @@ double osinfo::get_cpu_usage() {
 }
 
 void register_osinfo_timer() {
-    timer::event e;
-    e.time_point = std::chrono::system_clock::now() + std::chrono::minutes(1);
-    e.func = register_osinfo_timer;
+    timer::event event;
+    event.time_point = std::chrono::system_clock::now() + std::chrono::minutes(1);
+    event.func = register_osinfo_timer;
 
-    static osinfo i;
-    i.update();
-    DBG("cpu=[%f], mem=[%f]", i.get_cpu_usage(), i.get_mem_usage());
+    static osinfo info;
+    info.update();
+    DBG("cpu=[%f], mem=[%f]", , info.get_mem_usage());
 
-    timer::timer::global().insert(e);
+    nlohmann::json doc;
+    doc["type"] = "osinfo::report";
+    doc["cpu"] = info.get_cpu_usage();
+    doc["mem"] = info.get_mem_usage();
+    std::string msg = generate_system_broadcast_msg(doc);
+    broadcaster::global().broadcast(msg);
+
+    timer::timer::global().insert(event);
 }
 
 }; // namespace hackernel
