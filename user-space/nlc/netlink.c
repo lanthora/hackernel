@@ -179,12 +179,15 @@ int start_netlink() {
     while (is_running) {
         static const nfds_t nfds = 1;
         static const int timeout = HEARTBEAT_INTERVAL * 2;
-
-        error = poll(&fds, nfds, timeout);
+        const int total = poll(&fds, nfds, timeout);
         // 返回值等于0时表示超时,在有心跳存在的情况下,
         // 等待时间超过两次心跳表示内核没有向上返回结果,是异常情况
-        if (error <= 0) {
-            ERR("poll failed");
+        if (total == 0) {
+            ERR("poll timeout");
+            shutdown_service(HACKERNEL_NETLINK_WAIT);
+        }
+        if (total == -1) {
+            ERR("poll failed, errno=[%d] errmsg=[%s]", errno, strerror(errno));
             shutdown_service(HACKERNEL_NETLINK_WAIT);
             break;
         }
