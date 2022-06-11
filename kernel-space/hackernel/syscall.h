@@ -42,6 +42,7 @@ void syscall_early_init(void);
 #define REG_DEFINE(name)                                                       \
 	static int __hook_##name(void)                                         \
 	{                                                                      \
+		unsigned long flags;                                           \
 		if (HK_NR_##name == HK_NR_UNDEFINED) {                         \
 			ERR("undefined system call: " STR(name));              \
 			return -ENOSYS;                                        \
@@ -55,15 +56,18 @@ void syscall_early_init(void);
 			SYSCALL_BACKUP(hk_sys_##name, HK_NR_##name);           \
 		}                                                              \
                                                                                \
+		local_irq_save(flags);                                         \
 		disable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));  \
 		SYSCALL_UPDATE(HK_NR_##name, &sys_##name##_hook);              \
 		enable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));   \
+		local_irq_restore(flags);                                      \
 		return 0;                                                      \
 	}
 
 #define UNREG_DEFINE(name)                                                     \
 	static int __unhook_##name(void)                                       \
 	{                                                                      \
+		unsigned long flags;                                           \
 		if (HK_NR_##name == HK_NR_UNDEFINED) {                         \
 			return -ENOSYS;                                        \
 		}                                                              \
@@ -74,9 +78,12 @@ void syscall_early_init(void);
 		if (!hk_sys_##name) {                                          \
 			return -EPERM;                                         \
 		}                                                              \
+                                                                               \
+		local_irq_save(flags);                                         \
 		disable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));  \
 		SYSCALL_UPDATE(HK_NR_##name, hk_sys_##name);                   \
 		enable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));   \
+		local_irq_restore(flags);                                      \
 		return 0;                                                      \
 	}
 
