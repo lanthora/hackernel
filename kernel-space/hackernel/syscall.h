@@ -59,6 +59,7 @@ void syscall_early_init(void);
 		local_irq_save(flags);                                         \
 		disable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));  \
 		SYSCALL_UPDATE(HK_NR_##name, &sys_##name##_hook);              \
+		wmb();                                                         \
 		enable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));   \
 		local_irq_restore(flags);                                      \
 		return 0;                                                      \
@@ -82,6 +83,7 @@ void syscall_early_init(void);
 		local_irq_save(flags);                                         \
 		disable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));  \
 		SYSCALL_UPDATE(HK_NR_##name, hk_sys_##name);                   \
+		wmb();                                                         \
 		enable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));   \
 		local_irq_restore(flags);                                      \
 		return 0;                                                      \
