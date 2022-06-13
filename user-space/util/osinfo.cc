@@ -99,7 +99,7 @@ void register_osinfo_timer() {
 
     static osinfo info;
     info.update();
-    DBG("cpu=[%f], mem=[%f]", , info.get_mem_usage());
+    DBG("cpu=[%f], mem=[%f]", info.get_cpu_usage(), info.get_mem_usage());
 
     nlohmann::json doc;
     doc["type"] = "osinfo::report";
