@@ -34,8 +34,8 @@ struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
 
 struct nla_policy file_policy[FILE_A_MAX + 1] = {
     [FILE_A_SESSION] = {.type = NLA_S32}, [FILE_A_STATUS_CODE] = {.type = NLA_S32}, [FILE_A_OP_TYPE] = {.type = NLA_U8},
-    [FILE_A_NAME] = {.type = NLA_STRING}, [FILE_A_PERM] = {.type = NLA_S32},
-};
+    [FILE_A_NAME] = {.type = NLA_STRING}, [FILE_A_PERM] = {.type = NLA_S32},        [FILE_A_FSID] = {.type = NLA_U64},
+    [FILE_A_INO] = {.type = NLA_U64}};
 
 struct nla_policy net_policy[NET_A_MAX + 1] = {
     [NET_A_SESSION] = {.type = NLA_S32},      [NET_A_STATUS_CODE] = {.type = NLA_S32},

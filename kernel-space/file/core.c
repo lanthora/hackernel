@@ -135,11 +135,11 @@ static int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm)
 	return file_perm_tree_update(fsid, ino, perm);
 }
 
-int file_perm_set_path(const char *path, file_perm_t perm)
+int file_perm_set_path(const char *path, file_perm_t perm, fsid_t *fsid,
+		       ino_t *ino)
 {
-	unsigned long fsid, ino;
-	file_id_get(path, &fsid, &ino);
-	return file_perm_set(fsid, ino, perm);
+	file_id_get(path, fsid, ino);
+	return file_perm_set(*fsid, *ino, perm);
 }
 
 static int file_perm_data_fill(char *path, struct file_perm_data *data)
