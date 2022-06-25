@@ -29,7 +29,7 @@ int disable_file_protection(int32_t session) {
     return update_file_protection_status(session, FILE_PROTECT_DISABLE);
 }
 
-int set_file_protection(int32_t session, const char *path, file_perm perm) {
+int set_file_protection(int32_t session, const char *path, file_perm perm, int flag) {
     struct nl_msg *message;
 
     message = alloc_hackernel_nlmsg(HACKERNEL_C_FILE_PROTECT);
@@ -37,6 +37,7 @@ int set_file_protection(int32_t session, const char *path, file_perm perm) {
     nla_put_u8(message, FILE_A_OP_TYPE, FILE_PROTECT_SET);
     nla_put_string(message, FILE_A_NAME, path);
     nla_put_s32(message, FILE_A_PERM, perm);
+    nla_put_s32(message, FILE_A_FLAG, flag);
     send_free_hackernel_nlmsg(message);
     return 0;
 }

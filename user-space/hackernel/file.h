@@ -17,7 +17,7 @@ typedef int32_t file_perm;
 
 int enable_file_protection(int32_t session);
 int disable_file_protection(int32_t session);
-int set_file_protection(int32_t session, const char *path, file_perm perm);
+int set_file_protection(int32_t session, const char *path, file_perm perm, int flag);
 
 #define FLAG_FILE_DISABLE_READ (0b00000001)
 #define FLAG_FILE_DISABLE_WRITE (0b00000010)

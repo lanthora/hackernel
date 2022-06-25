@@ -186,6 +186,16 @@ int ipc_server::update_token(const std::string &token) {
     return 0;
 }
 
+bool ipc_server::check_token(const nlohmann::json &data) {
+    if (!token_.is_enabled())
+        return true;
+    if (!data.contains("token"))
+        return false;
+    if (!data["token"].is_string())
+        return false;
+    return token_.is_vaild(data["token"]);
+}
+
 int ipc_server::start_unix_domain_socket() {
     static const char *SOCK_PATH = "/tmp/hackernel.sock";
     static const int BUFFER_SIZE = 1024;
@@ -232,12 +242,12 @@ int ipc_server::start_unix_domain_socket() {
             continue;
         }
 
-        if (!data.is_object() || !data["type"].is_string()) {
+        if (!data.contains("type") || !data["type"].is_string()) {
             WARN("invalid request, buffer=[%s]", buffer);
             continue;
         }
 
-        if (token_.is_enabled() && (!data["token"].is_string() || !token_.is_vaild(data["token"]))) {
+        if (!check_token(data)) {
             WARN("invalid token, buffer=[%s]", buffer);
             continue;
         }

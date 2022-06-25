@@ -68,6 +68,7 @@ private:
 private:
     int start_unix_domain_socket();
     session generate_user_session();
+    bool check_token(const nlohmann::json &data);
 };
 
 }; // namespace ipc

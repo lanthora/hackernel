@@ -51,12 +51,23 @@ bool handle_file_protection_disable_msg(const std::string &msg) {
 }
 
 static int check_user_file_set_data(const nlohmann::json &data) {
+    if (!data.contains("path"))
+        goto errout;
+
     if (!data["path"].is_string())
+        goto errout;
+
+    if (!data.contains("perm"))
         goto errout;
 
     if (!data["perm"].is_number_integer())
         goto errout;
 
+    if (!data.contains("flag"))
+        goto errout;
+
+    if (!data["flag"].is_number_integer())
+        goto errout;
     return 0;
 
 errout:
@@ -77,7 +88,8 @@ bool handle_file_protection_set_msg(const std::string &msg) {
 
     std::string path = data["path"];
     int32_t perm = data["perm"];
-    set_file_protection(session, path.data(), perm);
+    int flag = data["flag"];
+    set_file_protection(session, path.data(), perm, flag);
     return true;
 }
 
@@ -102,46 +114,73 @@ bool handle_net_protection_disable_msg(const std::string &msg) {
 }
 
 static int check_net_protection_insert_data(const nlohmann::json &data) {
-
+    if (!data.contains("id"))
+        goto errout;
     if (!data["id"].is_number_integer())
+        goto errout;
+    if (!data.contains("priority"))
         goto errout;
     if (!data["priority"].is_number_integer())
         goto errout;
-    if (!data["addr"].is_object())
+    if (!data.contains("addr"))
         goto errout;
-    if (!data["addr"]["src"].is_object())
+    if (!data["addr"].contains("src"))
+        goto errout;
+    if (!data["addr"]["src"].contains("begin"))
         goto errout;
     if (!data["addr"]["src"]["begin"].is_string())
         goto errout;
+    if (!data["addr"]["src"].contains("end"))
+        goto errout;
     if (!data["addr"]["src"]["end"].is_string())
         goto errout;
-    if (!data["addr"]["dst"].is_object())
+    if (!data["addr"].contains("dst"))
+        goto errout;
+    if (!data["addr"]["dst"].contains("begin"))
         goto errout;
     if (!data["addr"]["dst"]["begin"].is_string())
         goto errout;
+    if (!data["addr"]["dst"].contains("end"))
+        goto errout;
     if (!data["addr"]["dst"]["end"].is_string())
         goto errout;
-    if (!data["protocol"].is_object())
+    if (!data.contains("protocol"))
+        goto errout;
+    if (!data["protocol"].contains("begin"))
         goto errout;
     if (!data["protocol"]["begin"].is_number_integer())
         goto errout;
+    if (!data["protocol"].contains("end"))
+        goto errout;
     if (!data["protocol"]["end"].is_number_integer())
         goto errout;
-    if (!data["port"].is_object())
+    if (!data.contains("port"))
         goto errout;
-    if (!data["port"]["src"].is_object())
+    if (!data["port"].contains("src"))
+        goto errout;
+    if (!data["port"]["src"].contains("begin"))
         goto errout;
     if (!data["port"]["src"]["begin"].is_number_integer())
         goto errout;
+    if (!data["port"]["src"].contains("end"))
+        goto errout;
     if (!data["port"]["src"]["end"].is_number_integer())
         goto errout;
-    if (!data["port"]["dst"].is_object())
+    if (!data["port"].contains("dst"))
+        goto errout;
+    if (!data["port"]["dst"].contains("begin"))
         goto errout;
     if (!data["port"]["dst"]["begin"].is_number_integer())
         goto errout;
+    if (!data["port"]["dst"].contains("end"))
+        goto errout;
     if (!data["port"]["dst"]["end"].is_number_integer())
         goto errout;
+    if (!data.contains("flags"))
+        goto errout;
     if (!data["flags"].is_number_integer())
+        goto errout;
+    if (!data.contains("response"))
         goto errout;
     if (!data["response"].is_number_integer())
         goto errout;
@@ -182,9 +221,12 @@ bool handle_net_protection_insert_msg(const std::string &msg) {
 }
 
 static int check_net_protection_delete_data(const nlohmann::json &data) {
+    if (!data.contains("id"))
+        goto errout;
     if (!data["id"].is_number_integer())
         goto errout;
     return 0;
+
 errout:
     WARN("invalid argument=[%s]", json::dump(data).data());
     return -EINVAL;
