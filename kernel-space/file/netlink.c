@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "hackernel/netlink.h"
+#include "file/utils.h"
 #include "hackernel/define.h"
 #include "hackernel/file.h"
 #include "hackernel/handshake.h"
@@ -18,6 +19,7 @@ struct nla_policy file_policy[FILE_A_MAX + 1] = {
 	[FILE_A_OP_TYPE] = { .type = NLA_U8 },
 	[FILE_A_NAME] = { .type = NLA_STRING },
 	[FILE_A_PERM] = { .type = NLA_S32 },
+	[FILE_A_FLAG] = { .type = NLA_S32 },
 	[FILE_A_FSID] = { .type = NLA_U64 },
 	[FILE_A_INO] = { .type = NLA_U64 },
 };
@@ -124,6 +126,7 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	char *path;
 	fsid_t fsid;
 	ino_t ino;
+	int flag;
 
 	if (hackernel_user_check(info))
 		return -EPERM;
@@ -152,6 +155,11 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 			goto response;
 		}
 
+		if (!info->attrs[FILE_A_FLAG]) {
+			code = -EINVAL;
+			goto response;
+		}
+
 		path = kmalloc(PATH_MAX, GFP_KERNEL);
 		if (!path) {
 			code = -ENOMEM;
@@ -160,7 +168,9 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 
 		nla_strscpy(path, info->attrs[FILE_A_NAME], PATH_MAX);
 		perm = nla_get_s32(info->attrs[FILE_A_PERM]);
-		code = file_perm_set_path(path, perm, &fsid, &ino);
+		flag = nla_get_s32(info->attrs[FILE_A_FLAG]);
+		file_id_get(path, &fsid, &ino);
+		code = file_perm_set(fsid, ino, perm, flag);
 		kfree(path);
 		break;
 	default:

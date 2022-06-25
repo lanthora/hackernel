@@ -12,6 +12,7 @@ enum {
 	FILE_A_OP_TYPE,
 	FILE_A_NAME,
 	FILE_A_PERM,
+	FILE_A_FLAG,
 	FILE_A_FSID,
 	FILE_A_INO,
 	__FILE_A_MAX,
@@ -55,8 +56,7 @@ struct file_perm_node {
 	file_perm_t perm;
 };
 
-int file_perm_set_path(const char *path, file_perm_t perm, fsid_t *fsid,
-		       ino_t *ino);
+int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm, int flag);
 int file_protect_enable(void);
 int file_protect_disable(void);
 int file_protect_init(void);
@@ -69,6 +69,13 @@ enum {
 	FILE_PROTECT_DISABLE,
 	FILE_PROTECT_SET
 };
+
+enum{
+	FILE_UPDATE_FLAG_ANY,
+	FILE_UPDATE_FLAG_NEW,
+	FILE_UPDATE_FLAG_UPDATE,
+};
+
 int file_protect_handler(struct sk_buff *skb, struct genl_info *info);
 int file_protect_report_to_userspace(struct file_perm_data *data);
 
