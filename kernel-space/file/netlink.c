@@ -18,6 +18,8 @@ struct nla_policy file_policy[FILE_A_MAX + 1] = {
 	[FILE_A_OP_TYPE] = { .type = NLA_U8 },
 	[FILE_A_NAME] = { .type = NLA_STRING },
 	[FILE_A_PERM] = { .type = NLA_S32 },
+	[FILE_A_FSID] = { .type = NLA_U64 },
+	[FILE_A_INO] = { .type = NLA_U64 },
 };
 
 extern struct genl_family genl_family;
@@ -29,6 +31,9 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	void *head = NULL;
 	const char *filename = data->path;
 	const file_perm_t perm = data->marked_perm;
+	const fsid_t fsid = data->fsid;
+	const ino_t ino = data->ino;
+
 	int errcnt;
 	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
 
@@ -59,6 +64,18 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	error = nla_put_s32(skb, FILE_A_PERM, perm);
 	if (error) {
 		ERR("nla_put_s32 failed");
+		goto errout;
+	}
+
+	error = nla_put(skb, FILE_A_FSID, sizeof(fsid_t), &fsid);
+	if (error) {
+		ERR("nla_put_u64 failed");
+		goto errout;
+	}
+
+	error = nla_put(skb, FILE_A_INO, sizeof(ino_t), &ino);
+	if (error) {
+		ERR("nla_put_u64 failed");
 		goto errout;
 	}
 
@@ -103,6 +120,10 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	void *head = NULL;
 	u8 type;
 	s32 session;
+	file_perm_t perm;
+	char *path;
+	fsid_t fsid;
+	ino_t ino;
 
 	if (hackernel_user_check(info))
 		return -EPERM;
@@ -114,18 +135,13 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 
 	type = nla_get_u8(info->attrs[FILE_A_OP_TYPE]);
 	switch (type) {
-	case FILE_PROTECT_ENABLE: {
+	case FILE_PROTECT_ENABLE:
 		code = file_protect_enable();
 		goto response;
-	}
-	case FILE_PROTECT_DISABLE: {
+	case FILE_PROTECT_DISABLE:
 		code = file_protect_disable();
 		goto response;
-	}
-	case FILE_PROTECT_SET: {
-		file_perm_t perm;
-		char *path;
-
+	case FILE_PROTECT_SET:
 		if (!info->attrs[FILE_A_NAME]) {
 			code = -EINVAL;
 			goto response;
@@ -144,13 +160,11 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 
 		nla_strscpy(path, info->attrs[FILE_A_NAME], PATH_MAX);
 		perm = nla_get_s32(info->attrs[FILE_A_PERM]);
-		code = file_perm_set_path(path, perm);
+		code = file_perm_set_path(path, perm, &fsid, &ino);
 		kfree(path);
 		break;
-	}
-	default: {
+	default:
 		ERR("Unknown file protect command");
-	}
 	}
 
 response:
@@ -186,6 +200,20 @@ response:
 	error = nla_put_s32(reply, FILE_A_STATUS_CODE, code);
 	if (unlikely(error)) {
 		ERR("nla_put_s32 failed");
+		goto errout;
+	}
+
+	INFO("fsid=[%lu], ino=[%lu]", fsid, ino);
+
+	error = nla_put(reply, FILE_A_FSID, sizeof(fsid_t), &fsid);
+	if (error) {
+		ERR("nla_put_u64 failed");
+		goto errout;
+	}
+
+	error = nla_put(reply, FILE_A_INO, sizeof(ino_t), &ino);
+	if (error) {
+		ERR("nla_put_u64 failed");
 		goto errout;
 	}
 

@@ -14,6 +14,8 @@ enum {
     FILE_A_OP_TYPE,
     FILE_A_NAME,
     FILE_A_PERM,
+    FILE_A_FSID,
+    FILE_A_INO,
     __FILE_A_MAX,
 };
 #define FILE_A_MAX (__FILE_A_MAX - 1)

@@ -57,19 +57,25 @@ static int generate_file_protection_disable_msg(const int32_t &session, const in
     return 0;
 }
 
-static int generate_file_protection_set_msg(const int32_t &session, const int32_t &code, std::string &msg) {
+static int generate_file_protection_set_msg(const int32_t &session, const int32_t &code, unsigned long fsid,
+                                            unsigned long ino, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::set";
     doc["code"] = code;
+    doc["fsid"] = fsid;
+    doc["ino"] = ino;
     msg = generate_broadcast_msg(session, doc);
     return 0;
 }
 
-static int generate_file_protection_report_msg(const char *name, file_perm perm, std::string &msg) {
+static int generate_file_protection_report_msg(const char *name, file_perm perm, unsigned long fsid, unsigned long ino,
+                                               std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::report";
     doc["name"] = name;
     doc["perm"] = perm;
+    doc["fsid"] = fsid;
+    doc["ino"] = ino;
     msg = generate_system_broadcast_msg(doc);
     return 0;
 }
@@ -82,6 +88,8 @@ int handle_genl_file_protection(struct nl_cache_ops *unused, struct genl_cmd *ge
     int32_t session;
     int code;
     std::string msg;
+    unsigned long fsid;
+    unsigned long ino;
 
     type = nla_get_u8(genl_info->attrs[FILE_A_OP_TYPE]);
     switch (type) {
@@ -104,7 +112,9 @@ int handle_genl_file_protection(struct nl_cache_ops *unused, struct genl_cmd *ge
     case FILE_PROTECT_SET:
         session = nla_get_s32(genl_info->attrs[FILE_A_SESSION]);
         code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
-        generate_file_protection_set_msg(session, code, msg);
+        fsid = (unsigned long)nla_get_u64(genl_info->attrs[FILE_A_FSID]);
+        ino = (unsigned long)nla_get_u64(genl_info->attrs[FILE_A_INO]);
+        generate_file_protection_set_msg(session, code, fsid, ino, msg);
         broadcaster::global().broadcast(msg);
         DBG("kernel::file::set, session=[%d] code=[%d]", session, code);
         break;
@@ -112,7 +122,9 @@ int handle_genl_file_protection(struct nl_cache_ops *unused, struct genl_cmd *ge
     case FILE_PROTECT_REPORT:
         name = nla_get_string(genl_info->attrs[FILE_A_NAME]);
         perm = nla_get_s32(genl_info->attrs[FILE_A_PERM]);
-        generate_file_protection_report_msg(name, perm, msg);
+        fsid = (unsigned long)nla_get_u64(genl_info->attrs[FILE_A_FSID]);
+        ino = (unsigned long)nla_get_u64(genl_info->attrs[FILE_A_INO]);
+        generate_file_protection_report_msg(name, perm, fsid, ino, msg);
         broadcaster::global().broadcast(msg);
         DBG("kernel::file::report, name=[%s] perm=[%d]", name, perm);
         break;
