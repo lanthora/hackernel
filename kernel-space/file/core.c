@@ -16,11 +16,13 @@ static inline bool file_perm_node_cmp(const struct file_perm_node *a,
 	return a->fsid == b->fsid ? a->ino < b->ino : a->fsid < b->fsid;
 }
 
-static int file_perm_tree_update(fsid_t fsid, ino_t ino, file_perm_t perm)
+static int file_perm_tree_update(fsid_t fsid, ino_t ino, file_perm_t perm,
+				 int flag)
 {
 	struct rb_node **new, *parent;
 	struct file_perm_node *data;
 	struct file_perm_node *this;
+	int error = 0;
 
 	data = kzalloc(sizeof(struct file_perm_node), GFP_KERNEL);
 	if (!data)
@@ -44,15 +46,23 @@ static int file_perm_tree_update(fsid_t fsid, ino_t ino, file_perm_t perm)
 	}
 
 	if (*new) {
-		this->perm = perm;
 		kfree(data);
-	} else {
-		rb_link_node(&data->node, parent, new);
-		rb_insert_color(&data->node, &file_perm_tree);
-	}
+		if (flag == FILE_UPDATE_FLAG_NEW) {
+			error = -EINVAL;
+		} else {
+			this->perm = perm;
+		}
 
+	} else {
+		if (flag == FILE_UPDATE_FLAG_UPDATE) {
+			error = -EINVAL;
+		} else {
+			rb_link_node(&data->node, parent, new);
+			rb_insert_color(&data->node, &file_perm_tree);
+		}
+	}
 	write_unlock(&file_perm_tree_lock);
-	return 0;
+	return error;
 }
 
 static file_perm_t file_perm_tree_search(fsid_t fsid, ino_t ino)
@@ -127,19 +137,12 @@ static file_perm_t file_perm_get(const fsid_t fsid, const ino_t ino)
 	return file_perm_tree_search(fsid, ino);
 }
 
-static int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm)
+int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm, int flag)
 {
 	if (fsid == BAD_FSID || ino == BAD_INO)
 		return -EINVAL;
 
-	return file_perm_tree_update(fsid, ino, perm);
-}
-
-int file_perm_set_path(const char *path, file_perm_t perm, fsid_t *fsid,
-		       ino_t *ino)
-{
-	file_id_get(path, fsid, ino);
-	return file_perm_set(*fsid, *ino, perm);
+	return file_perm_tree_update(fsid, ino, perm, flag);
 }
 
 static int file_perm_data_fill(char *path, struct file_perm_data *data)
