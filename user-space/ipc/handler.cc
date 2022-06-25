@@ -50,6 +50,8 @@ bool handle_user_sub_msg(const std::string &msg) {
 }
 
 static int check_user_msg_unsub_data(const nlohmann::json &data) {
+    if (!data.contains("section"))
+        goto errout;
     if (!data["section"].is_string())
         goto errout;
 
@@ -89,9 +91,10 @@ bool handle_user_ctrl_exit_msg(const std::string &msg) {
 }
 
 static int check_user_ctrl_token_data(const nlohmann::json &data) {
+    if (!data.contains("new"))
+        goto errout;
     if (!data["new"].is_string())
         goto errout;
-
     return 0;
 
 errout:
