@@ -142,6 +142,10 @@ int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm, int flag)
 	if (fsid == BAD_FSID || ino == BAD_INO)
 		return -EINVAL;
 
+	if (!perm) {
+		file_perm_tree_delete(fsid, ino);
+		return 0;
+	}
 	return file_perm_tree_update(fsid, ino, perm, flag);
 }
 
