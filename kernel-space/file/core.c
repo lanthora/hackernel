@@ -48,14 +48,14 @@ static int file_perm_tree_update(fsid_t fsid, ino_t ino, file_perm_t perm,
 	if (*new) {
 		kfree(data);
 		if (flag == FILE_UPDATE_FLAG_NEW) {
-			error = -EINVAL;
+			error = -EEXIST;
 		} else {
 			this->perm = perm;
 		}
 
 	} else {
 		if (flag == FILE_UPDATE_FLAG_UPDATE) {
-			error = -EINVAL;
+			error = -ENOENT;
 		} else {
 			rb_link_node(&data->node, parent, new);
 			rb_insert_color(&data->node, &file_perm_tree);
