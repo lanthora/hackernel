@@ -41,8 +41,6 @@ bool file_protector::handle_file_protection_msg(const std::string &msg) {
     }
     if (type == "user::file::disable") {
         enabled_ = false;
-        std::unique_lock<std::shared_mutex> lock(mutex_);
-        perms_.clear();
         return true;
     }
     if (type == "user::file::set") {
@@ -58,6 +56,11 @@ bool file_protector::handle_file_protection_msg(const std::string &msg) {
         } else {
             perms_.erase(path);
         }
+        return true;
+    }
+    if (type == "user::file::clear") {
+        std::unique_lock<std::shared_mutex> lock(mutex_);
+        perms_.clear();
         return true;
     }
 
