@@ -62,6 +62,7 @@ int ipc_server::init() {
     audience_->add_message_handler(handle_kernel_process_disable_msg);
     audience_->add_message_handler(handle_kernel_file_set_msg);
     audience_->add_message_handler(handle_kernel_file_enable_msg);
+    audience_->add_message_handler(handle_kernel_file_clear_msg);
     audience_->add_message_handler(handle_kernel_file_disable_msg);
     audience_->add_message_handler(handle_kernel_net_insert_msg);
     audience_->add_message_handler(handle_kernel_net_delete_msg);

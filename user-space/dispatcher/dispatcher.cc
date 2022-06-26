@@ -20,6 +20,7 @@ int start_dispatcher() {
     dispatcher->add_message_handler(handle_file_protection_enable_msg);
     dispatcher->add_message_handler(handle_file_protection_disable_msg);
     dispatcher->add_message_handler(handle_file_protection_set_msg);
+    dispatcher->add_message_handler(handle_file_protection_clear_msg);
     dispatcher->add_message_handler(handle_net_protection_enable_msg);
     dispatcher->add_message_handler(handle_net_protection_disable_msg);
     dispatcher->add_message_handler(handle_net_protection_insert_msg);

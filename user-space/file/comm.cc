@@ -42,6 +42,10 @@ int set_file_protection(int32_t session, const char *path, file_perm perm, int f
     return 0;
 }
 
+int clear_file_protection(int32_t session) {
+    return update_file_protection_status(session, FILE_PROTECT_CLEAR);
+}
+
 static int generate_file_protection_enable_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::file::enable";
@@ -78,6 +82,14 @@ static int generate_file_protection_report_msg(const char *name, file_perm perm,
     doc["fsid"] = fsid;
     doc["ino"] = ino;
     msg = generate_system_broadcast_msg(doc);
+    return 0;
+}
+
+static int generate_file_protection_clear_msg(const int32_t &session, const int32_t &code, std::string &msg) {
+    nlohmann::json doc;
+    doc["type"] = "kernel::file::clear";
+    doc["code"] = code;
+    msg = generate_broadcast_msg(session, doc);
     return 0;
 }
 
@@ -128,6 +140,14 @@ int handle_genl_file_protection(struct nl_cache_ops *unused, struct genl_cmd *ge
         generate_file_protection_report_msg(name, perm, fsid, ino, msg);
         broadcaster::global().broadcast(msg);
         DBG("kernel::file::report, name=[%s] perm=[%d]", name, perm);
+        break;
+
+    case FILE_PROTECT_CLEAR:
+        session = nla_get_s32(genl_info->attrs[FILE_A_SESSION]);
+        code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
+        generate_file_protection_clear_msg(session, code, msg);
+        broadcaster::global().broadcast(msg);
+        DBG("kernel::file::set, session=[%d] code=[%d]", session, code);
         break;
 
     default:

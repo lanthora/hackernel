@@ -93,6 +93,16 @@ bool handle_file_protection_set_msg(const std::string &msg) {
     return true;
 }
 
+bool handle_file_protection_clear_msg(const std::string &msg) {
+    nlohmann::json doc = json::parse(msg);
+    if (doc["type"] != "user::file::clear")
+        return false;
+
+    int32_t session = doc["session"];
+    clear_file_protection(session);
+    return true;
+}
+
 bool handle_net_protection_enable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "user::net::enable")

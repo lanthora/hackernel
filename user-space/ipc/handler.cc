@@ -170,6 +170,15 @@ bool handle_kernel_file_enable_msg(const std::string &msg) {
     return true;
 }
 
+bool handle_kernel_file_clear_msg(const std::string &msg) {
+    nlohmann::json doc = json::parse(msg);
+    if (doc["type"] != "kernel::file::clear")
+        return false;
+
+    ipc_server::global().send_msg_to_client(doc);
+    return true;
+}
+
 bool handle_kernel_file_disable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::file::disable")

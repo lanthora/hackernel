@@ -19,6 +19,7 @@ bool handle_kernel_process_disable_msg(const std::string &msg);
 bool handle_kernel_file_report_msg(const std::string &msg);
 bool handle_kernel_file_set_msg(const std::string &msg);
 bool handle_kernel_file_enable_msg(const std::string &msg);
+bool handle_kernel_file_clear_msg(const std::string &msg);
 bool handle_kernel_file_disable_msg(const std::string &msg);
 
 bool handle_kernel_net_insert_msg(const std::string &msg);

@@ -12,6 +12,7 @@ bool handle_process_protection_disable_msg(const std::string &msg);
 bool handle_file_protection_enable_msg(const std::string &msg);
 bool handle_file_protection_disable_msg(const std::string &msg);
 bool handle_file_protection_set_msg(const std::string &msg);
+bool handle_file_protection_clear_msg(const std::string &msg);
 
 bool handle_net_protection_enable_msg(const std::string &msg);
 bool handle_net_protection_disable_msg(const std::string &msg);
