@@ -276,6 +276,14 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 }
 ```
 
+### 清空文件防护策略
+
+```json
+{
+    "type": "user::file::clear"
+}
+```
+
 ### 关闭文件防护
 
 关闭文件防护将清空所有文件防护策略.

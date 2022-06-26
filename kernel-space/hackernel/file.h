@@ -59,6 +59,7 @@ struct file_perm_node {
 int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm, int flag);
 int file_protect_enable(void);
 int file_protect_disable(void);
+int file_perm_tree_clear(void);
 int file_protect_init(void);
 int file_protect_destory(void);
 
@@ -67,7 +68,8 @@ enum {
 	FILE_PROTECT_REPORT,
 	FILE_PROTECT_ENABLE,
 	FILE_PROTECT_DISABLE,
-	FILE_PROTECT_SET
+	FILE_PROTECT_SET,
+	FILE_PROTECT_CLEAR,
 };
 
 enum{
