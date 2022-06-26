@@ -173,6 +173,9 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		code = file_perm_set(fsid, ino, perm, flag);
 		kfree(path);
 		break;
+	case FILE_PROTECT_CLEAR:
+		code = file_perm_tree_clear();
+		goto response;
 	default:
 		ERR("Unknown file protect command");
 	}

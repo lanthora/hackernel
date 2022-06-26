@@ -121,7 +121,7 @@ static void file_perm_tree_delete(fsid_t fsid, ino_t ino)
 	write_unlock(&file_perm_tree_lock);
 }
 
-static int file_perm_tree_clear(void)
+int file_perm_tree_clear(void)
 {
 	struct file_perm_node *data, *n;
 	write_lock(&file_perm_tree_lock);
@@ -566,7 +566,6 @@ int file_protect_disable(void)
 	UNREG_HOOK(symlinkat);
 	UNREG_HOOK(mknod);
 	UNREG_HOOK(mknodat);
-	file_perm_tree_clear();
 	return 0;
 }
 
@@ -577,5 +576,7 @@ int file_protect_init(void)
 
 int file_protect_destory(void)
 {
-	return file_protect_disable();
+	file_protect_disable();
+	file_perm_tree_clear();
+	return 0;
 }
