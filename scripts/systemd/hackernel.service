@@ -3,6 +3,7 @@ Description=Hackernel
 
 [Service]
 ExecStart=/usr/sbin/hackernel
+Nice=-20
 
 [Install]
 WantedBy=multi-user.target
