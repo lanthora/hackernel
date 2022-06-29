@@ -174,10 +174,12 @@ int ipc_server::broadcast_msg_to_subscriber(const std::string &section, const st
         peer = (struct sockaddr *)conn.peer.get();
         len = conn.len;
 
-        if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1)
+        if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1) {
+            WARN("send error, peer=[%s], msg=[%s]", ((struct sockaddr_un *)peer)->sun_path, msg.data());
             it = sub_[section].erase(it);
-        else
+        } else {
             ++it;
+        }
     }
     return 0;
 }
