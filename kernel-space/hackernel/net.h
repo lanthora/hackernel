@@ -104,6 +104,7 @@ int net_protect_enable(void);
 int net_protect_disable(void);
 int net_protect_init(void);
 int net_protect_destory(void);
+int net_policy_clear(void);
 
 enum {
 	NET_PROTECT_UNSPEC,
@@ -111,6 +112,7 @@ enum {
 	NET_PROTECT_DISABLE,
 	NET_PROTECT_INSERT,
 	NET_PROTECT_DELETE,
+	NET_PROTECT_CLEAR,
 };
 int net_protect_handler(struct sk_buff *skb, struct genl_info *info);
 

@@ -109,7 +109,6 @@ int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	case NET_PROTECT_ENABLE:
 		code = net_protect_enable();
 		goto response;
-
 	case NET_PROTECT_DISABLE:
 		code = net_protect_disable();
 		goto response;
@@ -127,9 +126,11 @@ int net_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		}
 		code = net_policy_delete(nla_get_s32(info->attrs[NET_A_ID]));
 		goto response;
-	default: {
+	case NET_PROTECT_CLEAR:
+		code = net_policy_clear();
+		goto response;
+	default:
 		ERR("Unknown process protect command");
-	}
 	}
 
 response:

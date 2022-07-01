@@ -66,7 +66,7 @@ int net_policy_delete(policy_id_t id)
 	return 0;
 }
 
-static int net_policy_clear(void)
+int net_policy_clear(void)
 {
 	struct net_policy_t *pos, *n;
 	write_lock(&policys_lock);
@@ -298,7 +298,6 @@ int net_protect_disable(void)
 {
 	write_lock(&nf_lock);
 	if (hooked) {
-		net_policy_clear();
 		nf_unregister_net_hooks(&init_net, net_policy_ops,
 					ARRAY_SIZE(net_policy_ops));
 		hooked = false;
@@ -314,5 +313,7 @@ int net_protect_init(void)
 
 int net_protect_destory(void)
 {
-	return net_protect_disable();
+	net_policy_clear();
+	net_protect_disable();
+	return 0;
 }
