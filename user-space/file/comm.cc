@@ -147,7 +147,7 @@ int handle_genl_file_protection(struct nl_cache_ops *unused, struct genl_cmd *ge
         code = nla_get_s32(genl_info->attrs[FILE_A_STATUS_CODE]);
         generate_file_protection_clear_msg(session, code, msg);
         broadcaster::global().broadcast(msg);
-        DBG("kernel::file::set, session=[%d] code=[%d]", session, code);
+        DBG("kernel::file::clear, session=[%d] code=[%d]", session, code);
         break;
 
     default:

@@ -18,6 +18,7 @@ bool handle_net_protection_enable_msg(const std::string &msg);
 bool handle_net_protection_disable_msg(const std::string &msg);
 bool handle_net_protection_insert_msg(const std::string &msg);
 bool handle_net_protection_delete_msg(const std::string &msg);
+bool handle_net_protection_clear_msg(const std::string &msg);
 
 } // namespace hackernel
 

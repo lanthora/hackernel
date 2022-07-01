@@ -24,6 +24,7 @@ enum {
     NET_PROTECT_DISABLE,
     NET_PROTECT_INSERT,
     NET_PROTECT_DELETE,
+    NET_PROTECT_CLEAR,
 };
 
 int handle_genl_net_protection(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
@@ -70,6 +71,7 @@ int enable_net_protection(int32_t session);
 int disable_net_protection(int32_t session);
 int insert_net_policy(int32_t session, const struct net_policy *policy);
 int delete_net_policy(int32_t session, net_policy_id id);
+int clear_net_policy(int32_t session);
 
 #define FLAG_NET_INBOUND (0b00000001)
 #define FLAG_NET_OUTBOUND (0b00000010)
