@@ -26,6 +26,7 @@ bool handle_kernel_net_insert_msg(const std::string &msg);
 bool handle_kernel_net_delete_msg(const std::string &msg);
 bool handle_kernel_net_enable_msg(const std::string &msg);
 bool handle_kernel_net_disable_msg(const std::string &msg);
+bool handle_kernel_net_clear_msg(const std::string &msg);
 
 bool handle_audit_process_report_msg(const std::string &msg);
 

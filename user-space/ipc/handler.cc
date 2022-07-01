@@ -205,6 +205,7 @@ bool handle_kernel_net_delete_msg(const std::string &msg) {
     ipc_server::global().send_msg_to_client(doc);
     return true;
 }
+
 bool handle_kernel_net_enable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::enable")
@@ -213,9 +214,19 @@ bool handle_kernel_net_enable_msg(const std::string &msg) {
     ipc_server::global().send_msg_to_client(doc);
     return true;
 }
+
 bool handle_kernel_net_disable_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::disable")
+        return false;
+
+    ipc_server::global().send_msg_to_client(doc);
+    return true;
+}
+
+bool handle_kernel_net_clear_msg(const std::string &msg) {
+    nlohmann::json doc = json::parse(msg);
+    if (doc["type"] != "kernel::net::clear")
         return false;
 
     ipc_server::global().send_msg_to_client(doc);

@@ -25,6 +25,7 @@ int start_dispatcher() {
     dispatcher->add_message_handler(handle_net_protection_disable_msg);
     dispatcher->add_message_handler(handle_net_protection_insert_msg);
     dispatcher->add_message_handler(handle_net_protection_delete_msg);
+    dispatcher->add_message_handler(handle_net_protection_clear_msg);
 
     broadcaster::global().add_audience(dispatcher);
     DBG("dispatcher enter");

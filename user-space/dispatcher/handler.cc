@@ -258,4 +258,14 @@ bool handle_net_protection_delete_msg(const std::string &msg) {
     return true;
 }
 
+bool handle_net_protection_clear_msg(const std::string &msg) {
+    nlohmann::json doc = json::parse(msg);
+    if (doc["type"] != "user::net::clear")
+        return false;
+
+    int32_t session = doc["session"];
+    clear_net_policy(session);
+    return true;
+}
+
 }; // namespace hackernel

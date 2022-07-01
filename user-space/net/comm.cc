@@ -73,6 +73,17 @@ int delete_net_policy(int32_t session, net_policy_id id) {
     return 0;
 }
 
+int clear_net_policy(int32_t session) {
+    struct nl_msg *message;
+
+    message = alloc_hackernel_nlmsg(HACKERNEL_C_NET_PROTECT);
+    nla_put_s32(message, NET_A_SESSION, session);
+    nla_put_u8(message, NET_A_OP_TYPE, NET_PROTECT_CLEAR);
+    send_free_hackernel_nlmsg(message);
+
+    return 0;
+}
+
 static int generate_net_protection_enable_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::enable";
@@ -100,6 +111,14 @@ static int generate_net_protection_insert_msg(const int32_t &session, const int3
 static int generate_net_protection_delete_msg(const int32_t &session, const int32_t &code, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::net::delete";
+    doc["code"] = code;
+    msg = generate_broadcast_msg(session, doc);
+    return 0;
+}
+
+static int generate_net_protection_clear_msg(const int32_t &session, const int32_t &code, std::string &msg) {
+    nlohmann::json doc;
+    doc["type"] = "kernel::net::clear";
     doc["code"] = code;
     msg = generate_broadcast_msg(session, doc);
     return 0;
@@ -144,6 +163,14 @@ int handle_genl_net_protection(struct nl_cache_ops *unused, struct genl_cmd *gen
         generate_net_protection_delete_msg(session, code, msg);
         broadcaster::global().broadcast(msg);
         DBG("kernel::net::delete, session=[%d] code=[%d]", session, code);
+        break;
+
+    case NET_PROTECT_CLEAR:
+        session = nla_get_s32(genl_info->attrs[NET_A_SESSION]);
+        code = nla_get_s32(genl_info->attrs[NET_A_STATUS_CODE]);
+        generate_net_protection_clear_msg(session, code, msg);
+        broadcaster::global().broadcast(msg);
+        DBG("kernel::net::clear, session=[%d] code=[%d]", session, code);
         break;
 
     default:

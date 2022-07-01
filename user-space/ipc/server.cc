@@ -68,6 +68,7 @@ int ipc_server::init() {
     audience_->add_message_handler(handle_kernel_net_delete_msg);
     audience_->add_message_handler(handle_kernel_net_enable_msg);
     audience_->add_message_handler(handle_kernel_net_disable_msg);
+    audience_->add_message_handler(handle_kernel_net_clear_msg);
     audience_->add_message_handler(handle_user_sub_msg);
     audience_->add_message_handler(handle_user_unsub_msg);
     audience_->add_message_handler(handle_user_ctrl_exit_msg);
@@ -175,7 +176,7 @@ int ipc_server::broadcast_msg_to_subscriber(const std::string &section, const st
         len = conn.len;
 
         if (sendto(socket_, msg.data(), msg.size(), 0, peer, len) == -1) {
-            WARN("send error, peer=[%s], msg=[%s]", ((struct sockaddr_un *)peer)->sun_path, msg.data());
+            WARN("broadcast error, peer=[%s], msg=[%s]", ((struct sockaddr_un *)peer)->sun_path, msg.data());
             it = sub_[section].erase(it);
         } else {
             ++it;
