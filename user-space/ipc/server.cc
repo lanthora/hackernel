@@ -202,7 +202,7 @@ bool ipc_server::check_token(const nlohmann::json &data) {
 
 int ipc_server::start_unix_domain_socket() {
     static const char *SOCK_PATH = "/tmp/hackernel.sock";
-    static const int BUFFER_SIZE = 1024;
+    static const int BUFFER_SIZE = 1024 * 1024;
 
     char buffer[BUFFER_SIZE + 1];
     struct sockaddr_un server;
