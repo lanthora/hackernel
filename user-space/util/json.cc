@@ -6,7 +6,7 @@ namespace hackernel {
 
 namespace json {
 
-static const size_t json_cache_size = 8;
+static const size_t json_cache_size = 1024;
 static lru<std::string, nlohmann::json> cache(json_cache_size);
 
 std::string dump(const nlohmann::json &doc) {
