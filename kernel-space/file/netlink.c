@@ -26,7 +26,7 @@ struct nla_policy file_policy[FILE_A_MAX + 1] = {
 
 extern struct genl_family genl_family;
 
-int file_protect_report_to_userspace(struct file_perm_data *data)
+int file_protect_report_event(struct file_perm_data *data)
 {
 	int error = 0;
 	struct sk_buff *skb = NULL;
@@ -35,9 +35,6 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	const file_perm_t perm = data->marked_perm;
 	const fsid_t fsid = data->fsid;
 	const ino_t ino = data->ino;
-
-	int errcnt;
-	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
 
 	if (!filename)
 		ERR("filename is null");
@@ -89,25 +86,11 @@ int file_protect_report_to_userspace(struct file_perm_data *data)
 	genlmsg_end(skb, head);
 
 	error = genlmsg_unicast(hackernel_net, skb, hackernel_portid);
-	if (!error) {
-		errcnt = atomic_xchg(&atomic_errcnt, 0);
-		if (unlikely(errcnt))
-			ERR("errcnt=[%u]", errcnt);
-
-		goto out;
+	if (error) {
+		ERR("genlmsg_unicast failed error=[%d]", error);
+		conn_check_set_dead();
 	}
 
-	atomic_inc(&atomic_errcnt);
-
-	if (error == -EAGAIN) {
-		goto out;
-	}
-
-	conn_check_set_dead();
-
-	ERR("genlmsg_unicast failed error=[%d]", error);
-
-out:
 	return 0;
 errout:
 	nlmsg_free(skb);

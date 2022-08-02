@@ -3,6 +3,7 @@
 #include "hackernel/handshake.h"
 #include "hackernel/log.h"
 #include "hackernel/net.h"
+#include "hackernel/watchdog.h"
 
 extern struct genl_family genl_family;
 
@@ -178,4 +179,81 @@ response:
 errout:
 	nlmsg_free(reply);
 	return 0;
+}
+
+int net_protect_report_event(const struct net_event_t *event)
+{
+	int error = 0;
+	struct sk_buff *skb = NULL;
+	void *head = NULL;
+
+	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+
+	if ((!skb)) {
+		ERR("genlmsg_new failed");
+		error = -ENOMEM;
+		goto errout;
+	}
+
+	head = genlmsg_put(skb, hackernel_portid, 0, &genl_family, 0,
+			   HACKERNEL_C_NET_PROTECT);
+	if (!head) {
+		ERR("genlmsg_put failed");
+		error = -ENOMEM;
+		goto errout;
+	}
+	error = nla_put_u8(skb, NET_A_OP_TYPE, NET_PROTECT_REPORT);
+	if (error) {
+		ERR("nla_put_u8 failed");
+		goto errout;
+	}
+
+	error = nla_put_u8(skb, NET_A_PROTOCOL_BEGIN, event->protocol);
+	if (error) {
+		ERR("nla_put_u32 failed");
+		goto errout;
+	}
+
+	error = nla_put_u32(skb, NET_A_ADDR_SRC_BEGIN, event->saddr);
+	if (error) {
+		ERR("nla_put_u32 failed");
+		goto errout;
+	}
+
+	error = nla_put_u32(skb, NET_A_ADDR_DST_BEGIN, event->daddr);
+	if (error) {
+		ERR("nla_put_u32 failed");
+		goto errout;
+	}
+
+	error = nla_put_u16(skb, NET_A_PORT_SRC_BEGIN, event->sport);
+	if (error) {
+		ERR("nla_put_u16 failed");
+		goto errout;
+	}
+
+	error = nla_put_u16(skb, NET_A_PORT_DST_BEGIN, event->dport);
+	if (error) {
+		ERR("nla_put_u16 failed");
+		goto errout;
+	}
+
+	error = nla_put_u32(skb, NET_A_ID, event->policy);
+	if (error) {
+		ERR("nla_put_u32 failed");
+		goto errout;
+	}
+
+	genlmsg_end(skb, head);
+
+	error = genlmsg_unicast(hackernel_net, skb, hackernel_portid);
+	if (error) {
+		ERR("genlmsg_unicast failed error=[%d]", error);
+		conn_check_set_dead();
+	}
+
+	return 0;
+errout:
+	nlmsg_free(skb);
+	return error;
 }

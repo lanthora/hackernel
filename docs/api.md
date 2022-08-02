@@ -367,6 +367,15 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 }
 ```
 
+### 订阅网络策略命中事件
+
+```json
+{
+    "type": "user::msg::sub",
+    "section": "kernel::net::report"
+}
+```
+
 ### 关闭网络防护
 
 关闭网络防护不清空的所有网络防护策略,再次启动时保留的策略立刻生效.
