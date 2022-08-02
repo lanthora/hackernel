@@ -3,6 +3,7 @@
 #include "hackernel/ipc.h"
 #include "hackernel/net.h"
 #include "nlc/netlink.h"
+#include <arpa/inet.h>
 #include <netlink/genl/genl.h>
 #include <netlink/msg.h>
 #include <nlohmann/json.hpp>
@@ -124,11 +125,34 @@ static int generate_net_protection_clear_msg(const int32_t &session, const int32
     return 0;
 }
 
+static int generate_net_protection_report_msg(uint8_t protocol, uint32_t saddr, uint32_t daddr, uint16_t sport,
+                                              uint16_t dport, uint32_t policy, std::string &msg) {
+    nlohmann::json doc;
+
+    struct in_addr ip_addr;
+
+    doc["type"] = "kernel::net::report";
+    doc["protocol"] = protocol;
+    ip_addr.s_addr = htonl(saddr);
+    doc["saddr"] = inet_ntoa(ip_addr);
+    ip_addr.s_addr = htonl(daddr);
+    doc["daddr"] = inet_ntoa(ip_addr);
+    doc["sport"] = sport;
+    doc["dport"] = dport;
+    doc["policy"] = policy;
+    msg = generate_system_broadcast_msg(doc);
+    return 0;
+}
+
 int handle_genl_net_protection(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
                                void *arg) {
     u_int8_t type;
     int code;
     int32_t session;
+    uint8_t protocol;
+    uint32_t saddr, daddr;
+    uint16_t sport, dport;
+    uint32_t policy;
     std::string msg;
 
     type = nla_get_u8(genl_info->attrs[NET_A_OP_TYPE]);
@@ -171,6 +195,18 @@ int handle_genl_net_protection(struct nl_cache_ops *unused, struct genl_cmd *gen
         generate_net_protection_clear_msg(session, code, msg);
         broadcaster::global().broadcast(msg);
         DBG("kernel::net::clear, session=[%d] code=[%d]", session, code);
+        break;
+
+    case NET_PROTECT_REPORT:
+        protocol = nla_get_u8(genl_info->attrs[NET_A_PROTOCOL_BEGIN]);
+        saddr = nla_get_u32(genl_info->attrs[NET_A_ADDR_SRC_BEGIN]);
+        daddr = nla_get_u32(genl_info->attrs[NET_A_ADDR_DST_BEGIN]);
+        sport = nla_get_u16(genl_info->attrs[NET_A_PORT_SRC_BEGIN]);
+        dport = nla_get_u16(genl_info->attrs[NET_A_PORT_DST_BEGIN]);
+        policy = nla_get_u32(genl_info->attrs[NET_A_ID]);
+        generate_net_protection_report_msg(protocol, saddr, daddr, sport, dport, policy, msg);
+        broadcaster::global().broadcast(msg);
+        DBG("kernel::net::report, msg=[%s]", msg.data());
         break;
 
     default:

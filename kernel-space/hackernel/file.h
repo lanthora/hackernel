@@ -72,13 +72,13 @@ enum {
 	FILE_PROTECT_CLEAR,
 };
 
-enum{
+enum {
 	FILE_UPDATE_FLAG_ANY,
 	FILE_UPDATE_FLAG_NEW,
 	FILE_UPDATE_FLAG_UPDATE,
 };
 
 int file_protect_handler(struct sk_buff *skb, struct genl_info *info);
-int file_protect_report_to_userspace(struct file_perm_data *data);
+int file_protect_report_event(struct file_perm_data *data);
 
 #endif

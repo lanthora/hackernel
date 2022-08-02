@@ -164,11 +164,11 @@ static int read_protect_check(struct file_perm_data *data)
 	const int is_audited = data->this_perm & READ_AUDIT_FLAG;
 	if (is_forbidden) {
 		data->marked_perm = READ_PROTECT_FLAG;
-		file_protect_report_to_userspace(data);
+		file_protect_report_event(data);
 	}
 	if (is_audited) {
 		data->marked_perm = READ_AUDIT_FLAG;
-		file_protect_report_to_userspace(data);
+		file_protect_report_event(data);
 	}
 	return is_forbidden;
 }
@@ -179,11 +179,11 @@ static int write_protect_check(struct file_perm_data *data)
 	const int is_audited = data->this_perm & WRITE_AUDIT_FLAG;
 	if (is_forbidden) {
 		data->marked_perm = WRITE_PROTECT_FLAG;
-		file_protect_report_to_userspace(data);
+		file_protect_report_event(data);
 	}
 	if (is_audited) {
 		data->marked_perm = WRITE_AUDIT_FLAG;
-		file_protect_report_to_userspace(data);
+		file_protect_report_event(data);
 	}
 	return is_forbidden;
 }
@@ -194,11 +194,11 @@ static int read_write_protect_check(struct file_perm_data *data)
 	const int is_audited = data->this_perm & RDWR_AUDIT_FLAG;
 	if (is_forbidden) {
 		data->marked_perm = RDWR_PROTECT_FLAG;
-		file_protect_report_to_userspace(data);
+		file_protect_report_event(data);
 	}
 	if (is_audited) {
 		data->marked_perm = RDWR_AUDIT_FLAG;
-		file_protect_report_to_userspace(data);
+		file_protect_report_event(data);
 	}
 	return is_forbidden;
 }
@@ -209,11 +209,11 @@ static int unlink_protect_check(struct file_perm_data *data)
 	const int is_audited = data->this_perm & UNLINK_AUDIT_FLAG;
 	if (is_forbidden) {
 		data->marked_perm = UNLINK_PROTECT_FLAG;
-		file_protect_report_to_userspace(data);
+		file_protect_report_event(data);
 	}
 	if (is_audited) {
 		data->marked_perm = UNLINK_AUDIT_FLAG;
-		file_protect_report_to_userspace(data);
+		file_protect_report_event(data);
 	}
 	return is_forbidden;
 }
@@ -224,11 +224,11 @@ static int rename_protect_check(struct file_perm_data *data)
 	const int is_audited = data->this_perm & RENAME_AUDIT_FLAG;
 	if (is_forbidden) {
 		data->marked_perm = RENAME_PROTECT_FLAG;
-		file_protect_report_to_userspace(data);
+		file_protect_report_event(data);
 	}
 	if (is_audited) {
 		data->marked_perm = RENAME_AUDIT_FLAG;
-		file_protect_report_to_userspace(data);
+		file_protect_report_event(data);
 	}
 	return is_forbidden;
 }

@@ -91,9 +91,20 @@ struct net_policy_t {
 #define FLAG_TCP_HANDSHAKE (1U << 2)
 #define FLAG_TCP_HEADER_ONLY (1U << 3)
 
-struct hknf_buff {
+struct net_event_t {
+	u8 protocol;
+	u32 saddr;
+	u32 daddr;
+	u16 sport;
+	u16 dport;
+	u32 policy;
+};
+
+struct net_policy_match {
 	const struct sk_buff *skb;
 	const struct nf_hook_state *state;
+	struct net_policy_t *policy;
+	struct net_event_t *event;
 };
 
 /* 内部会复制policy,需要自行释放入参的内存 */
@@ -113,7 +124,9 @@ enum {
 	NET_PROTECT_INSERT,
 	NET_PROTECT_DELETE,
 	NET_PROTECT_CLEAR,
+	NET_PROTECT_REPORT,
 };
 int net_protect_handler(struct sk_buff *skb, struct genl_info *info);
+int net_protect_report_event(const struct net_event_t *event);
 
 #endif

@@ -188,6 +188,15 @@ bool handle_kernel_file_disable_msg(const std::string &msg) {
     return true;
 }
 
+bool handle_kernel_net_report_msg(const std::string &msg) {
+    nlohmann::json doc = json::parse(msg);
+    if (doc["type"] != "kernel::net::report")
+        return false;
+
+    ipc_server::global().broadcast_msg_to_subscriber(doc);
+    return true;
+}
+
 bool handle_kernel_net_insert_msg(const std::string &msg) {
     nlohmann::json doc = json::parse(msg);
     if (doc["type"] != "kernel::net::insert")

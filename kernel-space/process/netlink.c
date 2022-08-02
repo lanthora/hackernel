@@ -1,9 +1,9 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "hackernel/netlink.h"
 #include "hackernel/handshake.h"
+#include "hackernel/log.h"
 #include "hackernel/process.h"
 #include "hackernel/watchdog.h"
-#include "hackernel/log.h"
 #include <linux/binfmts.h>
 
 extern struct genl_family genl_family;
@@ -19,13 +19,11 @@ struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
 	[PROCESS_A_ID] = { .type = NLA_S32 },
 };
 
-int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
+int process_protect_report_event(process_perm_id_t id, char *cmd)
 {
 	int error = 0;
 	struct sk_buff *skb = NULL;
 	void *head = NULL;
-	int errcnt;
-	static atomic_t atomic_errcnt = ATOMIC_INIT(0);
 
 	skb = genlmsg_new(MAX_ARG_STRLEN, GFP_KERNEL);
 
@@ -61,26 +59,15 @@ int process_protect_report_to_userspace(process_perm_id_t id, char *cmd)
 	}
 	genlmsg_end(skb, head);
 
-	error = genlmsg_unicast(&init_net, skb, hackernel_portid);
-	skb = NULL;
+	error = genlmsg_unicast(hackernel_net, skb, hackernel_portid);
 	if (error) {
 		ERR("genlmsg_unicast failed error=[%d]", error);
-		hackernel_portid = 0;
-		hackernel_tgid = 0;
 		conn_check_set_dead();
-		atomic_inc(&atomic_errcnt);
-		goto errout;
 	}
-
-	errcnt = atomic_xchg(&atomic_errcnt, 0);
-	if (unlikely(errcnt))
-		ERR("errcnt=[%u]", errcnt);
 
 	return 0;
 errout:
-	if (skb)
-		nlmsg_free(skb);
-
+	nlmsg_free(skb);
 	return error;
 }
 

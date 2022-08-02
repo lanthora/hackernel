@@ -25,6 +25,7 @@ enum {
     NET_PROTECT_INSERT,
     NET_PROTECT_DELETE,
     NET_PROTECT_CLEAR,
+    NET_PROTECT_REPORT,
 };
 
 int handle_genl_net_protection(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,

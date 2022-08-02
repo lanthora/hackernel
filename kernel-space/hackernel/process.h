@@ -54,6 +54,6 @@ enum {
 	PROCESS_PROTECT_DISABLE
 };
 int process_protect_handler(struct sk_buff *skb, struct genl_info *info);
-int process_protect_report_to_userspace(process_perm_id_t id, char *arg);
+int process_protect_report_event(process_perm_id_t id, char *arg);
 
 #endif
