@@ -309,10 +309,10 @@ nc -uU /tmp/hackernel.sock <<< '{"type":"user::test::echo"}'
 |字段|范围|作用|
 |:-|:-|:-|
 |id|s32|删除时使用|
-|priority|u8|根据优先级命中,值越小优先级越高|
+|priority|u8|根据优先级命中,值越小优先级越高,相同优先级不保证命中顺序|
 |flags|s32|1:匹配入站, 2:匹配出站, 3:仅命中握手包, 4:仅命中不包含数据的TCP包|
-|response|u32|0:丢弃, 1:放行|
-|protocol|u8|IP层协议编号,如TCP为6|
+|response|u32|第1位表示是否放行,第2位表示是否产生日志.如0为不放行且不产生日志,3为放行且产生日志|
+|protocol|u8|IP层协议编号,如TCP为6,ICMP为1|
 
 通过"begin","end"标记的数值范围的均为闭区间.
 
