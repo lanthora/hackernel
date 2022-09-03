@@ -21,8 +21,8 @@ enum {
 
 #define READ_WRITE_MASK 3
 
-typedef unsigned long fsid_t;
-typedef unsigned long ino_t;
+typedef u64 hkfsid_t;
+typedef u64 hkino_t;
 typedef s32 file_perm_t;
 
 #define READ_PROTECT_FLAG (1U << 0)
@@ -43,20 +43,20 @@ typedef s32 file_perm_t;
 
 struct file_perm_data {
 	char *path;
-	fsid_t fsid;
-	ino_t ino;
+	hkfsid_t fsid;
+	hkino_t ino;
 	file_perm_t this_perm;
 	file_perm_t marked_perm;
 };
 
 struct file_perm_node {
 	struct rb_node node;
-	fsid_t fsid;
-	ino_t ino;
+	hkfsid_t fsid;
+	hkino_t ino;
 	file_perm_t perm;
 };
 
-int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm, int flag);
+int file_perm_set(const hkfsid_t fsid, hkino_t ino, file_perm_t perm, int flag);
 int file_protect_enable(void);
 int file_protect_disable(void);
 int file_perm_tree_clear(void);
