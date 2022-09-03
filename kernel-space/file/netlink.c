@@ -33,8 +33,8 @@ int file_protect_report_event(struct file_perm_data *data)
 	void *head = NULL;
 	const char *filename = data->path;
 	const file_perm_t perm = data->marked_perm;
-	const fsid_t fsid = data->fsid;
-	const ino_t ino = data->ino;
+	const hkfsid_t fsid = data->fsid;
+	const hkino_t ino = data->ino;
 
 	if (!filename)
 		ERR("filename is null");
@@ -66,13 +66,13 @@ int file_protect_report_event(struct file_perm_data *data)
 		goto errout;
 	}
 
-	error = nla_put(skb, FILE_A_FSID, sizeof(fsid_t), &fsid);
+	error = nla_put(skb, FILE_A_FSID, sizeof(hkfsid_t), &fsid);
 	if (error) {
 		ERR("nla_put_u64 failed");
 		goto errout;
 	}
 
-	error = nla_put(skb, FILE_A_INO, sizeof(ino_t), &ino);
+	error = nla_put(skb, FILE_A_INO, sizeof(hkino_t), &ino);
 	if (error) {
 		ERR("nla_put_u64 failed");
 		goto errout;
@@ -107,8 +107,8 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	s32 session;
 	file_perm_t perm;
 	char *path;
-	fsid_t fsid;
-	ino_t ino;
+	hkfsid_t fsid;
+	hkino_t ino;
 	int flag;
 
 	if (hackernel_user_check(info))
@@ -201,13 +201,13 @@ response:
 
 	INFO("fsid=[%lu], ino=[%lu]", fsid, ino);
 
-	error = nla_put(reply, FILE_A_FSID, sizeof(fsid_t), &fsid);
+	error = nla_put(reply, FILE_A_FSID, sizeof(hkfsid_t), &fsid);
 	if (error) {
 		ERR("nla_put_u64 failed");
 		goto errout;
 	}
 
-	error = nla_put(reply, FILE_A_INO, sizeof(ino_t), &ino);
+	error = nla_put(reply, FILE_A_INO, sizeof(hkino_t), &ino);
 	if (error) {
 		ERR("nla_put_u64 failed");
 		goto errout;

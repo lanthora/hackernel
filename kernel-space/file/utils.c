@@ -1,5 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "file/utils.h"
+#include "hackernel/file.h"
 #include <linux/file.h>
 #include <linux/fs_struct.h>
 #include <linux/namei.h>
@@ -216,7 +217,7 @@ errout:
 	return NULL;
 }
 
-int file_id_get(const char *name, unsigned long *fsid, unsigned long *ino)
+int file_id_get(const char *name, hkfsid_t *fsid, hkino_t *ino)
 {
 	int error;
 	struct path path;
@@ -229,7 +230,7 @@ int file_id_get(const char *name, unsigned long *fsid, unsigned long *ino)
 
 	vfs_statfs(&path, &kstatfs);
 
-	memcpy(fsid, &kstatfs.f_fsid, sizeof(unsigned long));
+	memcpy(fsid, &kstatfs.f_fsid, sizeof(hkfsid_t));
 	*ino = path.dentry->d_inode->i_ino;
 	path_put(&path);
 	return 0;

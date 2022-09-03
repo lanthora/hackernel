@@ -16,7 +16,7 @@ static inline bool file_perm_node_cmp(const struct file_perm_node *a,
 	return a->fsid == b->fsid ? a->ino < b->ino : a->fsid < b->fsid;
 }
 
-static int file_perm_tree_update(fsid_t fsid, ino_t ino, file_perm_t perm,
+static int file_perm_tree_update(hkfsid_t fsid, hkino_t ino, file_perm_t perm,
 				 int flag)
 {
 	struct rb_node **new, *parent;
@@ -65,7 +65,7 @@ static int file_perm_tree_update(fsid_t fsid, ino_t ino, file_perm_t perm,
 	return error;
 }
 
-static file_perm_t file_perm_tree_search(fsid_t fsid, ino_t ino)
+static file_perm_t file_perm_tree_search(hkfsid_t fsid, hkino_t ino)
 {
 	const struct file_perm_node tmp = { .fsid = fsid, .ino = ino };
 	struct rb_node *node;
@@ -94,7 +94,7 @@ static file_perm_t file_perm_tree_search(fsid_t fsid, ino_t ino)
 	return perm;
 }
 
-static void file_perm_tree_delete(fsid_t fsid, ino_t ino)
+static void file_perm_tree_delete(hkfsid_t fsid, hkino_t ino)
 {
 	const struct file_perm_node tmp = { .fsid = fsid, .ino = ino };
 	struct rb_node *node;
@@ -132,12 +132,12 @@ int file_perm_tree_clear(void)
 	return 0;
 }
 
-static file_perm_t file_perm_get(const fsid_t fsid, const ino_t ino)
+static file_perm_t file_perm_get(const hkfsid_t fsid, const hkino_t ino)
 {
 	return file_perm_tree_search(fsid, ino);
 }
 
-int file_perm_set(const fsid_t fsid, ino_t ino, file_perm_t perm, int flag)
+int file_perm_set(const hkfsid_t fsid, hkino_t ino, file_perm_t perm, int flag)
 {
 	if (fsid == BAD_FSID || ino == BAD_INO)
 		return -EINVAL;
