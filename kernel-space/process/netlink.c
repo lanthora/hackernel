@@ -25,12 +25,11 @@ int process_protect_report_event(process_perm_id_t id, char *cmd)
 	struct sk_buff *skb = NULL;
 	void *head = NULL;
 
-	skb = genlmsg_new(MAX_ARG_STRLEN, GFP_KERNEL);
-
+	skb = genlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
 	if (!skb) {
 		ERR("genlmsg_new failed");
 		error = -ENOMEM;
-		goto errout;
+		goto out_free;
 	}
 
 	head = genlmsg_put(skb, hackernel_portid, 0, &genl_family, 0,
@@ -38,24 +37,24 @@ int process_protect_report_event(process_perm_id_t id, char *cmd)
 	if (!head) {
 		ERR("genlmsg_put failed");
 		error = -ENOMEM;
-		goto errout;
+		goto out_free;
 	}
 	error = nla_put_u8(skb, PROCESS_A_OP_TYPE, PROCESS_PROTECT_REPORT);
 	if (error) {
 		ERR("nla_put_u8 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	error = nla_put_s32(skb, PROCESS_A_ID, id);
 	if (error) {
 		ERR("nla_put_s32 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	error = nla_put_string(skb, PROCESS_A_NAME, cmd);
 	if (error) {
 		ERR("nla_put_string failed. errno=[%d]", error);
-		goto errout;
+		goto out_cancel;
 	}
 	genlmsg_end(skb, head);
 
@@ -66,7 +65,10 @@ int process_protect_report_event(process_perm_id_t id, char *cmd)
 	}
 
 	return 0;
-errout:
+
+out_cancel:
+	genlmsg_cancel(skb, head);
+out_free:
 	nlmsg_free(skb);
 	return error;
 }
@@ -108,22 +110,22 @@ int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		goto response;
 	}
 	default: {
-		ERR("Unknown process protect command");
+		ERR("unknown process protect command");
 	}
 	}
 
 response:
-	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+	reply = genlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
 	if (unlikely(!reply)) {
 		ERR("genlmsg_new failed");
-		goto errout;
+		goto out_free;
 	}
 
 	head = genlmsg_put_reply(reply, info, &genl_family, 0,
 				 HACKERNEL_C_PROCESS_PROTECT);
 	if (unlikely(!head)) {
 		ERR("genlmsg_put_reply failed");
-		goto errout;
+		goto out_free;
 	}
 
 	if (info->attrs[PROCESS_A_SESSION]) {
@@ -131,20 +133,20 @@ response:
 		error = nla_put_s32(reply, PROCESS_A_SESSION, session);
 		if (unlikely(error)) {
 			ERR("nla_put_s32 failed");
-			goto errout;
+			goto out_cancel;
 		}
 	}
 
 	error = nla_put_u32(reply, PROCESS_A_OP_TYPE, type);
 	if (unlikely(error)) {
 		ERR("nla_put_s32 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	error = nla_put_s32(reply, PROCESS_A_STATUS_CODE, code);
 	if (unlikely(error)) {
 		ERR("nla_put_s32 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	genlmsg_end(reply, head);
@@ -155,7 +157,9 @@ response:
 
 out:
 	return 0;
-errout:
+out_cancel:
+	genlmsg_cancel(reply, head);
+out_free:
 	nlmsg_free(reply);
 	return 0;
 }

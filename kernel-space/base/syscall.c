@@ -8,6 +8,8 @@ unsigned long *g_sys_call_table = NULL;
 static struct mm_struct *init_mm_ptr = NULL;
 static void init_mm_ptr_init(void)
 {
+	if (!hk_kallsyms_lookup_name)
+		return;
 	init_mm_ptr = (struct mm_struct *)hk_kallsyms_lookup_name("init_mm");
 }
 
@@ -131,18 +133,25 @@ void disable_wp(unsigned long addr)
 }
 #endif
 
-kallsyms_lookup_name_t hk_kallsyms_lookup_name;
+kallsyms_lookup_name_t hk_kallsyms_lookup_name = NULL;
 static struct kprobe hk_kp = { .symbol_name = "kallsyms_lookup_name" };
 static void hk_kallsyms_lookup_name_init(void)
 {
-	register_kprobe(&hk_kp);
+	if (register_kprobe(&hk_kp)) {
+		ERR("please set CONFIG_KALLSYMS_ALL=y");
+		goto out;
+	}
 	hk_kallsyms_lookup_name = (kallsyms_lookup_name_t)hk_kp.addr;
+out:
 	unregister_kprobe(&hk_kp);
 }
 
 static int sys_call_table_init(void)
 {
 	unsigned long syscall_kernel;
+	if (!hk_kallsyms_lookup_name)
+		return -EPERM;
+
 	syscall_kernel = hk_kallsyms_lookup_name("sys_call_table");
 	g_sys_call_table = (unsigned long *)syscall_kernel;
 	return 0;

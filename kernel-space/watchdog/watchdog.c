@@ -28,7 +28,7 @@ void watchdog_feed(struct watchdog *dog)
 
 void watchdog_start(struct watchdog *dog)
 {
-	dog->task = kthread_run(watchdog_kthread, dog, "hk_wdog");
+	dog->task = kthread_run(watchdog_kthread, dog, "watchdog/hackernel");
 	if (IS_ERR_OR_NULL(dog->task)) {
 		ERR("watchdog_kthread create failed");
 		dog->task = NULL;
