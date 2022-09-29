@@ -39,12 +39,11 @@ int file_protect_report_event(struct file_perm_data *data)
 	if (!filename)
 		ERR("filename is null");
 
-	skb = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
-
+	skb = genlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
 	if ((!skb)) {
 		ERR("genlmsg_new failed");
 		error = -ENOMEM;
-		goto errout;
+		goto out_free;
 	}
 
 	head = genlmsg_put(skb, hackernel_portid, 0, &genl_family, 0,
@@ -52,36 +51,36 @@ int file_protect_report_event(struct file_perm_data *data)
 	if (!head) {
 		ERR("genlmsg_put failed");
 		error = -ENOMEM;
-		goto errout;
+		goto out_free;
 	}
 	error = nla_put_u8(skb, FILE_A_OP_TYPE, FILE_PROTECT_REPORT);
 	if (error) {
 		ERR("nla_put_u8 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	error = nla_put_s32(skb, FILE_A_PERM, perm);
 	if (error) {
 		ERR("nla_put_s32 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	error = nla_put(skb, FILE_A_FSID, sizeof(hkfsid_t), &fsid);
 	if (error) {
 		ERR("nla_put_u64 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	error = nla_put(skb, FILE_A_INO, sizeof(hkino_t), &ino);
 	if (error) {
 		ERR("nla_put_u64 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	error = nla_put_string(skb, FILE_A_NAME, filename);
 	if (error) {
 		ERR("nla_put_string failed");
-		goto errout;
+		goto out_cancel;
 	}
 	genlmsg_end(skb, head);
 
@@ -92,7 +91,10 @@ int file_protect_report_event(struct file_perm_data *data)
 	}
 
 	return 0;
-errout:
+
+out_cancel:
+	genlmsg_cancel(skb, head);
+out_free:
 	nlmsg_free(skb);
 	return error;
 }
@@ -164,18 +166,17 @@ int file_protect_handler(struct sk_buff *skb, struct genl_info *info)
 	}
 
 response:
-
-	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+	reply = genlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
 	if (unlikely(!reply)) {
 		ERR("genlmsg_new failed");
-		goto errout;
+		goto out_free;
 	}
 
 	head = genlmsg_put_reply(reply, info, &genl_family, 0,
 				 HACKERNEL_C_FILE_PROTECT);
 	if (unlikely(!head)) {
 		ERR("genlmsg_put_reply failed");
-		goto errout;
+		goto out_free;
 	}
 
 	if (info->attrs[FILE_A_SESSION]) {
@@ -183,20 +184,20 @@ response:
 		error = nla_put_s32(reply, FILE_A_SESSION, session);
 		if (unlikely(error)) {
 			ERR("nla_put_s32 failed");
-			goto errout;
+			goto out_cancel;
 		}
 	}
 
 	error = nla_put_s32(reply, FILE_A_OP_TYPE, type);
 	if (unlikely(error)) {
 		ERR("nla_put_s32 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	error = nla_put_s32(reply, FILE_A_STATUS_CODE, code);
 	if (unlikely(error)) {
 		ERR("nla_put_s32 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	INFO("fsid=[%lu], ino=[%lu]", fsid, ino);
@@ -204,13 +205,13 @@ response:
 	error = nla_put(reply, FILE_A_FSID, sizeof(hkfsid_t), &fsid);
 	if (error) {
 		ERR("nla_put_u64 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	error = nla_put(reply, FILE_A_INO, sizeof(hkino_t), &ino);
 	if (error) {
 		ERR("nla_put_u64 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	genlmsg_end(reply, head);
@@ -220,7 +221,10 @@ response:
 		ERR("genlmsg_reply failed");
 
 	return 0;
-errout:
+
+out_cancel:
+	genlmsg_cancel(reply, head);
+out_free:
 	nlmsg_free(reply);
 	return 0;
 }

@@ -36,23 +36,23 @@ int handshake_handler(struct sk_buff *skb, struct genl_info *info)
 	tgid_init(nla_get_s32(info->attrs[HANDSHAKE_A_SYS_SERVICE_TGID]));
 
 response:
-	reply = genlmsg_new(NLMSG_GOODSIZE, GFP_KERNEL);
+	reply = genlmsg_new(NLMSG_DEFAULT_SIZE, GFP_KERNEL);
 	if (unlikely(!reply)) {
 		ERR("genlmsg_new failed");
-		goto errout;
+		goto out_free;
 	}
 
 	head = genlmsg_put_reply(reply, info, &genl_family, 0,
 				 HACKERNEL_C_HANDSHAKE);
 	if (unlikely(!head)) {
 		ERR("genlmsg_put_reply failed");
-		goto errout;
+		goto out_free;
 	}
 
 	error = nla_put_s32(reply, HANDSHAKE_A_STATUS_CODE, code);
 	if (unlikely(error)) {
 		ERR("nla_put_s32 failed");
-		goto errout;
+		goto out_cancel;
 	}
 
 	genlmsg_end(reply, head);
@@ -66,7 +66,10 @@ response:
 		ERR("genlmsg_reply failed");
 
 	return 0;
-errout:
+
+out_cancel:
+	genlmsg_cancel(reply, head);
+out_free:
 	nlmsg_free(reply);
 	return 0;
 }
