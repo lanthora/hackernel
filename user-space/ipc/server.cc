@@ -217,7 +217,11 @@ int ipc_server::start_unix_domain_socket() {
     server.sun_family = AF_UNIX;
     strcpy(server.sun_path, SOCK_PATH);
 
-    unlink(SOCK_PATH);
+    if (unlink(SOCK_PATH) && errno == EPERM) {
+        ERR("unlink unix domain socket file failed");
+        goto errout;
+    }
+
     if (bind(socket_, (struct sockaddr *)&server, sizeof(server)) == -1) {
         ERR("unix domain socket bind failed");
         goto errout;
@@ -272,10 +276,12 @@ int ipc_server::start_unix_domain_socket() {
     }
 
     close(socket_);
+    unlink(SOCK_PATH);
     return 0;
 
 errout:
     close(socket_);
+    unlink(SOCK_PATH);
     shutdown_service(HACKERNEL_UNIX_DOMAIN_SOCKET);
     return -EPERM;
 }

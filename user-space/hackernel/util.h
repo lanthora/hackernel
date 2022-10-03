@@ -30,6 +30,8 @@ EXTERN_C_BEGIN
         fflush(stdout);                                                                                                \
     } while (0)
 
+#define INFO WARN
+
 #if defined(DEBUG)
 #define DBG WARN
 #else
