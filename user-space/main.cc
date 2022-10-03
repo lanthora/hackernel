@@ -28,8 +28,8 @@ void shutdown_service(int status_code) {
     if (!running.exchange(false))
         return;
 
-    DBG("exit start, status_code=[%d]", status_code);
-
+    DBG("exit start");
+    INFO("shutdown code=[%d]", status_code);
     // 停止接受外部用户输入
     stop_ipc_server();
     stop_dispatcher();

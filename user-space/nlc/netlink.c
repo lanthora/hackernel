@@ -180,11 +180,19 @@ int start_netlink() {
         static const nfds_t nfds = 1;
         static const int timeout = HEARTBEAT_INTERVAL * 2;
         const int total = poll(&fds, nfds, timeout);
+
+        // 服务正常退出时,如果心跳线程先结束,会导致此处会出现超时,这属于正常逻辑,
+        // 不应该产生错误日志.因此检测到进程处于退出状态时跳出循环.
+        if (!is_running) {
+            break;
+        }
+
         // 返回值等于0时表示超时,在有心跳存在的情况下,
         // 等待时间超过两次心跳表示内核没有向上返回结果,是异常情况
         if (total == 0) {
             ERR("poll timeout");
             shutdown_service(HACKERNEL_NETLINK_WAIT);
+            break;
         }
         if (total == -1) {
             ERR("poll failed, errno=[%d] errmsg=[%s]", errno, strerror(errno));
