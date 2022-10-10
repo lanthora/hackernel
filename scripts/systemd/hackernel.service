@@ -3,7 +3,7 @@ Description=Hackernel
 
 [Service]
 ExecStart=/usr/bin/hackernel
-Nice=-20
+Nice=10
 Restart=on-success
 RestartSec=3
 
