@@ -7,8 +7,4 @@
 char *parse_argv_alloc(const char __user *const __user *argv);
 char *get_pwd_path_alloc(void);
 
-/* 用特殊ascii码间隔不同参数,0x1F是单元分隔符 */
-#define ASCII_US 0x1F
-#define ASCII_US_STR "\x1F"
-
 #endif

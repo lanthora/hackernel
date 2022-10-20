@@ -13,21 +13,21 @@
 
 namespace hackernel {
 
-bool process_protector::is_trusted(const std::string &cmd) {
+bool process_protector::is_trusted(const process_cmd_ctx &cmd) {
     std::shared_lock<std::shared_mutex> lock(mutex_);
     return trusted_.contains(cmd);
 }
 
-int process_protector::insert_trusted_cmd(const std::string &cmd) {
+int process_protector::insert_trusted_cmd(const process_cmd_ctx &cmd) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
-    DBG("trusted insert, cmd=[%s]", cmd.data());
+    DBG("trusted insert, argv=[%s]", cmd.argv.data());
     trusted_.insert(cmd);
     return 0;
 }
 
-int process_protector::delete_trusted_cmd(const std::string &cmd) {
+int process_protector::delete_trusted_cmd(const process_cmd_ctx &cmd) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
-    DBG("trusted delete, cmd=[%s]", cmd.data());
+    DBG("trusted delete, argv=[%s]", cmd.argv.data());
     trusted_.erase(cmd);
     return 0;
 }
@@ -39,7 +39,7 @@ int process_protector::clear_trusted_cmd() {
     return 0;
 }
 
-proc_perm process_protector::handle_new_cmd(const std::string &cmd) {
+proc_perm process_protector::handle_new_cmd(const process_cmd_ctx &cmd) {
     if (judge_ != PROCESS_ACCEPT && judge_ != PROCESS_REJECT)
         return PROCESS_ACCEPT;
 
@@ -50,10 +50,12 @@ proc_perm process_protector::handle_new_cmd(const std::string &cmd) {
     return judge_;
 }
 
-int process_protector::report(const std::string &cmd) {
+int process_protector::report(const process_cmd_ctx &cmd) {
     nlohmann::json doc;
     doc["type"] = "audit::proc::report";
-    doc["cmd"] = cmd.data();
+    doc["workdir"] = cmd.workdir;
+    doc["binary"] = cmd.binary;
+    doc["argv"] = cmd.argv;
     doc["judge"] = judge_;
     std::string msg = generate_system_broadcast_msg(doc);
     broadcaster::global().broadcast(msg);
@@ -76,9 +78,16 @@ bool process_protector::handle_process_msg(const std::string &msg) {
 
     if (type == "user::proc::trusted::insert") {
         nlohmann::json &data = doc["data"];
-        if (!data["cmd"].is_string())
+        if (!data["workdir"].is_string())
             return false;
-        std::string cmd = data["cmd"];
+        if (!data["binary"].is_string())
+            return false;
+        if (!data["argv"].is_string())
+            return false;
+        process_cmd_ctx cmd;
+        cmd.workdir = data["workdir"];
+        cmd.binary = data["binary"];
+        cmd.argv = data["argv"];
         data["code"] = insert_trusted_cmd(cmd);
         ipc::ipc_server::global().send_msg_to_client(doc);
         return true;
@@ -86,9 +95,16 @@ bool process_protector::handle_process_msg(const std::string &msg) {
 
     if (type == "user::proc::trusted::delete") {
         nlohmann::json &data = doc["data"];
-        if (!data["cmd"].is_string())
+        if (!data["workdir"].is_string())
             return false;
-        std::string cmd = data["cmd"];
+        if (!data["binary"].is_string())
+            return false;
+        if (!data["argv"].is_string())
+            return false;
+        process_cmd_ctx cmd;
+        cmd.workdir = data["workdir"];
+        cmd.binary = data["binary"];
+        cmd.argv = data["argv"];
         data["code"] = delete_trusted_cmd(cmd);
         ipc::ipc_server::global().send_msg_to_client(doc);
         return true;

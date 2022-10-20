@@ -51,27 +51,6 @@ static int get_path_prefix(int dirfd, char *prefix)
 	return 0;
 }
 
-/**
- * 通过这个函数获取根目录的路径,在一般情况下,根目录的路径是/
- * 但是在chroot或者使用namespace后,这个路径相应的会产生变化,
- * 目前的一个想法是:建立挂载点及对应的inode号的映射关系,并
- * 检查当前进程的根目录对应的inode号,以此获取映射关系
- */
-static char *get_root_path(void *buffer, size_t buffer_size)
-{
-	strcpy(buffer, "/");
-	return buffer;
-}
-
-static char *get_root_path_alloc(void)
-{
-	char *tmp, *buffer;
-	buffer = kzalloc(PATH_MAX, GFP_KERNEL);
-	tmp = get_root_path(buffer, PATH_MAX);
-	memmove(buffer, tmp, strnlen(tmp, PATH_MAX - 1) + 1);
-	return buffer;
-}
-
 static size_t backtrack(char *path, size_t slow)
 {
 	int cnt = 0;
@@ -159,7 +138,6 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 {
 	char *filename = NULL;
 	char *path = NULL;
-	char *retval = NULL;
 	int error;
 
 	path = kzalloc(PATH_MAX, GFP_KERNEL);
@@ -181,17 +159,12 @@ char *get_absolute_path_alloc(int dirfd, char __user *pathname)
 	strncat(path, filename, PATH_MAX);
 
 	path = adjust_path(path);
-	retval = get_root_path_alloc();
-	strcat(retval, path);
-
-	kfree(path);
 	kfree(filename);
-	return retval;
+	return path;
 
 errout:
 	kfree(path);
 	kfree(filename);
-	kfree(retval);
 	return NULL;
 }
 

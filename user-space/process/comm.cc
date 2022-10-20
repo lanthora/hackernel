@@ -30,8 +30,12 @@ int disable_process_protection(int32_t session) {
     return update_process_protection_status(session, PROCESS_PROTECT_DISABLE);
 }
 
-proc_perm check_process_permission(char *cmd) {
+proc_perm check_process_permission(const std::string &workdir, const std::string &binary, const std::string &argv) {
     auto &auditor = process_protector::global();
+    process_cmd_ctx cmd;
+    cmd.workdir = workdir;
+    cmd.binary = binary;
+    cmd.argv = argv;
     return auditor.handle_new_cmd(cmd);
 }
 
@@ -46,10 +50,13 @@ int reply_process_permission(proc_perm_id id, proc_perm perm) {
     return 0;
 }
 
-static int generate_process_protection_report_msg(const std::string &cmd, std::string &msg) {
+static int generate_process_protection_report_msg(const std::string &workdir, const std::string &binary,
+                                                  const std::string &argv, std::string &msg) {
     nlohmann::json doc;
     doc["type"] = "kernel::proc::report";
-    doc["cmd"] = cmd;
+    doc["workdir"] = workdir;
+    doc["binary"] = binary;
+    doc["argv"] = argv;
     msg = generate_system_broadcast_msg(doc);
     return 0;
 }
@@ -74,7 +81,7 @@ int handle_genl_process_protection(struct nl_cache_ops *unused, struct genl_cmd 
                                    void *arg) {
     u_int8_t type = nla_get_u8(genl_info->attrs[PROCESS_A_OP_TYPE]);
     int error, id, code, session;
-    char *name;
+    char *workdir, *binary, *argv;
     std::string msg;
 
     switch (type) {
@@ -96,15 +103,17 @@ int handle_genl_process_protection(struct nl_cache_ops *unused, struct genl_cmd 
 
     case PROCESS_PROTECT_REPORT:
         id = nla_get_s32(genl_info->attrs[PROCESS_A_ID]);
-        name = nla_get_string(genl_info->attrs[PROCESS_A_NAME]);
-        DBG("kernel::proc::report, id=[%d] name=[%s]", id, name);
+        workdir = nla_get_string(genl_info->attrs[PROCESS_A_WORKDIR]);
+        binary = nla_get_string(genl_info->attrs[PROCESS_A_BINARY]);
+        argv = nla_get_string(genl_info->attrs[PROCESS_A_ARGV]);
+        DBG("kernel::proc::report, id=[%d] workdir=[%s] binary=[%s] argv=[%s]", id, workdir, binary, argv);
 
-        generate_process_protection_report_msg(name, msg);
+        generate_process_protection_report_msg(workdir, binary, argv, msg);
         broadcaster::global().broadcast(msg);
 
-        error = reply_process_permission(id, check_process_permission(name));
+        error = reply_process_permission(id, check_process_permission(workdir, binary, argv));
         if (error)
-            WARN("reply_process_permission failed, id=[%d] name=[%s]", id, name);
+            WARN("reply_process_permission failed, id=[%d] argv=[%s]", id, argv);
 
         break;
 

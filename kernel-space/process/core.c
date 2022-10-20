@@ -169,34 +169,33 @@ static int process_perm_delele(const process_perm_id_t id)
 	return 0;
 }
 
-static int process_perm_condition(process_perm_id_t id, process_perm_t *retval)
+static int process_perm_cond(process_perm_id_t id, process_perm_t *retval)
 {
 	*retval = process_perm_search(id);
 	return *retval;
 }
 
-static process_perm_t process_protect_status(char *msg)
+static process_perm_t process_protect_status(struct process_cmd_context *ctx)
 {
 	int error;
-	static process_perm_id_t id;
 	process_perm_t retval = PROCESS_INVAILD;
 	const unsigned long timeout = msecs_to_jiffies(100U);
 
-	id = atomic_inc_return(&atomic_process_id);
+	ctx->id = atomic_inc_return(&atomic_process_id);
 
-	error = process_perm_insert(id);
+	error = process_perm_insert(ctx->id);
 	if (error) {
 		ERR("process_perm_insert failed");
 		goto out;
 	}
 
-	error = process_protect_report_event(id, msg);
+	error = process_protect_report_event(ctx);
 	if (error) {
 		ERR("report to userspace failed");
 		goto out;
 	}
 
-	wait_event_timeout(wq, process_perm_condition(id, &retval), timeout);
+	wait_event_timeout(wq, process_perm_cond(ctx->id, &retval), timeout);
 
 	if (retval == PROCESS_WATT) {
 		ERR("get process protect status timeout");
@@ -204,7 +203,7 @@ static process_perm_t process_protect_status(char *msg)
 	}
 
 out:
-	process_perm_delele(id);
+	process_perm_delele(ctx->id);
 	return retval;
 }
 
@@ -212,11 +211,7 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 			       char __user *__user *argv,
 			       char __user *__user *envp, int flag)
 {
-	char *msg = NULL;
-	char *pwd = NULL;
-	char *exec = NULL;
-	char *cmd = NULL;
-
+	struct process_cmd_context ctx = {};
 	int error = 0;
 	process_perm_t perm = PROCESS_INVAILD;
 
@@ -226,39 +221,26 @@ static int sys_execveat_helper(int dirfd, char __user *pathname,
 	if (hackernel_trusted_proccess())
 		goto out;
 
-	msg = kzalloc(MAX_ARG_STRLEN, GFP_KERNEL);
-	if (!msg)
+	ctx.workdir = get_pwd_path_alloc();
+	if (!ctx.workdir)
 		goto out;
 
-	pwd = get_pwd_path_alloc();
-	if (!pwd)
-		goto out;
-	strcat(msg, pwd);
-
-	exec = get_absolute_path_alloc(dirfd, pathname);
-	if (!exec)
-		goto out;
-	strcat(msg, ASCII_US_STR);
-	strcat(msg, exec);
-
-	cmd = parse_argv_alloc((const char *const *)argv);
-	if (!cmd)
+	ctx.binary = get_absolute_path_alloc(dirfd, pathname);
+	if (!ctx.binary)
 		goto out;
 
-	strcat(msg, ASCII_US_STR);
-	strcat(msg, cmd);
+	ctx.argv = parse_argv_alloc((const char *const *)argv);
+	if (!ctx.argv)
+		goto out;
 
-	msg = adjust_path(msg);
-
-	perm = process_protect_status(msg);
+	perm = process_protect_status(&ctx);
 	if (perm == PROCESS_REJECT)
 		error = -EPERM;
 
 out:
-	kfree(msg);
-	kfree(pwd);
-	kfree(exec);
-	kfree(cmd);
+	kfree(ctx.workdir);
+	kfree(ctx.binary);
+	kfree(ctx.argv);
 
 	return error;
 }
