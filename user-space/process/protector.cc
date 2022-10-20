@@ -20,14 +20,14 @@ bool process_protector::is_trusted(const process_cmd_ctx &cmd) {
 
 int process_protector::insert_trusted_cmd(const process_cmd_ctx &cmd) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
-    DBG("trusted insert, argv=[%s]", cmd.argv.data());
+    DBG("trusted insert, workdir=[%s] binary=[%s] argv=[%s]", cmd.workdir.data(), cmd.binary.data(), cmd.argv.data());
     trusted_.insert(cmd);
     return 0;
 }
 
 int process_protector::delete_trusted_cmd(const process_cmd_ctx &cmd) {
     std::unique_lock<std::shared_mutex> lock(mutex_);
-    DBG("trusted delete, argv=[%s]", cmd.argv.data());
+    DBG("trusted delete, workdir=[%s] binary=[%s] argv=[%s]", cmd.workdir.data(), cmd.binary.data(), cmd.argv.data());
     trusted_.erase(cmd);
     return 0;
 }

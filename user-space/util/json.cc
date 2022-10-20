@@ -11,7 +11,6 @@ static lru<std::string, nlohmann::json> cache(json_cache_size);
 
 std::string dump(const nlohmann::json &doc) {
     std::string retval = doc.dump(-1, ' ', false, nlohmann::json::error_handler_t::ignore);
-    DBG("json dump, %s", retval.data());
     return retval;
 }
 

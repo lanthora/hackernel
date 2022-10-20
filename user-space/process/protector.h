@@ -28,7 +28,7 @@ struct process_cmd_ctx_cmp {
             return a.binary < b.binary;
         if (a.argv != b.argv)
             return a.argv < b.argv;
-        return true;
+        return false;
     }
 };
 
