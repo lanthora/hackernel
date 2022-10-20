@@ -10,7 +10,9 @@ enum {
 
 	PROCESS_A_STATUS_CODE,
 	PROCESS_A_OP_TYPE,
-	PROCESS_A_NAME,
+	PROCESS_A_WORKDIR,
+	PROCESS_A_BINARY,
+	PROCESS_A_ARGV,
 	PROCESS_A_PERM,
 	PROCESS_A_ID,
 	__PROCESS_A_MAX,
@@ -53,7 +55,15 @@ enum {
 	PROCESS_PROTECT_ENABLE,
 	PROCESS_PROTECT_DISABLE
 };
+
+struct process_cmd_context {
+	process_perm_id_t id;
+	char *workdir;
+	char *binary;
+	char *argv;
+};
+
 int process_protect_handler(struct sk_buff *skb, struct genl_info *info);
-int process_protect_report_event(process_perm_id_t id, char *arg);
+int process_protect_report_event(struct process_cmd_context *cmd_ctx);
 
 #endif

@@ -5,6 +5,7 @@
 #include "hackernel/util.h"
 #include "process/define.h"
 #include <netlink/genl/mngt.h>
+#include <string>
 
 namespace hackernel {
 
@@ -24,7 +25,7 @@ int handle_genl_process_protection(struct nl_cache_ops *unused, struct genl_cmd 
 int enable_process_protection(int32_t session);
 int disable_process_protection(int32_t session);
 
-proc_perm check_process_permission(char *cmd);
+proc_perm check_process_permission(const std::string &workdir, const std::string &binary, const std::string &argv);
 int reply_process_permission(proc_perm_id id, proc_perm perm);
 
 }; // namespace hackernel

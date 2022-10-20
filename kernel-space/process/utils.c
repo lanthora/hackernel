@@ -62,7 +62,7 @@ char *parse_argv_alloc(const char __user *const __user *argv)
 			break;
 
 		cursor += len;
-		*(cursor - 1) = ASCII_US;
+		*(cursor - 1) = ' ';
 	}
 	if (!(cursor > cmd))
 		goto errout;

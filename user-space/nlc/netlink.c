@@ -27,9 +27,10 @@ static struct nla_policy handshake_policy[HANDSHAKE_A_MAX + 1] = {
 };
 
 struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
-    [PROCESS_A_SESSION] = {.type = NLA_S32}, [PROCESS_A_STATUS_CODE] = {.type = NLA_S32},
-    [PROCESS_A_OP_TYPE] = {.type = NLA_U8},  [PROCESS_A_NAME] = {.type = NLA_STRING},
-    [PROCESS_A_PERM] = {.type = NLA_S32},    [PROCESS_A_ID] = {.type = NLA_S32},
+    [PROCESS_A_SESSION] = {.type = NLA_S32},   [PROCESS_A_STATUS_CODE] = {.type = NLA_S32},
+    [PROCESS_A_OP_TYPE] = {.type = NLA_U8},    [PROCESS_A_WORKDIR] = {.type = NLA_STRING},
+    [PROCESS_A_BINARY] = {.type = NLA_STRING}, [PROCESS_A_ARGV] = {.type = NLA_STRING},
+    [PROCESS_A_PERM] = {.type = NLA_S32},      [PROCESS_A_ID] = {.type = NLA_S32},
 };
 
 struct nla_policy file_policy[FILE_A_MAX + 1] = {

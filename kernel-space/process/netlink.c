@@ -14,12 +14,14 @@ struct nla_policy process_policy[PROCESS_A_MAX + 1] = {
 	[PROCESS_A_SESSION] = { .type = NLA_S32 },
 
 	[PROCESS_A_OP_TYPE] = { .type = NLA_U8 },
-	[PROCESS_A_NAME] = { .type = NLA_STRING },
+	[PROCESS_A_WORKDIR] = { .type = NLA_STRING },
+	[PROCESS_A_BINARY] = { .type = NLA_STRING },
+	[PROCESS_A_ARGV] = { .type = NLA_STRING },
 	[PROCESS_A_PERM] = { .type = NLA_S32 },
 	[PROCESS_A_ID] = { .type = NLA_S32 },
 };
 
-int process_protect_report_event(process_perm_id_t id, char *cmd)
+int process_protect_report_event(struct process_cmd_context *cmd_ctx)
 {
 	int error = 0;
 	struct sk_buff *skb = NULL;
@@ -45,13 +47,25 @@ int process_protect_report_event(process_perm_id_t id, char *cmd)
 		goto out_cancel;
 	}
 
-	error = nla_put_s32(skb, PROCESS_A_ID, id);
+	error = nla_put_s32(skb, PROCESS_A_ID, cmd_ctx->id);
 	if (error) {
 		ERR("nla_put_s32 failed");
 		goto out_cancel;
 	}
 
-	error = nla_put_string(skb, PROCESS_A_NAME, cmd);
+	error = nla_put_string(skb, PROCESS_A_WORKDIR, cmd_ctx->workdir);
+	if (error) {
+		ERR("nla_put_string failed. errno=[%d]", error);
+		goto out_cancel;
+	}
+
+	error = nla_put_string(skb, PROCESS_A_BINARY, cmd_ctx->binary);
+	if (error) {
+		ERR("nla_put_string failed. errno=[%d]", error);
+		goto out_cancel;
+	}
+
+	error = nla_put_string(skb, PROCESS_A_ARGV, cmd_ctx->argv);
 	if (error) {
 		ERR("nla_put_string failed. errno=[%d]", error);
 		goto out_cancel;
