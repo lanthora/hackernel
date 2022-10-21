@@ -6,9 +6,10 @@
 #include "hackernel/lru.h"
 #include "hackernel/process.h"
 #include <chrono>
-#include <set>
+#include <functional>
 #include <shared_mutex>
 #include <string>
+#include <unordered_set>
 
 namespace hackernel {
 
@@ -19,18 +20,20 @@ struct process_cmd_ctx {
     std::string binary;
     std::string argv;
 };
+}; // namespace hackernel
 
-struct process_cmd_ctx_cmp {
-    bool operator()(const process_cmd_ctx &a, const process_cmd_ctx &b) const {
-        if (a.workdir != b.workdir)
-            return a.workdir < b.workdir;
-        if (a.binary != b.binary)
-            return a.binary < b.binary;
-        if (a.argv != b.argv)
-            return a.argv < b.argv;
-        return false;
+namespace std {
+template <> struct hash<hackernel::process_cmd_ctx> {
+    std::size_t operator()(const hackernel::process_cmd_ctx &ctx) const {
+        std::size_t a = std::hash<std::string>()(ctx.workdir);
+        std::size_t b = std::hash<std::string>()(ctx.binary) << 1;
+        std::size_t c = std::hash<std::string>()(ctx.argv) >> 1;
+        return (a) ^ (b) ^ (c);
     }
 };
+}; // namespace std
+
+namespace hackernel {
 
 class process_protector {
 
@@ -51,7 +54,7 @@ public:
     static process_protector &global();
 
 private:
-    std::set<process_cmd_ctx, process_cmd_ctx_cmp> trusted_;
+    std::unordered_set<process_cmd_ctx> trusted_;
     std::shared_mutex mutex_;
     proc_perm judge_ = PROCESS_ACCEPT;
     bool enabled_ = false;

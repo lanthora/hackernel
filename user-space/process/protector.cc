@@ -13,6 +13,10 @@
 
 namespace hackernel {
 
+bool operator==(const process_cmd_ctx &a, const process_cmd_ctx &b) {
+    return a.workdir == b.workdir && a.binary == b.binary && a.argv == b.argv;
+}
+
 bool process_protector::is_trusted(const process_cmd_ctx &cmd) {
     std::shared_lock<std::shared_mutex> lock(mutex_);
     return trusted_.contains(cmd);
