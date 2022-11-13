@@ -93,6 +93,43 @@ static int generate_file_protection_clear_msg(const int32_t &session, const int3
     return 0;
 }
 
+static int check_genl_file_protection_parm(struct genl_info *genl_info) {
+    if (!genl_info->attrs[FILE_A_OP_TYPE]) {
+        ERR("nlattr type is NULL");
+        return -EINVAL;
+    }
+
+    u_int8_t type = nla_get_u8(genl_info->attrs[FILE_A_OP_TYPE]);
+    switch (type) {
+    case FILE_PROTECT_ENABLE:
+    case FILE_PROTECT_DISABLE:
+    case FILE_PROTECT_CLEAR:
+        if (!genl_info->attrs[FILE_A_SESSION] || !genl_info->attrs[FILE_A_STATUS_CODE]) {
+            ERR("nlattr invalid, type=[%d]", type);
+            return -EINVAL;
+        }
+        break;
+    case FILE_PROTECT_SET:
+        if (!genl_info->attrs[FILE_A_FSID] || !genl_info->attrs[FILE_A_INO] || !genl_info->attrs[FILE_A_SESSION] ||
+            !genl_info->attrs[FILE_A_STATUS_CODE]) {
+            ERR("nlattr invalid, type=[%d]", type);
+            return -EINVAL;
+        }
+        break;
+    case FILE_PROTECT_REPORT:
+        if (!genl_info->attrs[FILE_A_NAME] || !genl_info->attrs[FILE_A_PERM] || !genl_info->attrs[FILE_A_FSID] ||
+            !genl_info->attrs[FILE_A_INO]) {
+            ERR("nlattr invalid, type=[%d]", type);
+            return -EINVAL;
+        }
+        break;
+    default:
+        ERR("Unknown process protect command Type");
+        return -EINVAL;
+    }
+    return 0;
+}
+
 int handle_genl_file_protection(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
                                 void *arg) {
     u_int8_t type;
@@ -103,6 +140,10 @@ int handle_genl_file_protection(struct nl_cache_ops *unused, struct genl_cmd *ge
     std::string msg;
     unsigned long fsid;
     unsigned long ino;
+
+    if (check_genl_file_protection_parm(genl_info)) {
+        return -EINVAL;
+    }
 
     type = nla_get_u8(genl_info->attrs[FILE_A_OP_TYPE]);
     switch (type) {
@@ -149,9 +190,6 @@ int handle_genl_file_protection(struct nl_cache_ops *unused, struct genl_cmd *ge
         broadcaster::global().broadcast(msg);
         DBG("kernel::file::clear, session=[%d] code=[%d]", session, code);
         break;
-
-    default:
-        DBG("Unknown process protect command Type");
     }
 
     return 0;

@@ -200,8 +200,6 @@ response:
 		goto out_cancel;
 	}
 
-	INFO("fsid=[%lu], ino=[%lu]", fsid, ino);
-
 	error = nla_put(reply, FILE_A_FSID, sizeof(hkfsid_t), &fsid);
 	if (error) {
 		ERR("nla_put_u64 failed");

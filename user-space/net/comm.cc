@@ -144,6 +144,38 @@ static int generate_net_protection_report_msg(uint8_t protocol, uint32_t saddr, 
     return 0;
 }
 
+static int check_genl_net_protection_parm(struct genl_info *genl_info) {
+    if (!genl_info->attrs[NET_A_OP_TYPE]) {
+        ERR("nlattr type is NULL");
+        return -EINVAL;
+    }
+    u_int8_t type = nla_get_u8(genl_info->attrs[NET_A_OP_TYPE]);
+    switch (type) {
+    case NET_PROTECT_ENABLE:
+    case NET_PROTECT_DISABLE:
+    case NET_PROTECT_INSERT:
+    case NET_PROTECT_DELETE:
+    case NET_PROTECT_CLEAR:
+        if (!genl_info->attrs[NET_A_SESSION] || !genl_info->attrs[NET_A_STATUS_CODE]) {
+            ERR("nlattr invalid, type=[%d]", type);
+            return -EINVAL;
+        }
+        break;
+    case NET_PROTECT_REPORT:
+        if (!genl_info->attrs[NET_A_PROTOCOL_BEGIN] || !genl_info->attrs[NET_A_ADDR_SRC_BEGIN] ||
+            !genl_info->attrs[NET_A_ADDR_DST_BEGIN] || !genl_info->attrs[NET_A_PORT_SRC_BEGIN] ||
+            !genl_info->attrs[NET_A_PORT_DST_BEGIN] || !genl_info->attrs[NET_A_ID]) {
+            ERR("nlattr invalid, type=[%d]", type);
+            return -EINVAL;
+        }
+        break;
+    default:
+        ERR("Unknown net protect command Type");
+        return -EINVAL;
+    }
+    return 0;
+}
+
 int handle_genl_net_protection(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
                                void *arg) {
     u_int8_t type;
@@ -154,6 +186,9 @@ int handle_genl_net_protection(struct nl_cache_ops *unused, struct genl_cmd *gen
     uint16_t sport, dport;
     uint32_t policy;
     std::string msg;
+
+    if (check_genl_net_protection_parm(genl_info))
+        return -EINVAL;
 
     type = nla_get_u8(genl_info->attrs[NET_A_OP_TYPE]);
     switch (type) {
@@ -208,9 +243,6 @@ int handle_genl_net_protection(struct nl_cache_ops *unused, struct genl_cmd *gen
         broadcaster::global().broadcast(msg);
         DBG("kernel::net::report, msg=[%s]", msg.data());
         break;
-
-    default:
-        DBG("Unknown net protect command Type");
     }
     return 0;
 }

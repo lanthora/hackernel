@@ -12,7 +12,7 @@ MODULE_LICENSE("GPL v2");
 
 static int init(void)
 {
-	INFO("hackernel init");
+	INFO("hackernel 1.6.0 loaded");
 	syscall_early_init();
 	process_protect_init();
 	file_protect_init();

@@ -57,12 +57,21 @@ int start_heartbeat() {
 }
 
 int handle_heartbeat(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info, void *arg) {
-    int code = nla_get_s32(genl_info->attrs[HANDSHAKE_A_STATUS_CODE]);
+    int code = 0;
+    if (!genl_info->attrs[HANDSHAKE_A_STATUS_CODE]) {
+        ERR("nlattr NULL");
+        goto errout;
+    }
+    code = nla_get_s32(genl_info->attrs[HANDSHAKE_A_STATUS_CODE]);
     if (code) {
         ERR("handshake response code=[%d]", code);
-        ERR("handshake failed. exit");
-        shutdown_service(HACKERNEL_HEARTBEAT);
+        goto errout;
     }
+    return 0;
+
+errout:
+    ERR("handshake failed. exit");
+    shutdown_service(HACKERNEL_HEARTBEAT);
     return 0;
 }
 
