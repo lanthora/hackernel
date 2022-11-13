@@ -226,6 +226,10 @@ struct nl_msg *alloc_hackernel_nlmsg(uint8_t cmd) {
     struct nl_msg *message;
 
     message = nlmsg_alloc();
+    if (!message) {
+        ERR("nlmsg_alloc failed");
+        return NULL;
+    }
     genlmsg_put(message, NL_AUTO_PID, NL_AUTO_SEQ, fam_id, 0, NLM_F_REQUEST, cmd, HACKERNEL_FAMLY_VERSION);
     return message;
 }

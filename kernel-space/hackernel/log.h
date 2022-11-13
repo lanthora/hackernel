@@ -8,14 +8,20 @@
 		       __LINE__, ##arg);                                       \
 	} while (0)
 
-#ifdef DEBUG
 #define INFO(fmt, arg...)                                                      \
 	do {                                                                   \
 		printk(KERN_INFO "hackernel: %s:%d " fmt "\n", __FILE__,       \
 		       __LINE__, ##arg);                                       \
 	} while (0)
+
+#ifdef DEBUG
+#define DBG(fmt, arg...)                                                       \
+	do {                                                                   \
+		printk(KERN_DEBUG "hackernel: %s:%d " fmt "\n", __FILE__,      \
+		       __LINE__, ##arg);                                       \
+	} while (0)
 #else
-#define INFO(fmt, arg...)
+#define DBG(fmt, arg...)
 #endif
 
 #endif

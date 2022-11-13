@@ -77,13 +77,45 @@ static int generate_process_protection_disable_msg(const int32_t &session, const
     return 0;
 }
 
+static int check_genl_process_protection_parm(struct genl_info *genl_info) {
+    if (!genl_info->attrs[PROCESS_A_OP_TYPE]) {
+        ERR("nlattr type is NULL");
+        return -EINVAL;
+    }
+    u_int8_t type = nla_get_u8(genl_info->attrs[PROCESS_A_OP_TYPE]);
+    switch (type) {
+    case PROCESS_PROTECT_ENABLE:
+    case PROCESS_PROTECT_DISABLE:
+        if (!genl_info->attrs[PROCESS_A_SESSION] || !genl_info->attrs[PROCESS_A_STATUS_CODE]) {
+            ERR("nlattr invalid, type=[%d]", type);
+            return -EINVAL;
+        }
+        break;
+    case PROCESS_PROTECT_REPORT:
+        if (!genl_info->attrs[PROCESS_A_ID] || !genl_info->attrs[PROCESS_A_WORKDIR] ||
+            !genl_info->attrs[PROCESS_A_BINARY] || !genl_info->attrs[PROCESS_A_ARGV]) {
+            ERR("nlattr invalid, type=[%d]", type);
+            return -EINVAL;
+        }
+        break;
+    default:
+        ERR("Unknown process protect command Type");
+        return -EINVAL;
+    }
+    return 0;
+}
+
 int handle_genl_process_protection(struct nl_cache_ops *unused, struct genl_cmd *genl_cmd, struct genl_info *genl_info,
                                    void *arg) {
-    u_int8_t type = nla_get_u8(genl_info->attrs[PROCESS_A_OP_TYPE]);
+
     int error, id, code, session;
     char *workdir, *binary, *argv;
     std::string msg;
 
+    if (check_genl_process_protection_parm(genl_info))
+        return -EINVAL;
+
+    u_int8_t type = nla_get_u8(genl_info->attrs[PROCESS_A_OP_TYPE]);
     switch (type) {
     case PROCESS_PROTECT_ENABLE:
         session = nla_get_s32(genl_info->attrs[PROCESS_A_SESSION]);
@@ -116,9 +148,6 @@ int handle_genl_process_protection(struct nl_cache_ops *unused, struct genl_cmd 
             WARN("reply_process_permission failed, id=[%d] argv=[%s]", id, argv);
 
         break;
-
-    default:
-        DBG("Unknown process protect command Type");
     }
     return 0;
 }
