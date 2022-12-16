@@ -249,7 +249,7 @@ static response_t net_policy_hook(void *priv, struct sk_buff *skb,
 	static const u32 REPORT_MASK = 2;
 
 	response_t response = NET_POLICY_ACCEPT;
-	struct net_event_t event;
+	struct net_event_t event = {};
 	struct net_policy_match match = {
 		.skb = skb,
 		.state = state,
