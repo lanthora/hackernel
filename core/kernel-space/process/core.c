@@ -333,12 +333,12 @@ int process_protect_disable(void)
 	return 0;
 }
 
-int process_protect_init()
+int process_protect_init(void)
 {
 	return process_perm_hlist_init();
 }
 
-int process_protect_destory()
+int process_protect_destory(void)
 {
 	return process_protect_disable();
 }
