@@ -1,3 +1,4 @@
+# Arch Linux 打包文件模板,版本号变化不更新这个文件,最新版本请从 AUR 获取
 pkgname=hackernel
 pkgver=1.7.1
 pkgrel=2
@@ -12,11 +13,11 @@ makedepends=('cmake' 'make' 'go' 'nlohmann-json')
 backup=('etc/hackernel/telegram.yaml' 'etc/hackernel/web.yaml')
 
 build() {
-        cd "$pkgname-$pkgver"
-        make arch-build
+  cd "$pkgname-$pkgver"
+  make arch-build
 }
 
 package() {
-        cd "$pkgname-$pkgver"
-        make DESTDIR="$pkgdir/" arch-install
+  cd "$pkgname-$pkgver"
+  make DESTDIR="$pkgdir/" arch-install
 }
