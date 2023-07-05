@@ -3,35 +3,25 @@
 
 EAPI=8
 
-inherit git-r3
-
-DESCRIPTION="Host Intrusion Detection and Prevention System Based on Kernel Module"
+DESCRIPTION="Host Intrusion Detection and Prevention System"
 HOMEPAGE="https://github.com/lanthora/hackernel"
-EGIT_REPO_URI="${HOMEPAGE}"
+SRC_URI="https://github.com/lanthora/hackernel/archive/refs/tags/v1.7.1.tar.gz"
 
 LICENSE="GPL"
 SLOT="0"
 KEYWORDS="~amd64 ~arm64 ~arm"
 
-DEPEND="dev-libs/libnl
-		sys-kernel/dkms
-		"
+DEPEND="
+	dev-libs/libnl
+	sys-kernel/dkms
+"
 RDEPEND="${DEPEND}"
 BDEPEND="
-	dev-vcs/git
 	dev-util/cmake
 	sys-devel/make
 	dev-lang/go
 	dev-cpp/nlohmann_json
 "
-
-src_unpack() {
-	git-r3_src_unpack
-	pushd "${S}"/apps || die
-	go mod tidy || die
-	go mod vendor || die
-	popd || die
-}
 
 src_compile(){
 	make gentoo-build
