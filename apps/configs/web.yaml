@@ -1,0 +1,5 @@
+# SQLite3 database file
+db: "/var/lib/hackernel/web.db"
+
+# web service listening address
+listen: "0.0.0.0:80"
