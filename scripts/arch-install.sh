@@ -23,8 +23,8 @@ cp $workdir/apps/configs/notify.yaml $DESTDIR/etc/hackernel/notify.yaml
 mkdir -p $DESTDIR/etc/modules-load.d/
 mkdir -p $DESTDIR/usr/lib/systemd/system/
 mkdir -p $DESTDIR/usr/lib/systemd/user/
-cp $workdir/hackernel/scripts/modules-load/hackernel.conf $DESTDIR/etc/modules-load.d/hackernel.conf
-cp $workdir/hackernel/scripts/systemd/hackernel.service $DESTDIR/usr/lib/systemd/system/hackernel.service
+cp $workdir/core/configs/modules-load/hackernel.conf $DESTDIR/etc/modules-load.d/hackernel.conf
+cp $workdir/core/configs/systemd/hackernel.service $DESTDIR/usr/lib/systemd/system/hackernel.service
 cp $workdir/apps/init/hackernel-telegram.service $DESTDIR/usr/lib/systemd/system/hackernel-telegram.service
 cp $workdir/apps/init/hackernel-web.service $DESTDIR/usr/lib/systemd/system/hackernel-web.service
 cp $workdir/apps/init/hackernel-notify.service $DESTDIR/usr/lib/systemd/user/hackernel-notify.service
