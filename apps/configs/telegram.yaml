@@ -1,0 +1,8 @@
+# Token from Telegram @BotFather
+token: ""
+
+# chat ID
+id: 0
+
+# SQLite3 database file
+db: "/var/lib/hackernel/telegram.db"

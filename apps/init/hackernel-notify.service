@@ -1,0 +1,10 @@
+[Unit]
+Description=Hackernel Notify
+
+[Service]
+ExecStart=/usr/bin/hackernel-notify
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=default.target

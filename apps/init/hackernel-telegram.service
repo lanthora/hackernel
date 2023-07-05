@@ -1,0 +1,11 @@
+[Unit]
+Description=Hackernel Telegram
+After=hackernel.service
+
+[Service]
+ExecStart=/usr/bin/hackernel-telegram
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

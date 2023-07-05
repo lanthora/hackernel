@@ -1,0 +1,12 @@
+[Unit]
+Description=Hackernel Web
+After=hackernel.service
+
+[Service]
+ExecStart=/usr/bin/hackernel-web
+Restart=always
+RestartSec=30
+Environment="GOMEMLIMIT=50MiB"
+
+[Install]
+WantedBy=multi-user.target

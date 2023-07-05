@@ -1,0 +1,6 @@
+# cp notify.yaml ~/.config/hackernel/notify.yaml
+# update your config
+# systemctl start hackernel-notify --user
+server: "http[s]://your-hackernel-web-server"
+username: "test"
+password: "123456"
