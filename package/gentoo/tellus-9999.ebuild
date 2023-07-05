@@ -49,9 +49,9 @@ src_install(){
 	doins apps/configs/telegram.yaml
 	doins apps/configs/web.yaml
 	insinto /etc/modules-load.d
-	doins hackernel/scripts/modules-load/hackernel.conf
+	doins core/configs/modules-load/hackernel.conf
 	insinto /usr/lib/systemd/system
-	doins hackernel/scripts/systemd/hackernel.service
+	doins core/configs/systemd/hackernel.service
 	doins apps/init/hackernel-telegram.service
 	doins apps/init/hackernel-web.service
 }
