@@ -9,3 +9,5 @@ do
         printf "[%s][remove] %s\n" $(date +"%H:%M:%S") $bin
         rm $bin
 done
+
+rm -rf $root/internal/web/webui/*
