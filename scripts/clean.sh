@@ -6,4 +6,7 @@ make clean
 rm -rf $workdir/core/user-space/build/*
 
 cd $workdir/apps
-make
+make clean
+
+cd $workdir/webui
+rm -rf dist
