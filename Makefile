@@ -1,13 +1,6 @@
-default:
-	@scripts/update-submodule.sh
-	@scripts/build.sh
-	@scripts/done.sh
-
-init:
-	@scripts/update-submodule.sh
-
 build:
 	@scripts/build.sh
+	@scripts/done.sh
 
 install:
 	@scripts/install.sh
@@ -27,7 +20,4 @@ arch-install:
 gentoo-build:
 	@scripts/gentoo-build.sh
 
-update-aur:
-	@scripts/update-aur.sh
-
-PHONY: default init build install uninstall arch-build arch-install gentoo-build
+PHONY: build install clean uninstall arch-build arch-install gentoo-build
