@@ -17,6 +17,7 @@ var contentType = map[string]string{
 	".css":  "text/css; charset=UTF-8",
 	".js":   "text/javascript; charset=UTF-8",
 	".ico":  "image/x-icon",
+	".svg":  "image/svg+xml",
 }
 
 func webui(context *gin.Context) {
