@@ -12,4 +12,5 @@
                 "${workspaceFolder}"
         ],
         "editor.formatOnSave": true,
+        "git.openRepositoryInParentFolders": "always",
 }

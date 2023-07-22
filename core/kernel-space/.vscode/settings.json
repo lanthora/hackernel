@@ -4,7 +4,7 @@
 	"C_Cpp.clang_format_sortIncludes": true,
 	"C_Cpp.dimInactiveRegions": false,
 	"editor.tabSize": 8,
-	"C_Cpp.intelliSenseEngine": "Default",
+	"C_Cpp.intelliSenseEngine": "default",
 	"[shellscript]": {
 		"files.eol": "\n"
 	},
@@ -23,4 +23,5 @@
 	],
 	"C_Cpp.autoAddFileAssociations": false,
 	"editor.formatOnSave": true,
+	"git.openRepositoryInParentFolders": "always",
 }
