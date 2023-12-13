@@ -2,8 +2,6 @@
 set -e
 workdir=$(dirname $(dirname $(readlink -f "$0")))
 
-clear
-
 echo "========================= SUCCESS ========================"
 echo "[1] $workdir/core/kernel-space/hackernel.ko"
 echo "[2] $workdir/core/user-space/build/hackernel"
