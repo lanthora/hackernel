@@ -1,6 +1,6 @@
 module github.com/lanthora/hackernel/apps
 
-go 1.20
+go 1.22
 
 require (
 	github.com/gen2brain/beeep v0.0.0-20230307103607-6e717729cb4f
