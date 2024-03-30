@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "file/utils.h"
 #include "hackernel/file.h"
+#include "process/utils.h"
 #include <linux/file.h>
 #include <linux/fs_struct.h>
 #include <linux/namei.h>
