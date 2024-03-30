@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
 #include "hackernel/watchdog.h"
 #include "watchdog/api.h"
+#include <linux/jiffies.h>
 
 static struct watchdog dog;
 static bool connecting = false;
