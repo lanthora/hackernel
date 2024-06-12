@@ -133,6 +133,18 @@ void disable_wp(unsigned long addr)
 }
 #endif
 
+#ifdef CONFIG_RISCV
+void enable_wp(unsigned long addr)
+{
+	return;
+}
+
+void disable_wp(unsigned long addr)
+{
+	return;
+}
+#endif
+
 kallsyms_lookup_name_t hk_kallsyms_lookup_name = NULL;
 static struct kprobe hk_kp = { .symbol_name = "kallsyms_lookup_name" };
 static void hk_kallsyms_lookup_name_init(void)
