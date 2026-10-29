@@ -16,7 +16,7 @@ set(CMAKE_CXX_FLAGS_RELEASE_INIT "-O2")
 if (CMAKE_BUILD_TYPE MATCHES "Debug")
 add_definitions(-DDEBUG)
 else()
-add_custom_command(TARGET ${HACKERNEL} COMMAND ${CMAKE_STRIP} ${HACKERNEL})
+add_custom_command(TARGET ${HACKERNEL} POST_BUILD COMMAND ${CMAKE_STRIP} ${HACKERNEL})
 endif()
 
 include_directories("/usr/include/libnl3")
