@@ -5,6 +5,7 @@
 
 unsigned long *g_sys_call_table = NULL;
 
+#if !HACKERNEL_USE_FTRACE
 static struct mm_struct *init_mm_ptr = NULL;
 static void init_mm_ptr_init(void)
 {
@@ -132,6 +133,7 @@ void disable_wp(unsigned long addr)
 	flush_tlb_all();
 }
 #endif
+#endif /* !HACKERNEL_USE_FTRACE */
 
 kallsyms_lookup_name_t hk_kallsyms_lookup_name = NULL;
 static struct kprobe hk_kp = { .symbol_name = "kallsyms_lookup_name" };
@@ -139,13 +141,13 @@ static void hk_kallsyms_lookup_name_init(void)
 {
 	if (register_kprobe(&hk_kp)) {
 		ERR("please set CONFIG_KALLSYMS_ALL=y");
-		goto out;
+		return;
 	}
 	hk_kallsyms_lookup_name = (kallsyms_lookup_name_t)hk_kp.addr;
-out:
 	unregister_kprobe(&hk_kp);
 }
 
+#if !HACKERNEL_USE_FTRACE
 static int sys_call_table_init(void)
 {
 	unsigned long syscall_kernel;
@@ -154,12 +156,18 @@ static int sys_call_table_init(void)
 
 	syscall_kernel = hk_kallsyms_lookup_name("sys_call_table");
 	g_sys_call_table = (unsigned long *)syscall_kernel;
-	return 0;
+	return g_sys_call_table ? 0 : -ENOENT;
 }
+#endif
 
 void syscall_early_init(void)
 {
 	hk_kallsyms_lookup_name_init();
+#if HACKERNEL_USE_FTRACE
+	INFO("syscall hook backend=[ftrace]");
+#else
+	INFO("syscall hook backend=[sys_call_table]");
 	init_mm_ptr_init();
 	sys_call_table_init();
+#endif
 }

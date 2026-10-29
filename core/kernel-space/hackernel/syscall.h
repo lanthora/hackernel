@@ -25,7 +25,7 @@ void syscall_early_init(void);
 #define __HOOK_ARGS(t, a, cnt) (t) SC_ARG_##cnt
 #define DECL_MAP(n, ...) HKMAP##n(i, __HOOK_DECL, __VA_ARGS__)
 #define ARGS_MAP(n, ...) HKMAP##n(i, __HOOK_ARGS, __VA_ARGS__)
-#define DECL_MAP_RAW(n, ...) struct pt_regs *regs
+#define DECL_MAP_RAW(n, ...) const struct pt_regs *regs
 #define ARGS_MAP_RAW(n, ...) regs
 #else
 #define __HOOK_DECL(t, a, cnt) t a
@@ -36,13 +36,58 @@ void syscall_early_init(void);
 #define ARGS_MAP_RAW ARGS_MAP
 #endif
 
+#if HACKERNEL_USE_FTRACE
+#include <linux/atomic.h>
+#include <linux/ftrace.h>
+#include <linux/wait.h>
+
+struct hk_ftrace_hook {
+	const char *symbol;
+	void *replacement;
+	unsigned long address;
+	struct ftrace_ops ops;
+	atomic_t active;
+	wait_queue_head_t drained;
+	bool registered;
+};
+
+int hk_ftrace_register(struct hk_ftrace_hook *hook, void **original);
+int hk_ftrace_unregister(struct hk_ftrace_hook *hook);
+void hk_ftrace_exit(struct hk_ftrace_hook *hook);
+
+#define REG_DEFINE(name)                                                       \
+	static struct hk_ftrace_hook hk_ftrace_##name = {                      \
+		.symbol = "__x64_sys_" #name,                                 \
+		.replacement = sys_##name##_hook,                             \
+	};                                                                     \
+	static int __hook_##name(void)                                         \
+	{                                                                      \
+		if (HK_NR_##name == HK_NR_UNDEFINED)                         \
+			return -ENOSYS;                                        \
+		return hk_ftrace_register(&hk_ftrace_##name,                  \
+					 (void **)&hk_sys_##name);              \
+	}
+
+#define UNREG_DEFINE(name)                                                     \
+	static int __unhook_##name(void)                                       \
+	{                                                                      \
+		return hk_ftrace_unregister(&hk_ftrace_##name);                \
+	}
+
+#define HOOK_LEAVE(name) hk_ftrace_exit(&hk_ftrace_##name)
+#else
+#define HOOK_LEAVE(name) do { } while (0)
+
 #define SYSCALL_UPDATE(nr, func) g_sys_call_table[nr] = (unsigned long)func
 #define SYSCALL_BACKUP(func, nr) func = (void *)g_sys_call_table[nr]
 
 #define REG_DEFINE(name)                                                       \
+	static bool syscall_##name##_registered;                              \
 	static int __hook_##name(void)                                         \
 	{                                                                      \
 		unsigned long flags;                                           \
+		if (syscall_##name##_registered)                               \
+			return 0;                                              \
 		if (HK_NR_##name == HK_NR_UNDEFINED) {                         \
 			ERR("undefined system call: " STR(name));              \
 			return -ENOSYS;                                        \
@@ -62,6 +107,7 @@ void syscall_early_init(void);
 		wmb();                                                         \
 		enable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));   \
 		local_irq_restore(flags);                                      \
+		syscall_##name##_registered = true;                            \
 		return 0;                                                      \
 	}
 
@@ -69,6 +115,8 @@ void syscall_early_init(void);
 	static int __unhook_##name(void)                                       \
 	{                                                                      \
 		unsigned long flags;                                           \
+		if (!syscall_##name##_registered)                              \
+			return 0;                                              \
 		if (HK_NR_##name == HK_NR_UNDEFINED) {                         \
 			return -ENOSYS;                                        \
 		}                                                              \
@@ -86,23 +134,26 @@ void syscall_early_init(void);
 		wmb();                                                         \
 		enable_wp((unsigned long)(g_sys_call_table + HK_NR_##name));   \
 		local_irq_restore(flags);                                      \
+		syscall_##name##_registered = false;                           \
 		return 0;                                                      \
 	}
+#endif /* HACKERNEL_USE_FTRACE */
 
 #define HOOK_DEFINEx(x, name, ...)                                             \
 	static long __sys_##name##_hook(DECL_MAP(x, __VA_ARGS__));             \
-	long sys_##name##_hook(DECL_MAP_RAW(x, __VA_ARGS__));                  \
+	noinline long sys_##name##_hook(DECL_MAP_RAW(x, __VA_ARGS__));         \
 	long (*hk_sys_##name)(DECL_MAP_RAW(x, __VA_ARGS__));                   \
-	long sys_##name##_hook(DECL_MAP_RAW(x, __VA_ARGS__))                   \
+	REG_DEFINE(name)                                                       \
+	UNREG_DEFINE(name)                                                     \
+	noinline long sys_##name##_hook(DECL_MAP_RAW(x, __VA_ARGS__))          \
 	{                                                                      \
 		long retval;                                                   \
 		retval = __sys_##name##_hook(ARGS_MAP(x, __VA_ARGS__));        \
-		if (retval)                                                    \
-			return retval;                                         \
-		return hk_sys_##name(ARGS_MAP_RAW(x, __VA_ARGS__));            \
+		if (!retval)                                                   \
+			retval = hk_sys_##name(ARGS_MAP_RAW(x, __VA_ARGS__));  \
+		HOOK_LEAVE(name);                                              \
+		return retval;                                                 \
 	}                                                                      \
-	REG_DEFINE(name)                                                       \
-	UNREG_DEFINE(name)                                                     \
 	static long __sys_##name##_hook(DECL_MAP(x, __VA_ARGS__))
 
 #define HOOK_DEFINE1(name, ...) HOOK_DEFINEx(1, name, __VA_ARGS__)

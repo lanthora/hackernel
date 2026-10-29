@@ -6,6 +6,33 @@
 #include <linux/syscalls.h>
 #include <linux/version.h>
 
+/*
+ * x86 stopped dispatching through sys_call_table in v6.9. The change was
+ * also backported to these stable branches. Distributions with different
+ * backports can override this at build time with -DHACKERNEL_USE_FTRACE=0/1.
+ * ARM and ARM64 retain the existing syscall-table backend.
+ */
+#ifndef HACKERNEL_USE_FTRACE
+#if defined(CONFIG_X86_64) &&                                            \
+	((LINUX_VERSION_CODE >= KERNEL_VERSION(6, 9, 0)) ||               \
+	 (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 8, 5) &&                \
+	  LINUX_VERSION_CODE < KERNEL_VERSION(6, 9, 0)) ||                \
+	 (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 6, 26) &&               \
+	  LINUX_VERSION_CODE < KERNEL_VERSION(6, 7, 0)) ||                \
+	 (LINUX_VERSION_CODE >= KERNEL_VERSION(6, 1, 85) &&               \
+	  LINUX_VERSION_CODE < KERNEL_VERSION(6, 2, 0)) ||                \
+	 (LINUX_VERSION_CODE >= KERNEL_VERSION(5, 15, 154) &&             \
+	  LINUX_VERSION_CODE < KERNEL_VERSION(5, 16, 0)))
+#define HACKERNEL_USE_FTRACE 1
+#else
+#define HACKERNEL_USE_FTRACE 0
+#endif
+#endif
+
+#if HACKERNEL_USE_FTRACE && !defined(CONFIG_X86_64)
+#error "The ftrace syscall backend currently supports only x86_64"
+#endif
+
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(5, 11, 0))
 #define CONFIG_NLA_STRSCPY 1
 #endif
