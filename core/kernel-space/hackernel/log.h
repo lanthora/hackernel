@@ -21,7 +21,7 @@
 		       __LINE__, ##arg);                                       \
 	} while (0)
 #else
-#define DBG(fmt, arg...)
+#define DBG(fmt, arg...) do { } while (0)
 #endif
 
 #endif

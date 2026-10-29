@@ -9,6 +9,7 @@
 #include <linux/module.h>
 
 MODULE_LICENSE("GPL v2");
+MODULE_DESCRIPTION("Hackernel host intrusion detection and prevention system");
 
 static int init(void)
 {
