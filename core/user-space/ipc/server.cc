@@ -261,6 +261,12 @@ int ipc_server::start_unix_domain_socket() {
             continue;
         }
 
+        const std::string type = data["type"].get<std::string>();
+        std::string section;
+        if (data.contains("section") && data["section"].is_string())
+            section = data["section"].get<std::string>();
+        INFO("IPC received type=[%s] section=[%s]", type.c_str(), section.c_str());
+
         user_conn conn;
         conn.peer = std::make_shared<struct sockaddr_un>(peer);
         conn.len = len;
