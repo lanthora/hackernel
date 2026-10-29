@@ -287,8 +287,6 @@ static int self_protect(pid_t nr, int sig)
 
 HOOK_DEFINE3(execve, char *, pathname, char **, argv, char **, envp)
 {
-	pr_info_ratelimited("hackernel: execve hook entered pid=%d comm=%s\n",
-			    current->pid, current->comm);
 	if (sys_execveat_helper(AT_FDCWD, pathname, argv, envp, 0))
 		return -EPERM;
 	return 0;

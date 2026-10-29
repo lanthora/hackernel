@@ -78,7 +78,6 @@ int hk_ftrace_register(struct hk_ftrace_hook *hook, void **original)
 	if (error)
 		goto free_filter;
 	hook->registered = true;
-	INFO("ftrace registered symbol=[%s]", hook->symbol);
 	goto out;
 
 free_filter:
@@ -111,7 +110,6 @@ int hk_ftrace_unregister(struct hk_ftrace_hook *hook)
 	/* Drain the wrapper's final instructions after its active decrement. */
 	synchronize_rcu_tasks();
 	ftrace_free_filter(&hook->ops);
-	INFO("ftrace unregistered symbol=[%s]", hook->symbol);
 	module_put(THIS_MODULE);
 out:
 	mutex_unlock(&hook_mutex);

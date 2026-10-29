@@ -174,7 +174,7 @@ void hk_ftrace_exit(struct hk_ftrace_hook *hook);
 			ERR("hook register name=[%s] code=[%d]", STR(name),      \
 			    hook_error);                                       \
 		else                                                           \
-			INFO("hook register name=[%s] code=[0]", STR(name));     \
+			DBG("hook register name=[%s] code=[0]", STR(name));      \
 	} while (0)
 #endif
 
@@ -186,7 +186,7 @@ void hk_ftrace_exit(struct hk_ftrace_hook *hook);
 			ERR("hook unregister name=[%s] code=[%d]", STR(name),    \
 			    hook_error);                                       \
 		else                                                           \
-			INFO("hook unregister name=[%s] code=[0]", STR(name));   \
+			DBG("hook unregister name=[%s] code=[0]", STR(name));    \
 	} while (0)
 #endif
 

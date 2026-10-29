@@ -37,7 +37,7 @@ bool hackernel_trusted_proccess(void)
 	return current->tgid == hackernel_tgid;
 }
 
-void inline tgid_init(pid_t pid)
+inline void tgid_init(pid_t pid)
 {
 	hackernel_tgid = pid;
 }

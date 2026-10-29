@@ -115,13 +115,13 @@ int process_protect_handler(struct sk_buff *skb, struct genl_info *info)
 		goto out;
 	}
 	case PROCESS_PROTECT_ENABLE: {
-		INFO("process protect enable request portid=[%u]", info->snd_portid);
+		DBG("process protect enable request portid=[%u]", info->snd_portid);
 		code = process_protect_enable();
 		goto response;
 	}
 
 	case PROCESS_PROTECT_DISABLE: {
-		INFO("process protect disable request portid=[%u]", info->snd_portid);
+		DBG("process protect disable request portid=[%u]", info->snd_portid);
 		code = process_protect_disable();
 		goto response;
 	}
