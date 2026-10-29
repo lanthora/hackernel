@@ -118,14 +118,24 @@ void syscall_early_init(void);
 #ifndef REG_HOOK
 #define REG_HOOK(name)                                                         \
 	do {                                                                   \
-		__hook_##name();                                               \
+		int hook_error = __hook_##name();                              \
+		if (hook_error)                                                \
+			ERR("hook register name=[%s] code=[%d]", STR(name),      \
+			    hook_error);                                       \
+		else                                                           \
+			INFO("hook register name=[%s] code=[0]", STR(name));     \
 	} while (0)
 #endif
 
 #ifndef UNREG_HOOK
 #define UNREG_HOOK(name)                                                       \
 	do {                                                                   \
-		__unhook_##name();                                             \
+		int hook_error = __unhook_##name();                            \
+		if (hook_error)                                                \
+			ERR("hook unregister name=[%s] code=[%d]", STR(name),    \
+			    hook_error);                                       \
+		else                                                           \
+			INFO("hook unregister name=[%s] code=[0]", STR(name));   \
 	} while (0)
 #endif
 
