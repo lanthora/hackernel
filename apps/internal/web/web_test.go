@@ -15,14 +15,16 @@ import (
 	"sync/atomic"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	_ "github.com/mattn/go-sqlite3"
 )
 
 type testCore struct {
-	conn *net.UnixConn
-	code atomic.Int32
+	conn  *net.UnixConn
+	code  atomic.Int32
+	delay atomic.Int64
 }
 
 func startTestCore(t *testing.T) *testCore {
@@ -47,6 +49,7 @@ func startTestCore(t *testing.T) *testCore {
 			if json.Unmarshal(buffer[:n], &message) != nil {
 				continue
 			}
+			time.Sleep(time.Duration(core.delay.Load()))
 			message["code"] = core.code.Load()
 			message["fsid"] = 1
 			message["ino"] = 2
@@ -294,4 +297,15 @@ func TestLegacyPasswordUpgrade(t *testing.T) {
 	if !strings.HasPrefix(hash, "$2") {
 		t.Fatal("legacy password was not upgraded")
 	}
+}
+
+func TestSlowKernelControlResponse(t *testing.T) {
+	core := startTestCore(t)
+	_, handler := testServer(t)
+	c := &testClient{t: t, handler: handler}
+	c.post("/auth/login", gin.H{"username": "admin", "password": "test-password"}, 0)
+	// RCU hook removal can legitimately outlast the former one-second deadline.
+	core.delay.Store(int64(1200 * time.Millisecond))
+	c.post("/file/enableModule", gin.H{}, 0)
+	c.post("/file/disableModule", gin.H{}, 0)
 }

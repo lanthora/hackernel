@@ -179,7 +179,12 @@ int start_netlink() {
     is_running = current_service_status();
     while (is_running) {
         static const nfds_t nfds = 1;
-        static const int timeout = HEARTBEAT_INTERVAL * 2;
+        /*
+         * Generic Netlink serializes this family's handlers. Removing file
+         * hooks waits for multiple RCU grace periods and can also delay the
+         * heartbeat send/response for several seconds on a healthy kernel.
+         */
+        static const int timeout = HEARTBEAT_INTERVAL * 10;
         const int total = poll(&fds, nfds, timeout);
 
         // 服务正常退出时,如果心跳线程先结束,会导致此处会出现超时,这属于正常逻辑,
@@ -189,7 +194,7 @@ int start_netlink() {
         }
 
         // 返回值等于0时表示超时,在有心跳存在的情况下,
-        // 等待时间超过两次心跳表示内核没有向上返回结果,是异常情况
+        // 等待超过控制操作的宽限期仍无响应时，视为通信异常
         if (total == 0) {
             ERR("poll timeout");
             shutdown_service(HACKERNEL_NETLINK_WAIT);

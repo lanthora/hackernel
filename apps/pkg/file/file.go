@@ -4,7 +4,6 @@ package file
 import (
 	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/lanthora/hackernel/apps/pkg/exector"
 	"github.com/sirupsen/logrus"
@@ -73,7 +72,7 @@ func SetPolicy(path string, perm, flag int) (fsid, ino int64, status int, err er
 		return
 	}
 
-	tmp, err := exector.Exec(string(bytes), time.Second)
+	tmp, err := exector.Exec(string(bytes), exector.ControlTimeout)
 	if err != nil {
 		return
 	}
@@ -109,7 +108,7 @@ func SetPolicy(path string, perm, flag int) (fsid, ino int64, status int, err er
 }
 
 func Enable() bool {
-	tmp, err := exector.Exec(`{"type":"user::file::enable"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::file::enable"}`, exector.ControlTimeout)
 	if err != nil {
 		return false
 	}
@@ -125,7 +124,7 @@ func Enable() bool {
 }
 
 func Disable() bool {
-	tmp, err := exector.Exec(`{"type":"user::file::disable"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::file::disable"}`, exector.ControlTimeout)
 	if err != nil {
 		return false
 	}
@@ -141,7 +140,7 @@ func Disable() bool {
 }
 
 func ClearPolicy() bool {
-	tmp, err := exector.Exec(`{"type":"user::file::clear"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::file::clear"}`, exector.ControlTimeout)
 	if err != nil {
 		return false
 	}

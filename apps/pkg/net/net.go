@@ -4,7 +4,6 @@ package net
 import (
 	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/lanthora/hackernel/apps/pkg/exector"
 )
@@ -83,7 +82,7 @@ func AddPolicy(policy Policy) bool {
 		return false
 	}
 
-	tmp, err := exector.Exec(string(bytes), time.Second)
+	tmp, err := exector.Exec(string(bytes), exector.ControlTimeout)
 	if err != nil {
 		return false
 	}
@@ -112,7 +111,7 @@ func DeletePolicy(id int) bool {
 		return false
 	}
 
-	tmp, err := exector.Exec(string(bytes), time.Second)
+	tmp, err := exector.Exec(string(bytes), exector.ControlTimeout)
 	if err != nil {
 		return false
 	}
@@ -128,7 +127,7 @@ func DeletePolicy(id int) bool {
 }
 
 func Enable() bool {
-	tmp, err := exector.Exec(`{"type":"user::net::enable"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::net::enable"}`, exector.ControlTimeout)
 	if err != nil {
 		return false
 	}
@@ -144,7 +143,7 @@ func Enable() bool {
 }
 
 func Disable() bool {
-	tmp, err := exector.Exec(`{"type":"user::net::disable"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::net::disable"}`, exector.ControlTimeout)
 	if err != nil {
 		return false
 	}
@@ -160,7 +159,7 @@ func Disable() bool {
 }
 
 func ClearPolicy() bool {
-	tmp, err := exector.Exec(`{"type":"user::net::clear"}`, time.Second)
+	tmp, err := exector.Exec(`{"type":"user::net::clear"}`, exector.ControlTimeout)
 	if err != nil {
 		return false
 	}

@@ -7,6 +7,10 @@ import (
 	"github.com/lanthora/hackernel/apps/pkg/connector"
 )
 
+// ControlTimeout allows kernel hook removal to finish its RCU grace periods.
+// Keep this below the HTTP client timeout used by the management console.
+const ControlTimeout = 10 * time.Second
+
 var conn = connector.New()
 var mutex sync.Mutex
 

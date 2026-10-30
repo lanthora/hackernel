@@ -4,7 +4,6 @@ package process
 import (
 	"encoding/json"
 	"errors"
-	"time"
 
 	"github.com/lanthora/hackernel/apps/pkg/exector"
 	"github.com/sirupsen/logrus"
@@ -46,7 +45,7 @@ func UpdateJudge(judge int) bool {
 		return false
 	}
 
-	responseStr, err := exector.Exec(string(bytes), time.Second)
+	responseStr, err := exector.Exec(string(bytes), exector.ControlTimeout)
 	if err != nil {
 		return false
 	}
@@ -62,7 +61,7 @@ func UpdateJudge(judge int) bool {
 }
 
 func Enable() bool {
-	responseStr, err := exector.Exec(`{"type":"user::proc::enable"}`, time.Second)
+	responseStr, err := exector.Exec(`{"type":"user::proc::enable"}`, exector.ControlTimeout)
 	if err != nil {
 		return false
 	}
@@ -78,7 +77,7 @@ func Enable() bool {
 }
 
 func Disable() bool {
-	responseStr, err := exector.Exec(`{"type":"user::proc::disable"}`, time.Second)
+	responseStr, err := exector.Exec(`{"type":"user::proc::disable"}`, exector.ControlTimeout)
 	if err != nil {
 		return false
 	}
@@ -94,7 +93,7 @@ func Disable() bool {
 }
 
 func ClearPolicy() bool {
-	responseStr, err := exector.Exec(`{"type":"user::proc::trusted::clear"}`, time.Second)
+	responseStr, err := exector.Exec(`{"type":"user::proc::trusted::clear"}`, exector.ControlTimeout)
 	if err != nil {
 		return false
 	}
@@ -122,7 +121,7 @@ func SetTrustedCmd(workdir, binary, argv string) (err error) {
 	}
 
 	var reply string
-	reply, err = exector.Exec(string(b), time.Second)
+	reply, err = exector.Exec(string(b), exector.ControlTimeout)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -146,7 +145,7 @@ func SetUntrustedCmd(workdir, binary, argv string) (err error) {
 	}
 
 	var reply string
-	reply, err = exector.Exec(string(b), time.Second)
+	reply, err = exector.Exec(string(b), exector.ControlTimeout)
 	if err != nil {
 		logrus.Error(err)
 		return
