@@ -35,6 +35,7 @@ func Init(router *gin.Engine, db *sql.DB) (err error) {
 	fileGroup.POST("/disableModule", w.disableModule)
 	fileGroup.POST("/showModuleStatus", w.showModuleStatus)
 
+	fileGroup.POST("/browse", w.browse)
 	fileGroup.POST("/addPolicy", w.addPolicy)
 	fileGroup.POST("/updatePolicy", w.updatePolicy)
 	fileGroup.POST("/deletePolicy", w.deletePolicy)
@@ -75,25 +76,23 @@ func (w *Worker) showModuleStatus(context *gin.Context) {
 }
 
 func (w *Worker) enableModule(context *gin.Context) {
-	if err := w.config.SetInteger(config.FileModuleStatus, file.StatusEnable); err != nil {
-		render.Status(context, render.StatusProcessEnableFailed)
+	if !file.Enable() {
+		render.Status(context, render.StatusFileEnableFailed)
 		return
 	}
-	ok := file.Enable()
-	if !ok {
-		render.Status(context, render.StatusProcessEnableFailed)
+	if err := w.config.SetInteger(config.FileModuleStatus, file.StatusEnable); err != nil {
+		render.Status(context, render.StatusFileEnableFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)
 }
 
 func (w *Worker) disableModule(context *gin.Context) {
-	if err := w.config.SetInteger(config.FileModuleStatus, file.StatusDisable); err != nil {
+	if !file.Disable() {
 		render.Status(context, render.StatusFileDisableFailed)
 		return
 	}
-	ok := file.Disable()
-	if !ok {
+	if err := w.config.SetInteger(config.FileModuleStatus, file.StatusDisable); err != nil {
 		render.Status(context, render.StatusFileDisableFailed)
 		return
 	}
@@ -103,7 +102,7 @@ func (w *Worker) disableModule(context *gin.Context) {
 func (w *Worker) addPolicy(context *gin.Context) {
 	request := struct {
 		Path string `json:"path" binding:"required"`
-		Perm int    `json:"perm" binding:"number"`
+		Perm int    `json:"perm" binding:"required,min=1,max=255"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -121,7 +120,7 @@ func (w *Worker) addPolicy(context *gin.Context) {
 		return
 	}
 
-	if status == file.StatusPolicyConflict {
+	if status == file.StatusPolicyFileNotExist {
 		render.Status(context, render.StatusFileAddPolicyFileNotExist)
 		return
 	}
@@ -137,8 +136,8 @@ func (w *Worker) addPolicy(context *gin.Context) {
 
 func (w *Worker) updatePolicy(context *gin.Context) {
 	request := struct {
-		ID   int `json:"id" binding:"number"`
-		Perm int `json:"perm" binding:"number"`
+		ID   int `json:"id" binding:"required,gt=0"`
+		Perm int `json:"perm" binding:"required,min=1,max=255"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -163,7 +162,7 @@ func (w *Worker) updatePolicy(context *gin.Context) {
 		return
 	}
 
-	if status == file.StatusPolicyConflict {
+	if status == file.StatusPolicyFileNotExist {
 		render.Status(context, render.StatusFileUpdatePolicyFileNotExist)
 		return
 	}
@@ -180,7 +179,7 @@ func (w *Worker) updatePolicy(context *gin.Context) {
 
 func (w *Worker) deletePolicy(context *gin.Context) {
 	request := struct {
-		ID int `json:"id" binding:"number"`
+		ID int `json:"id" binding:"required,gt=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -194,9 +193,9 @@ func (w *Worker) deletePolicy(context *gin.Context) {
 		return
 	}
 
-	_, _, _, err = file.SetPolicy(policy.Path, 0, file.FlagAny)
-	if err != nil {
-		render.Status(context, render.StatusUnknownError)
+	_, _, status, err := file.SetPolicy(policy.Path, 0, file.FlagAny)
+	if err != nil || (status != file.StatusPolicyNormal && status != file.StatusPolicyFileNotExist) {
+		render.Status(context, render.StatusFileDeletePolicyFailed)
 		return
 	}
 
@@ -208,15 +207,22 @@ func (w *Worker) deletePolicy(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-// TODO: 清空配置列表
 func (w *Worker) clearPolicies(context *gin.Context) {
-	render.Status(context, render.StatusUnknownError)
+	if !file.ClearPolicy() {
+		render.Status(context, render.StatusFileDeletePolicyFailed)
+		return
+	}
+	if _, err := w.db.Exec("delete from file_policy"); err != nil {
+		render.Status(context, render.StatusFileDeletePolicyFailed)
+		return
+	}
+	render.Status(context, render.StatusSuccess)
 }
 
 func (w *Worker) listPolicies(context *gin.Context) {
 	request := struct {
-		Limit  int `json:"limit" binding:"number"`
-		Offset int `json:"offset" binding:"number"`
+		Limit  int `json:"limit" binding:"required,min=1,max=200"`
+		Offset int `json:"offset" binding:"min=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -235,7 +241,7 @@ func (w *Worker) listPolicies(context *gin.Context) {
 
 func (w *Worker) showPolicy(context *gin.Context) {
 	request := struct {
-		ID int `json:"id" binding:"number"`
+		ID int `json:"id" binding:"required,gt=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -253,8 +259,8 @@ func (w *Worker) showPolicy(context *gin.Context) {
 
 func (w *Worker) listEvents(context *gin.Context) {
 	request := struct {
-		Limit  int `json:"limit" binding:"number"`
-		Offset int `json:"offset" binding:"number"`
+		Limit  int `json:"limit" binding:"required,min=1,max=200"`
+		Offset int `json:"offset" binding:"min=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -272,7 +278,7 @@ func (w *Worker) listEvents(context *gin.Context) {
 
 func (w *Worker) deleteEvent(context *gin.Context) {
 	request := struct {
-		ID int `json:"id" binding:"number"`
+		ID int `json:"id" binding:"required,gt=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -290,8 +296,8 @@ func (w *Worker) deleteEvent(context *gin.Context) {
 
 func (w *Worker) updateEventStatus(context *gin.Context) {
 	request := struct {
-		Status int `json:"status" binding:"number"`
-		ID     int `json:"id" binding:"number"`
+		Status *int `json:"status" binding:"required,min=0,max=1"`
+		ID     int  `json:"id" binding:"required,gt=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -299,7 +305,7 @@ func (w *Worker) updateEventStatus(context *gin.Context) {
 		return
 	}
 
-	err := w.updateFileEventStatusById(request.Status, request.ID)
+	err := w.updateFileEventStatusById(*request.Status, request.ID)
 	if err != nil {
 		render.Status(context, render.StatusFileUpdateEventStatusFailed)
 		return

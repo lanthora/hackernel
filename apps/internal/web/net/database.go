@@ -2,6 +2,7 @@
 package net
 
 import (
+	"database/sql"
 	"github.com/lanthora/hackernel/apps/pkg/net"
 	"github.com/sirupsen/logrus"
 )
@@ -9,8 +10,8 @@ import (
 const (
 	sqlInsertNetPolicy           = `insert into net_policy(priority,addr_src_begin,addr_src_end,addr_dst_begin,addr_dst_end,protocol_begin,protocol_end,port_src_begin,port_src_end,port_dst_begin,port_dst_end,flags,response) values(?,?,?,?,?,?,?,?,?,?,?,?,?)`
 	sqlDeleteNetPolicyById       = `delete from net_policy where id=?`
-	sqlQueryNetPolicyLimitOffset = `select id,priority,addr_src_begin,addr_src_end,addr_dst_begin,addr_dst_end,protocol_begin,protocol_end,port_src_begin,port_src_end,port_dst_begin,port_dst_end,flags,response from net_policy where id>? limit ?`
-	sqlQueryNetEventLimitOffset  = `select id,protocol,saddr,daddr,sport,dport,timestamp,policy,status from net_event where id>? limit ?`
+	sqlQueryNetPolicyLimitOffset = `select id,priority,addr_src_begin,addr_src_end,addr_dst_begin,addr_dst_end,protocol_begin,protocol_end,port_src_begin,port_src_end,port_dst_begin,port_dst_end,flags,response from net_policy where id>? order by id limit ?`
+	sqlQueryNetEventLimitOffset  = `select id,protocol,saddr,daddr,sport,dport,timestamp,policy,status from net_event where id>? order by id limit ?`
 	sqlDeleteNetEventById        = `delete from net_event where id=?`
 	sqlUpdateNetEventStatusById  = `update net_event set status=? where id=?`
 	sqlQueryNetPolicyCount       = `select count(*) from net_policy`
@@ -141,11 +142,17 @@ func (w *Worker) deleteNetEventById(id int) (err error) {
 	}
 	defer stmt.Close()
 
-	// TODO: 数据不存在时错误提示
-	_, err = stmt.Exec(id)
+	result, err := stmt.Exec(id)
 	if err != nil {
 		logrus.Error(err)
 		return
+	}
+	count, countErr := result.RowsAffected()
+	if countErr != nil {
+		return countErr
+	}
+	if count != 1 {
+		return sql.ErrNoRows
 	}
 	return
 }
@@ -158,11 +165,17 @@ func (w *Worker) updateNetEventStatusById(status, id int) (err error) {
 	}
 	defer stmt.Close()
 
-	// TODO: 数据不存在时错误提示
-	_, err = stmt.Exec(status, id)
+	result, err := stmt.Exec(status, id)
 	if err != nil {
 		logrus.Error(err)
 		return
+	}
+	count, countErr := result.RowsAffected()
+	if countErr != nil {
+		return countErr
+	}
+	if count != 1 {
+		return sql.ErrNoRows
 	}
 	return
 }

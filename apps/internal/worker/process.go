@@ -17,7 +17,7 @@ import (
 
 const (
 	sqlCreateProcessTable    = `create table if not exists process_event(id integer primary key autoincrement, workdir text not null, binary text not null, argv text not null, count integer not null, judge integer not null, status integer not null)`
-	sqlUpdateProcessCount    = `update process_event set count=count+1,judge=?,status=? where workdir=? and binary=? and argv=?`
+	sqlUpdateProcessCount    = `update process_event set count=count+1,judge=? where workdir=? and binary=? and argv=?`
 	sqlInsertProcessEvent    = `insert into process_event(workdir,binary,argv,count,judge,status) values(?,?,?,1,?,?)`
 	sqlQueryAllowedProcesses = `select workdir,binary,argv from process_event where status=2`
 )
@@ -195,17 +195,13 @@ func (w *ProcessWorker) updateCmd(workdir, binary, argv string, judge int) (err 
 		status = process.StatusUntrusted
 	}
 
-	if status == process.StatusTrusted {
-		process.SetTrustedCmd(workdir, binary, argv)
-	}
-
 	stmt, err := w.db.Prepare(sqlUpdateProcessCount)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
 	defer stmt.Close()
-	result, err := stmt.Exec(judge, status, workdir, binary, argv)
+	result, err := stmt.Exec(judge, workdir, binary, argv)
 	if err != nil {
 		logrus.Error(err)
 		return
@@ -220,6 +216,11 @@ func (w *ProcessWorker) updateCmd(workdir, binary, argv string, judge int) (err 
 		return
 	}
 
+	if status == process.StatusTrusted {
+		if err = process.SetTrustedCmd(workdir, binary, argv); err != nil {
+			return
+		}
+	}
 	stmt, err = w.db.Prepare(sqlInsertProcessEvent)
 	if err != nil {
 		logrus.Error(err)

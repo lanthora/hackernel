@@ -75,12 +75,11 @@ func (w *Worker) showModuleStatus(context *gin.Context) {
 }
 
 func (w *Worker) enableModule(context *gin.Context) {
-	if err := w.config.SetInteger(config.NetModuleStatus, net.StatusEnable); err != nil {
-		render.Status(context, render.StatusProcessEnableFailed)
+	if !net.Enable() {
+		render.Status(context, render.StatusNetEnableFailed)
 		return
 	}
-	ok := net.Enable()
-	if !ok {
+	if err := w.config.SetInteger(config.NetModuleStatus, net.StatusEnable); err != nil {
 		render.Status(context, render.StatusNetEnableFailed)
 		return
 	}
@@ -88,12 +87,11 @@ func (w *Worker) enableModule(context *gin.Context) {
 }
 
 func (w *Worker) disableModule(context *gin.Context) {
-	if err := w.config.SetInteger(config.NetModuleStatus, net.StatusDisable); err != nil {
+	if !net.Disable() {
 		render.Status(context, render.StatusNetDisableFailed)
 		return
 	}
-	ok := net.Disable()
-	if !ok {
+	if err := w.config.SetInteger(config.NetModuleStatus, net.StatusDisable); err != nil {
 		render.Status(context, render.StatusNetDisableFailed)
 		return
 	}
@@ -108,6 +106,10 @@ func (w *Worker) addPolicy(context *gin.Context) {
 		return
 	}
 
+	if !validPolicy(request) {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
 	id, err := w.insertNetPolicy(&request)
 	if err != nil {
 		render.Status(context, render.StatusNetAddPolicyDatabaseFailed)
@@ -116,6 +118,7 @@ func (w *Worker) addPolicy(context *gin.Context) {
 
 	request.ID = id
 	if ok := net.AddPolicy(request); !ok {
+		w.deleteNetPolicyById(int(id))
 		render.Status(context, render.StatusNetAddPolicyFailed)
 		return
 	}
@@ -125,7 +128,7 @@ func (w *Worker) addPolicy(context *gin.Context) {
 
 func (w *Worker) deletePolicy(context *gin.Context) {
 	request := struct {
-		ID int `json:"id" binding:"number"`
+		ID int `json:"id" binding:"required,gt=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -133,6 +136,15 @@ func (w *Worker) deletePolicy(context *gin.Context) {
 		return
 	}
 
+	var exists int
+	if err := w.db.QueryRow("select count(*) from net_policy where id=?", request.ID).Scan(&exists); err != nil || exists != 1 {
+		render.Status(context, render.StatusNetPolicyNotExist)
+		return
+	}
+	if !net.DeletePolicy(request.ID) {
+		render.Status(context, render.StatusNetDeletePolicyFailed)
+		return
+	}
 	err := w.deleteNetPolicyById(request.ID)
 	if err == net.ErrorPolicyNotExist {
 		render.Status(context, render.StatusNetPolicyNotExist)
@@ -144,19 +156,13 @@ func (w *Worker) deletePolicy(context *gin.Context) {
 		return
 	}
 
-	ok := net.DeletePolicy(request.ID)
-	if !ok {
-		render.Status(context, render.StatusNetDeletePolicyFailed)
-		return
-	}
-
 	render.Status(context, render.StatusSuccess)
 }
 
 func (w *Worker) listPolicies(context *gin.Context) {
 	request := struct {
-		Limit  int `json:"limit" binding:"number"`
-		Offset int `json:"offset" binding:"number"`
+		Limit  int `json:"limit" binding:"required,min=1,max=200"`
+		Offset int `json:"offset" binding:"min=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -175,8 +181,8 @@ func (w *Worker) listPolicies(context *gin.Context) {
 
 func (w *Worker) listEvents(context *gin.Context) {
 	request := struct {
-		Limit  int `json:"limit" binding:"number"`
-		Offset int `json:"offset" binding:"number"`
+		Limit  int `json:"limit" binding:"required,min=1,max=200"`
+		Offset int `json:"offset" binding:"min=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -194,7 +200,7 @@ func (w *Worker) listEvents(context *gin.Context) {
 
 func (w *Worker) deleteEvent(context *gin.Context) {
 	request := struct {
-		ID int `json:"id" binding:"number"`
+		ID int `json:"id" binding:"required,gt=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -212,8 +218,8 @@ func (w *Worker) deleteEvent(context *gin.Context) {
 
 func (w *Worker) updateEventStatus(context *gin.Context) {
 	request := struct {
-		Status int `json:"status" binding:"number"`
-		ID     int `json:"id" binding:"number"`
+		Status *int `json:"status" binding:"required,min=0,max=1"`
+		ID     int  `json:"id" binding:"required,gt=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -221,7 +227,7 @@ func (w *Worker) updateEventStatus(context *gin.Context) {
 		return
 	}
 
-	err := w.updateNetEventStatusById(request.Status, request.ID)
+	err := w.updateNetEventStatusById(*request.Status, request.ID)
 	if err != nil {
 		render.Status(context, render.StatusNetUpdateEventStatusFailed)
 		return

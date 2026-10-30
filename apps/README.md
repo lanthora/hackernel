@@ -21,3 +21,7 @@ make
 
 其他程序的运行可能需要配置文件,配置文件模板见 `configs` 目录.
 
+
+## Web 管理控制台
+
+请从仓库根目录运行 `make web`，确保前端资源先构建并嵌入 Go 二进制。运行时可通过 `hackernel-web -config /path/to/web.yaml` 指定配置；默认仍读取 `/etc/hackernel/web.yaml`。详情见 [WebUI 文档](../webui/README.md)。

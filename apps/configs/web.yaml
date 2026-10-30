@@ -2,4 +2,5 @@
 db: "/var/lib/hackernel/web.db"
 
 # web service listening address
-listen: "0.0.0.0:80"
+# Local-only by default. Configure explicitly for remote administration.
+listen: "127.0.0.1:8080"

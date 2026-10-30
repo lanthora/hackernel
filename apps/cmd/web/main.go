@@ -3,6 +3,7 @@ package main
 
 import (
 	"database/sql"
+	"flag"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,6 +18,8 @@ import (
 )
 
 func main() {
+	configPath := flag.String("config", "", "path to web.yaml (default: /etc/hackernel/web.yaml)")
+	flag.Parse()
 	logger.InitLogrusFormat()
 
 	sigchan := make(chan os.Signal, 1)
@@ -26,6 +29,9 @@ func main() {
 	config.SetConfigName("web")
 	config.SetConfigType("yaml")
 	config.AddConfigPath("/etc/hackernel")
+	if *configPath != "" {
+		config.SetConfigFile(*configPath)
+	}
 	if err := config.ReadInConfig(); err != nil {
 		logrus.Fatal(err)
 	}

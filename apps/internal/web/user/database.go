@@ -3,7 +3,12 @@ package user
 
 import (
 	"crypto/sha256"
+	"crypto/subtle"
 	"encoding/hex"
+	"errors"
+	"github.com/gobwas/glob"
+	"golang.org/x/crypto/bcrypt"
+	"strings"
 
 	"github.com/google/uuid"
 )
@@ -42,9 +47,18 @@ func (w *Worker) noUser() bool {
 }
 
 func (w *Worker) createUser(username, password, alias, permissions string) (err error) {
+	if len(password) < 8 || len(password) > 72 || len(username) == 0 || len(username) > 128 {
+		return errors.New("invalid username or password")
+	}
+	if _, err = glob.Compile(permissions); err != nil {
+		return
+	}
 	salt := uuid.NewString()
-	sum := sha256.Sum256([]byte(salt + password))
-	hash := hex.EncodeToString(sum[:])
+	encoded, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return
+	}
+	hash := string(encoded)
 
 	stmt, err := w.db.Prepare(sqlInsertUser)
 	if err != nil {
@@ -71,8 +85,17 @@ func (w *Worker) checkUserPassword(username, password string) (ok bool, err erro
 	if err = stmt.QueryRow(username).Scan(&salt, &hash); err != nil {
 		return
 	}
+	if strings.HasPrefix(hash, "$2") {
+		return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password)) == nil, nil
+	}
 	sum := sha256.Sum256([]byte(salt + password))
-	ok = (hash == hex.EncodeToString(sum[:]))
+	ok = subtle.ConstantTimeCompare([]byte(hash), []byte(hex.EncodeToString(sum[:]))) == 1
+	if ok {
+		encoded, hashErr := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if hashErr == nil {
+			_, err = w.db.Exec("update user set password=? where username=? and password=?", string(encoded), username, hash)
+		}
+	}
 	return
 }
 
@@ -123,9 +146,18 @@ func (w *Worker) updateUserInfoByID(id int64, username, password, alias, permiss
 	}
 	defer stmt.Close()
 
+	if len(password) < 8 || len(password) > 72 || len(username) == 0 || len(username) > 128 {
+		return false
+	}
+	if _, err := glob.Compile(permissions); err != nil {
+		return false
+	}
 	salt := uuid.NewString()
-	sum := sha256.Sum256([]byte(salt + password))
-	hash := hex.EncodeToString(sum[:])
+	encoded, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return false
+	}
+	hash := string(encoded)
 
 	result, err := stmt.Exec(username, salt, hash, alias, permissions, id)
 	if err != nil {
@@ -134,6 +166,14 @@ func (w *Worker) updateUserInfoByID(id int64, username, password, alias, permiss
 	affected, err := result.RowsAffected()
 	if err != nil {
 		return false
+	}
+	if affected == 1 {
+		for _, key := range loggedUser.Keys() {
+			user, ok := loggedUser.Peek(key)
+			if ok && user.UserID == id {
+				loggedUser.Remove(key)
+			}
+		}
 	}
 	return affected == 1
 }
@@ -152,6 +192,14 @@ func (w *Worker) deleteUserByID(id int64) bool {
 	affected, err := result.RowsAffected()
 	if err != nil {
 		return false
+	}
+	if affected == 1 {
+		for _, key := range loggedUser.Keys() {
+			user, ok := loggedUser.Peek(key)
+			if ok && user.UserID == id {
+				loggedUser.Remove(key)
+			}
+		}
 	}
 	return affected == 1
 }

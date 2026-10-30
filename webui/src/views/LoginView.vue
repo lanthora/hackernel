@@ -1,68 +1,68 @@
-<template>
-  <div>
-    <form @submit.prevent="login" class="form">
-      <div class="input-group">
-        <label for="username">用户名:</label>
-        <input type="text" id="username" v-model="username" required>
-      </div>
-      <div class="input-group">
-        <label for="password">密码:</label>
-        <input type="password" id="password" v-model="password" required>
-      </div>
-      <div class="button-group">
-        <button type="submit">登录</button>
-      </div>
-    </form>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { ref } from 'vue'
-
-const username = ref('')
-const password = ref('')
-
-const login = () => {
-  // 这里可以写登录的逻辑，比如发送请求到后端验证用户名和密码
-  alert(`欢迎 ${username.value} 登录!`)
+import { useRoute, useRouter } from 'vue-router'
+import { api, errorMessage } from '../lib/api'
+import { loadSession } from '../lib/session'
+const route = useRoute(),
+  router = useRouter()
+const username = ref(''),
+  password = ref(''),
+  busy = ref(false)
+const error = ref(route.query.unavailable ? '无法连接管理服务，请确认服务正常后重试。' : '')
+async function login() {
+  busy.value = true
+  error.value = ''
+  try {
+    await api('/auth/login', { username: username.value, password: password.value })
+    await loadSession()
+    const target = String(route.query.redirect || '/overview')
+    await router.replace(
+      /^\/(overview|events|policies|settings|users)(\?|$)/.test(target) ? target : '/overview'
+    )
+  } catch (e) {
+    error.value = errorMessage(e)
+  } finally {
+    busy.value = false
+  }
 }
 </script>
-
-<style scoped>
-
-.form {
-  width: 400px;
-  margin: auto;
-  border: 1px solid #ccc;
-  padding: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.input-group {
-  margin: 10px 0;
-}
-
-.input-group label {
-  display: block;
-  font-weight: bold;
-}
-
-.input-group input {
-  width: 100%;
-  padding: 10px;
-  border: 1px solid #ccc;
-  outline: none;
-}
-
-.button-group {
-  text-align: center;
-}
-
-.button-group button {
-  padding: 10px 20px;
-  background: #0099ff;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-</style>
+<template>
+  <main class="login-page">
+    <section class="login-intro">
+      <h1>HIDS</h1>
+      <p>主机入侵检测系统</p>
+      <p>查看安全事件，管理进程、文件和网络防护。</p>
+      <span class="subtle">Linux 主机管理</span>
+    </section>
+    <section class="login-card">
+      <p class="eyebrow">欢迎使用 HIDS</p>
+      <h2>登录管理控制台</h2>
+      <p class="muted">使用主机管理账户继续。</p>
+      <form @submit.prevent="login">
+        <label
+          >用户名<input
+            v-model.trim="username"
+            autocomplete="username"
+            required
+            maxlength="128"
+            autofocus /></label
+        ><label
+          >密码<input
+            v-model="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            maxlength="72"
+        /></label>
+        <p v-if="error" class="notice error" role="alert">{{ error }}</p>
+        <button class="primary full" :disabled="busy">
+          {{ busy ? '正在登录…' : '登录控制台 →' }}
+        </button>
+      </form>
+      <p class="setup-note">
+        首次使用：数据库中没有账户时，本次输入的用户名和密码将创建为管理员（密码为 8–72
+        字节）。请在可信的本机环境中完成初始化。
+      </p>
+    </section>
+  </main>
+</template>

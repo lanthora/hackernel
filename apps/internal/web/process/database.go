@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	sqlQueryProcessLimitOffset      = `select id,workdir,binary,argv,count,judge,status from process_event where id>? limit ?`
+	sqlQueryProcessLimitOffset      = `select id,workdir,binary,argv,count,judge,status from process_event where id>? order by id limit ?`
 	sqlUpdateProcessStatus          = `update process_event set status=? where id=?`
 	sqlQueryProcessCmdById          = `select workdir,binary,argv from process_event where id=?`
 	sqlQueryProcessPolicyCount      = `select count(*) from process_event`

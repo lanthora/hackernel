@@ -4,6 +4,7 @@ package file
 import (
 	"time"
 
+	"database/sql"
 	"github.com/lanthora/hackernel/apps/pkg/file"
 	"github.com/sirupsen/logrus"
 )
@@ -11,9 +12,9 @@ import (
 const (
 	sqlInsertFilePolicy           = `insert into file_policy(path,fsid,ino,perm,timestamp,status) values(?,?,?,?,?,?)`
 	sqlUpdateFilePolicyById       = `update file_policy set fsid=?,ino=?,perm=?,timestamp=?,status=? where id=?`
-	sqlQueryFileEventLimitOffset  = `select id,path,fsid,ino,perm,timestamp,policy,status from file_event where id>? limit ?`
+	sqlQueryFileEventLimitOffset  = `select id,path,fsid,ino,perm,timestamp,policy,status from file_event where id>? order by id limit ?`
 	sqlQueryFilePolicyById        = `select id,path,fsid,ino,perm,timestamp,status from file_policy where id=?`
-	sqlQueryFilePolicyLimitOffset = `select id,path,fsid,ino,perm,timestamp,status from file_policy where id>? limit ?`
+	sqlQueryFilePolicyLimitOffset = `select id,path,fsid,ino,perm,timestamp,status from file_policy where id>? order by id limit ?`
 	sqlDeleteFilePolicyById       = `delete from file_policy where id=?`
 	sqlDeleteFileEventById        = `delete from file_event where id=?`
 	sqlUpdateFileEventStatusById  = `update file_event set status=? where id=?`
@@ -147,11 +148,17 @@ func (w *Worker) deleteFileEventById(id int) (err error) {
 	}
 	defer stmt.Close()
 
-	// TODO: 数据不存在时错误提示
-	_, err = stmt.Exec(id)
+	result, err := stmt.Exec(id)
 	if err != nil {
 		logrus.Error(err)
 		return
+	}
+	count, countErr := result.RowsAffected()
+	if countErr != nil {
+		return countErr
+	}
+	if count != 1 {
+		return sql.ErrNoRows
 	}
 	return
 }
@@ -164,11 +171,17 @@ func (w *Worker) updateFileEventStatusById(status, id int) (err error) {
 	}
 	defer stmt.Close()
 
-	// TODO: 数据不存在时错误提示
-	_, err = stmt.Exec(status, id)
+	result, err := stmt.Exec(status, id)
 	if err != nil {
 		logrus.Error(err)
 		return
+	}
+	count, countErr := result.RowsAffected()
+	if countErr != nil {
+		return countErr
+	}
+	if count != 1 {
+		return sql.ErrNoRows
 	}
 	return
 }
