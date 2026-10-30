@@ -7,7 +7,7 @@ require (
 	github.com/gin-contrib/pprof v1.5.6
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-telegram-bot-api/telegram-bot-api/v5 v5.5.1
-	github.com/gobwas/glob v1.0.0
+	github.com/gobwas/glob v1.1.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/mattn/go-sqlite3 v1.14.52
