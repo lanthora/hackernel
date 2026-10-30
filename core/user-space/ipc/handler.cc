@@ -86,6 +86,8 @@ bool handle_user_ctrl_exit_msg(const std::string &msg) {
     if (doc["type"] != "user::ctrl::exit")
         return false;
 
+    doc["data"]["code"] = 0;
+    ipc_server::global().send_msg_to_client(doc);
     shutdown_service(HACKERNEL_SUCCESS);
     return true;
 }

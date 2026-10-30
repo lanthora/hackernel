@@ -89,13 +89,13 @@ func AddPolicy(policy Policy) bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err = json.Unmarshal([]byte(tmp), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }
 
 func DeletePolicy(id int) bool {
@@ -118,13 +118,13 @@ func DeletePolicy(id int) bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(tmp), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }
 
 func Enable() bool {
@@ -134,13 +134,13 @@ func Enable() bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(tmp), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }
 
 func Disable() bool {
@@ -150,13 +150,13 @@ func Disable() bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(tmp), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }
 
 func ClearPolicy() bool {
@@ -166,11 +166,11 @@ func ClearPolicy() bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(tmp), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }

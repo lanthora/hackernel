@@ -4,6 +4,7 @@ package user
 import (
 	"database/sql"
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/glob"
@@ -13,6 +14,8 @@ import (
 )
 
 var loggedUser *lru.Cache[string, User]
+var userDB *sql.DB
+var bootstrapMu sync.Mutex
 
 type Worker struct {
 	db *sql.DB
@@ -21,6 +24,7 @@ type Worker struct {
 }
 
 func Init(router *gin.Engine, db *sql.DB) (err error) {
+	userDB = db
 	onlineUserMax := 10
 	loggedUser, err = lru.New[string, User](onlineUserMax)
 	if err != nil {
@@ -80,7 +84,20 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		g, err := glob.Compile(user.Permissions)
+		var current User
+		if err := lookupUser(user.UserID, &current); err != nil {
+			loggedUser.Remove(session)
+			render.Status(context, render.StatusUserNotLoggedIn)
+			context.Abort()
+			return
+		}
+		loggedUser.Add(session, current)
+		context.Set("authenticatedUserID", current.UserID)
+		if context.Request.URL.Path == "/auth/showCurrentUserInfo" || context.Request.URL.Path == "/auth/logout" {
+			context.Next()
+			return
+		}
+		g, err := glob.Compile(current.Permissions)
 		if err != nil {
 			render.Status(context, render.StatusUserPermissionDenied)
 			context.Abort()
@@ -107,10 +124,16 @@ func (w *Worker) login(context *gin.Context) {
 		return
 	}
 
+	bootstrapMu.Lock()
 	if w.noUser() {
-		w.createUser(request.Username, request.Password, request.Username, `{*}`)
+		if err := w.createUser(request.Username, request.Password, request.Username, `{*}`); err != nil {
+			bootstrapMu.Unlock()
+			render.Status(context, render.StatusUserCreateUserFailed)
+			return
+		}
 	}
 
+	bootstrapMu.Unlock()
 	ok, err := w.checkUserPassword(request.Username, request.Password)
 	if err == sql.ErrNoRows {
 		render.Status(context, render.StatusUserLoginFaild)
@@ -193,10 +216,16 @@ func (w *Worker) listAllUsers(context *gin.Context) {
 
 func (w *Worker) deleteUser(context *gin.Context) {
 	request := struct {
-		UserID int64 `json:"userID" binding:"number"`
+		UserID int64 `json:"userID" binding:"required,gt=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+	session, _ := context.Cookie("session")
+	current, _ := loggedUser.Get(session)
+	if current.UserID == request.UserID {
 		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
@@ -209,7 +238,7 @@ func (w *Worker) deleteUser(context *gin.Context) {
 
 func (w *Worker) updateUserInfo(context *gin.Context) {
 	request := struct {
-		UserID      int64  `json:"userID" binding:"number"`
+		UserID      int64  `json:"userID" binding:"required,gt=0"`
 		Username    string `json:"username" binding:"required"`
 		Password    string `json:"password" binding:"required"`
 		AliasName   string `json:"aliasName" binding:"required"`
@@ -225,15 +254,30 @@ func (w *Worker) updateUserInfo(context *gin.Context) {
 		render.Status(context, render.StatusUserUpdateUserFailed)
 		return
 	}
+	session, _ := context.Cookie("session")
+	current, err := w.queryUserByUsername(request.Username)
+	if err == nil {
+		// Only preserve the caller's session when they edited their own account.
+		if caller, ok := context.Get("authenticatedUserID"); ok && caller == request.UserID {
+			loggedUser.Add(session, current)
+		}
+	}
 	render.Status(context, render.StatusSuccess)
 }
 
 func updateSession(context *gin.Context, session string) {
 	context.SetSameSite(http.SameSiteStrictMode)
-	context.SetCookie("session", session, 0, "/", "", false, false)
+	context.SetCookie("session", session, 0, "/", "", context.Request.TLS != nil, true)
 }
 
 func deleteSession(context *gin.Context) {
+	if old, err := context.Cookie("session"); err == nil {
+		loggedUser.Remove(old)
+	}
 	context.SetSameSite(http.SameSiteStrictMode)
-	context.SetCookie("session", "deleted", -1, "/", "", false, false)
+	context.SetCookie("session", "deleted", -1, "/", "", context.Request.TLS != nil, true)
+}
+
+func lookupUser(id int64, current *User) error {
+	return userDB.QueryRow("select id,username,alias,permissions from user where id=?", id).Scan(&current.UserID, &current.Username, &current.AliasName, &current.Permissions)
 }

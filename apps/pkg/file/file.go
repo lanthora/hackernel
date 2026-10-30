@@ -79,7 +79,7 @@ func SetPolicy(path string, perm, flag int) (fsid, ino int64, status int, err er
 	}
 
 	response := struct {
-		Code int    `json:"code"`
+		Code *int   `json:"code"`
 		Fsid uint64 `json:"fsid"`
 		Ino  uint64 `json:"ino"`
 	}{}
@@ -91,7 +91,11 @@ func SetPolicy(path string, perm, flag int) (fsid, ino int64, status int, err er
 	fsid = (int64)(response.Fsid)
 	ino = (int64)(response.Ino)
 
-	switch response.Code {
+	if response.Code == nil {
+		status = StatusPolicyUnknown
+		return
+	}
+	switch *response.Code {
 	case 0:
 		status = StatusPolicyNormal
 	case -2:
@@ -111,13 +115,13 @@ func Enable() bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(tmp), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }
 
 func Disable() bool {
@@ -127,13 +131,13 @@ func Disable() bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(tmp), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }
 
 func ClearPolicy() bool {
@@ -143,11 +147,11 @@ func ClearPolicy() bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(tmp), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }

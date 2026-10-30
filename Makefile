@@ -21,3 +21,8 @@ gentoo-build:
 	@scripts/gentoo-build.sh
 
 PHONY: build install clean uninstall arch-build arch-install gentoo-build
+
+web:
+	@scripts/build-web.sh
+
+.PHONY: web

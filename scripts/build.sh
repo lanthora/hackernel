@@ -10,10 +10,8 @@ cmake $workdir/core/user-space/ -DCMAKE_BUILD_TYPE=Release
 make
 
 cd $workdir/webui
-npm install
-npm run build
-rm -rf $workdir/apps/internal/web/webui/*
-cp -r $workdir/webui/dist/* $workdir/apps/internal/web/webui/
+npm ci
+npm run build:embed
 
 cd $workdir/apps
 make

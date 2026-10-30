@@ -1,17 +1,80 @@
-# WebUI
+# HIDS 管理界面
 
-通过 create-vue 创建的页面原型，尚未接入后端接口，用于验证统一打包的可行性。
+Vue 3 + TypeScript 单页应用，使用同源 Cookie 会话连接 Go/Gin 服务。生产环境的页面与静态资源通过 `go:embed` 嵌入 `hackernel-web`，不需要 Node.js 或独立静态服务器。
 
-## 本地开发与构建
+## 功能
 
-- `npm ci`：按锁文件安装依赖。
-- `npm run dev`：启动开发服务器。
-- `npm run build`：检查应用类型并构建静态资源到 `dist/`。
+- 登录、退出、刷新后恢复会话、登录过期跳转。
+- 概览：核心通信检测、三个模块的保存配置、策略/记录数量、待处理数量，每 10 秒刷新，页面隐藏时暂停。
+- 事件：进程、文件、网络分类，详情，当前页筛选，ID 游标分页；进程命令信任/不信任；文件与网络已读状态；事件删除。
+- 策略：从进程事件管理命令信任；浏览主机文件系统选择文件或目录，新增、修改、删除、清空文件规则；网络 IPv4 地址、协议、端口范围和方向、优先级、放行/阻止、日志规则。
+- 设置：模块启停、进程工作模式、新命令默认状态、核心通信检查、性能诊断开关、停止核心。
+- 账户：新增、编辑（含密码重设）、删除和 glob 接口权限配置。
 
-统一打包脚本会将静态资源复制到 `apps/internal/web/webui/`，嵌入 Go 程序。
-当前没有自动化测试，未保留模板附带的测试框架和示例状态管理代码。
+模块状态是数据库中保存的配置；当前核心协议未提供各模块实际启用状态查询。核心连接检查不能替代实际模块状态确认。失败请求不会在页面显示为成功。
 
-## VSCode 开发配置
+## 构建与运行
 
-- 安装推荐插件 `Vue.volar` 和 `Vue.vscode-typescript-vue-plugin`
-- [禁用 VSCode 内置 TypeScript 插件](https://vuejs.org/guide/typescript/overview.html#configuring-tsconfig-json)
+构建环境需要 Node.js 20.19+（20.x）或 22.12+，以及项目要求的 Go 工具链。Node.js 仅用于构建，生产运行不依赖 Node.js。
+
+从仓库根目录运行：
+
+```sh
+make web
+./apps/cmd/web/hackernel-web -config /path/to/web.yaml
+```
+
+`make web` 安装锁定的前端依赖、检查类型、构建并复制资源、编译 Go Web 二进制。只构建 Web 程序，不编译内核模块。运行时仍需要 Linux 上的 Hackernel 核心服务。
+
+配置模板为 `apps/configs/web.yaml`，默认访问 `http://127.0.0.1:8080`。已有安装不会自动修改 `/etc/hackernel/web.yaml`。不传 `-config` 时继续读取该系统配置路径。
+
+首次登录且用户表为空时，输入的凭据会创建为管理员。请在可信的本机环境中完成，密码需 8–72 字节。已有 SHA-256 密码在成功登录后升级为 bcrypt。会话保存在服务内存中，服务重启需要重新登录。
+
+## 前端开发
+
+```sh
+cd webui
+npm ci
+npm run dev
+```
+
+Vite 将 `/auth`、`/admin`、`/ctrl`、`/process`、`/file`、`/net` 代理到 `http://127.0.0.1:8080`。可用 `HACKERNEL_API=http://127.0.0.1:其他端口 npm run dev` 修改目标。浏览器应通过 Vite 页面访问接口，以保持同源会话。
+
+```sh
+npm run build        # 类型检查与 dist 构建
+npm run build:embed  # 构建并准备 Go 嵌入资源
+npx eslint src --ext .vue,.ts
+```
+
+修改前端后必须重新准备嵌入资源并重新编译 Go。构建产物不提交到 Git。
+
+## 接口与权限
+
+沿用已有的 `{ status, message, data }` POST JSON 接口，`status = 0` 表示成功；未登录为 100，无权限为 101。列表的 `offset` 是上一页最后一条记录的 ID，非行偏移；`limit` 支持 1–200，结果按 ID 递增。GUI 每页显示 25 条。
+
+- 新增 `POST /file/browse`：接收 `{ path, after?, search? }`，读取 Go 服务所在主机的目录，返回规范化路径、父目录、文件与目录条目及下一页游标。每页最多 100 条，按名称排序；仅返回元数据，不读取文件内容。符号链接按目标类型处理，失效链接和特殊文件不可选。该接口需要单独授予 `/file/browse` 权限，`/file/list*` 不包含目录浏览权限。
+- 新增 `POST /ctrl/status`：`{ coreOnline, debugEnabled }`，通过核心 echo 检测连通性。
+- `POST /process/deleteEvents`：接收 `{ id }`，只删除非信任记录；需先取消信任才可删除信任记录。
+- `POST /file/clearPolicies`：清空核心及数据库文件规则。
+- 诊断开关改为 `POST /ctrl/enableDebug`、`POST /ctrl/disableDebug`。
+- pprof 默认关闭，开启后仍检查登录与对应路径权限。
+- 已登录账户始终可以读取自身信息和退出；其余接口由保存的 glob 权限表达式控制。
+- 修改账户后撤销该账户的旧会话；编辑当前账户时仅保留当前会话。
+
+全部权限：`{*}`。只读示例：
+
+```text
+{/process/listEvents,/process/show*,/file/list*,/file/show*,/net/list*,/net/show*,/ctrl/status}
+```
+
+接口启用同源 Origin/Fetch Metadata 校验、HttpOnly/SameSite Cookie 和请求体大小限制。远程访问需要显式配置监听地址，并由部署环境提供 HTTPS 和访问限制；使用 TLS 反向代理时，应配置其正确传递原始 Host。
+
+## 验证
+
+```sh
+cd apps
+go test ./...
+go test -race ./internal/web ./internal/worker
+```
+
+回归测试使用内存 SQLite 和独立 Unix socket 模拟核心，覆盖认证、权限、分页、规则操作、核心失败时的状态保留和静态资源路由。`HACKERNEL_SOCKET` 可覆盖 Go 客户端的默认 `/tmp/hackernel.sock`，方便隔离测试。测试不加载真实内核模块；内核执行行为需在 Linux 集成环境验证。

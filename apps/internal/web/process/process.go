@@ -82,24 +82,22 @@ func (w *Worker) showModuleStatus(context *gin.Context) {
 	render.Success(context, response)
 }
 func (w *Worker) enableModule(context *gin.Context) {
-	if err := w.config.SetInteger(config.ProcessModuleStatus, process.StatusEnable); err != nil {
+	if !process.Enable() {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
 	}
-	ok := process.Enable()
-	if !ok {
+	if err := w.config.SetInteger(config.ProcessModuleStatus, process.StatusEnable); err != nil {
 		render.Status(context, render.StatusProcessEnableFailed)
 		return
 	}
 	render.Status(context, render.StatusSuccess)
 }
 func (w *Worker) disableModule(context *gin.Context) {
-	if err := w.config.SetInteger(config.ProcessModuleStatus, process.StatusDisable); err != nil {
+	if !process.Disable() {
 		render.Status(context, render.StatusProcessDisableFailed)
 		return
 	}
-	ok := process.Disable()
-	if !ok {
+	if err := w.config.SetInteger(config.ProcessModuleStatus, process.StatusDisable); err != nil {
 		render.Status(context, render.StatusProcessDisableFailed)
 		return
 	}
@@ -113,7 +111,7 @@ func (w *Worker) showWorkMode(context *gin.Context) {
 	}
 
 	response := struct {
-		Judge int `json:"judge" binding:"number"`
+		Judge int `json:"judge" binding:"min=0,max=2"`
 	}{
 		Judge: judge,
 	}
@@ -123,7 +121,7 @@ func (w *Worker) showWorkMode(context *gin.Context) {
 
 func (w *Worker) updateWorkMode(context *gin.Context) {
 	request := struct {
-		Judge int `json:"judge" binding:"number"`
+		Judge *int `json:"judge" binding:"required,min=0,max=2"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -131,17 +129,17 @@ func (w *Worker) updateWorkMode(context *gin.Context) {
 		return
 	}
 
-	if request.Judge < process.StatusJudgeDisable || request.Judge > process.StatusJudgeDefense {
+	if *request.Judge < process.StatusJudgeDisable || *request.Judge > process.StatusJudgeDefense {
 		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
 
-	if err := w.config.SetInteger(config.ProcessProtectionMode, request.Judge); err != nil {
+	ok := process.UpdateJudge(*request.Judge)
+	if !ok {
 		render.Status(context, render.StatusProcessUpdateJudgeFailed)
 		return
 	}
-	ok := process.UpdateJudge(request.Judge)
-	if !ok {
+	if err := w.config.SetInteger(config.ProcessProtectionMode, *request.Judge); err != nil {
 		render.Status(context, render.StatusProcessUpdateJudgeFailed)
 		return
 	}
@@ -150,8 +148,8 @@ func (w *Worker) updateWorkMode(context *gin.Context) {
 
 func (w *Worker) listEvents(context *gin.Context) {
 	request := struct {
-		Limit  int `json:"limit" binding:"number"`
-		Offset int `json:"offset" binding:"number"`
+		Limit  int `json:"limit" binding:"required,min=1,max=200"`
+		Offset int `json:"offset" binding:"min=0"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -169,8 +167,8 @@ func (w *Worker) listEvents(context *gin.Context) {
 
 func (w *Worker) updateEventStatus(context *gin.Context) {
 	request := struct {
-		ID     int `json:"id" binding:"number"`
-		Status int `json:"status" binding:"number"`
+		ID     int  `json:"id" binding:"required,gt=0"`
+		Status *int `json:"status" binding:"required,min=0,max=2"`
 	}{}
 
 	if err := context.ShouldBindJSON(&request); err != nil {
@@ -184,7 +182,7 @@ func (w *Worker) updateEventStatus(context *gin.Context) {
 		return
 	}
 
-	switch request.Status {
+	switch *request.Status {
 	case process.StatusTrusted:
 		err = process.SetTrustedCmd(workdir, binary, argv)
 	default:
@@ -196,7 +194,7 @@ func (w *Worker) updateEventStatus(context *gin.Context) {
 		return
 	}
 
-	ok := w.updateStatus(int64(request.ID), request.Status)
+	ok := w.updateStatus(int64(request.ID), *request.Status)
 	if !ok {
 		render.Status(context, render.StatusProcessUpdatePolicyFailed)
 		return
@@ -204,20 +202,36 @@ func (w *Worker) updateEventStatus(context *gin.Context) {
 	render.Status(context, render.StatusSuccess)
 }
 
-// TODO: 补充进程事件删除功能
 func (w *Worker) deleteEvents(context *gin.Context) {
-	render.Status(context, render.StatusUnknownError)
+	request := struct {
+		ID int `json:"id" binding:"required,gt=0"`
+	}{}
+	if context.ShouldBindJSON(&request) != nil {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+	result, err := w.db.Exec("delete from process_event where id=? and status<>?", request.ID, process.StatusTrusted)
+	if err != nil {
+		render.Status(context, render.StatusUnknownError)
+		return
+	}
+	count, err := result.RowsAffected()
+	if err != nil || count != 1 {
+		render.Status(context, render.StatusInvalidArgument)
+		return
+	}
+	render.Status(context, render.StatusSuccess)
 }
 
 func (w *Worker) updateDefaultEventStatus(context *gin.Context) {
 	request := struct {
-		Status int `json:"status" binding:"number"`
+		Status *int `json:"status" binding:"required,min=0,max=2"`
 	}{}
 	if err := context.ShouldBindJSON(&request); err != nil {
 		render.Status(context, render.StatusInvalidArgument)
 		return
 	}
-	if err := w.config.SetInteger(config.ProcessCmdDefaultStatus, request.Status); err != nil {
+	if err := w.config.SetInteger(config.ProcessCmdDefaultStatus, *request.Status); err != nil {
 		render.Status(context, render.StatusProcessTrustUpdateFailed)
 		return
 	}
@@ -230,7 +244,7 @@ func (w *Worker) showDefaultEventStatus(context *gin.Context) {
 		status = process.StatusPending
 	}
 	response := struct {
-		Status int `json:"status" binding:"number"`
+		Status int `json:"status" binding:"min=0,max=2"`
 	}{
 		Status: status,
 	}

@@ -52,13 +52,13 @@ func UpdateJudge(judge int) bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }
 
 func Enable() bool {
@@ -68,13 +68,13 @@ func Enable() bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }
 
 func Disable() bool {
@@ -84,13 +84,13 @@ func Disable() bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }
 
 func ClearPolicy() bool {
@@ -100,13 +100,13 @@ func ClearPolicy() bool {
 	}
 
 	response := struct {
-		Code  int         `json:"code"`
+		Code  *int        `json:"code"`
 		Extra interface{} `json:"extra"`
 	}{}
 	if err := json.Unmarshal([]byte(responseStr), &response); err != nil {
 		return false
 	}
-	return response.Code == 0
+	return response.Code != nil && *response.Code == 0
 }
 
 func SetTrustedCmd(workdir, binary, argv string) (err error) {
@@ -121,11 +121,14 @@ func SetTrustedCmd(workdir, binary, argv string) (err error) {
 		return
 	}
 
-	// TODO: 更细致的判断是否执行成功
-	_, err = exector.Exec(string(b), time.Second)
+	var reply string
+	reply, err = exector.Exec(string(b), time.Second)
 	if err != nil {
 		logrus.Error(err)
 		return
+	}
+	if err == nil {
+		err = checkReply(reply)
 	}
 	return
 }
@@ -142,11 +145,27 @@ func SetUntrustedCmd(workdir, binary, argv string) (err error) {
 		return
 	}
 
-	// TODO: 更细致的判断是否执行成功
-	_, err = exector.Exec(string(b), time.Second)
+	var reply string
+	reply, err = exector.Exec(string(b), time.Second)
 	if err != nil {
 		logrus.Error(err)
 		return
 	}
+	if err == nil {
+		err = checkReply(reply)
+	}
 	return
+}
+
+func checkReply(reply string) error {
+	var result struct {
+		Code *int `json:"code"`
+	}
+	if err := json.Unmarshal([]byte(reply), &result); err != nil {
+		return err
+	}
+	if result.Code == nil || *result.Code != 0 {
+		return errors.New("core rejected process policy")
+	}
+	return nil
 }

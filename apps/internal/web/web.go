@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"net/http"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -46,6 +47,8 @@ func (w *WebWorker) Init() (err error) {
 	gin.SetMode(gin.ReleaseMode)
 
 	router := gin.New()
+	router.SetTrustedProxies(nil)
+	router.Use(gin.Recovery(), securityHeaders())
 	if err = user.Init(router, w.db); err != nil {
 		return
 	}
@@ -66,14 +69,22 @@ func (w *WebWorker) Init() (err error) {
 		return
 	}
 
-	router.Use(ctrl.PProfMiddleware())
+	router.Use(ctrl.PProfMiddleware(), func(c *gin.Context) {
+		if strings.HasPrefix(c.Request.URL.Path, pprof.DefaultPrefix) {
+			user.AuthMiddleware()(c)
+		}
+	})
 	pprof.Register(router)
 
 	router.NoRoute(webui)
 
 	w.server = &http.Server{
-		Addr:    w.addr,
-		Handler: router,
+		Addr:              w.addr,
+		Handler:           router,
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       15 * time.Second,
+		WriteTimeout:      30 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 	return
 }

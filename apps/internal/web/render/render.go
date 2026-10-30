@@ -49,6 +49,7 @@ const (
 	StatusFileUpdatePolicyFailed
 	StatusFileUpdateEventStatusFailed
 	StatusFileQueryEventFailed
+	StatusFileBrowseFailed
 )
 
 const (
@@ -66,6 +67,7 @@ const (
 )
 
 var messages = map[int]string{
+	StatusFileBrowseFailed:              "无法读取目录，请检查目录是否存在以及服务的访问权限",
 	StatusSuccess:                       "成功",
 	StatusUnknownError:                  "未知错误",
 	StatusInvalidArgument:               "无效参数",

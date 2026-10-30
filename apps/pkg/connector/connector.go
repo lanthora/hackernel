@@ -24,7 +24,10 @@ func New() *Connector {
 
 func (c *Connector) Connect() (err error) {
 	lname := fmt.Sprintf("/tmp/hackernel-%s.sock", uuid.New().String())
-	rname := "/tmp/hackernel.sock"
+	rname := os.Getenv("HACKERNEL_SOCKET")
+	if rname == "" {
+		rname = "/tmp/hackernel.sock"
+	}
 	nettype := "unixgram"
 	laddr := net.UnixAddr{Name: lname, Net: nettype}
 	raddr := net.UnixAddr{Name: rname, Net: nettype}
