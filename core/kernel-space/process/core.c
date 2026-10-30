@@ -73,21 +73,20 @@ static int process_perm_insert(const process_perm_id_t id)
 	process_perm_head_t *perm_head;
 	process_perm_node_t *new;
 
-	read_lock(&process_perm_hlist_lock);
-
-	perm_head = &process_perm_hlist[idx];
+	/* GFP_KERNEL may sleep; allocate before taking either spinlock. */
 	new = kmalloc(size, GFP_KERNEL);
 	if (!new) {
 		ERR("no memory");
-		goto out;
+		return -ENOMEM;
 	}
 	new->id = id;
 	new->perm = PROCESS_WATT;
 
+	read_lock(&process_perm_hlist_lock);
+	perm_head = &process_perm_hlist[idx];
 	write_lock(&perm_head->lock);
 	hlist_add_head(&new->node, &perm_head->head);
 	write_unlock(&perm_head->lock);
-out:
 	read_unlock(&process_perm_hlist_lock);
 	return 0;
 }
