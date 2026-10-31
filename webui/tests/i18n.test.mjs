@@ -117,7 +117,7 @@ test('all UI source messages and server errors have English translations', () =>
         fs.readFileSync(path.join(root, 'src', folder, filename), 'utf8')
       )
       inspectScript(descriptor.scriptSetup.content, filename)
-      function inspect(node) {
+      const inspect = (node) => {
         if (node.type === 2)
           assert.ok(
             !chinese.test(node.content),

@@ -309,3 +309,23 @@ func TestSlowKernelControlResponse(t *testing.T) {
 	c.post("/file/enableModule", gin.H{}, 0)
 	c.post("/file/disableModule", gin.H{}, 0)
 }
+
+func TestProcessSummarySeparatesPoliciesFromPendingEvents(t *testing.T) {
+	db, handler := testServer(t)
+	client := &testClient{t: t, handler: handler}
+	client.post("/auth/login", gin.H{"username": "admin", "password": "test-password"}, 0)
+	for status := 0; status <= 2; status++ {
+		execSQL(t, db, "insert into process_event(workdir,binary,argv,count,judge,status) values('/tmp','/bin/example',?,1,1,?)", status, status)
+	}
+	result := client.post("/process/showModuleStatus", gin.H{}, 0)
+	var summary struct {
+		PolicyCount      int `json:"policyCount"`
+		UnreadEventCount int `json:"unreadEventCount"`
+	}
+	if err := json.Unmarshal(result.Data, &summary); err != nil {
+		t.Fatal(err)
+	}
+	if summary.PolicyCount != 2 || summary.UnreadEventCount != 1 {
+		t.Fatalf("policy count=%d pending=%d, want 2 and 1", summary.PolicyCount, summary.UnreadEventCount)
+	}
+}

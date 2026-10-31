@@ -15,10 +15,14 @@ import {
   type FilePolicy,
   type NetPolicy
 } from '../lib/api'
+const props = defineProps<{ module?: Module; embedded?: boolean }>()
+const emit = defineEmits<{ (event: 'changed'): void }>()
 const route = useRoute(),
   router = useRouter()
-const module = computed<Module>(() =>
-  modules.some((m) => m.id === route.query.module) ? (route.query.module as Module) : 'file'
+const module = computed<Module>(
+  () =>
+    props.module ||
+    (modules.some((m) => m.id === route.query.module) ? (route.query.module as Module) : 'file')
 )
 const fileRows = ref<FilePolicy[]>([]),
   netRows = ref<NetPolicy[]>([]),
@@ -110,6 +114,7 @@ async function save() {
     }
     showForm.value = false
     success.value = '策略已应用并保存'
+    emit('changed')
     await load()
   } catch (e) {
     error.value = errorMessage(e)
@@ -125,6 +130,7 @@ async function remove(id: number) {
   try {
     await api(`/${module.value}/deletePolicy`, { id })
     success.value = '策略已移除'
+    emit('changed')
     await load()
   } catch (e) {
     error.value = errorMessage(e)
@@ -140,6 +146,7 @@ async function clearFiles() {
     await api('/file/clearPolicies')
     cursors.value = [0]
     success.value = '文件策略已清空'
+    emit('changed')
     await load()
   } catch (e) {
     error.value = errorMessage(e)
@@ -162,9 +169,10 @@ const dialog = useDialog(
     if (!busy.value) showForm.value = false
   }
 )
+defineExpose({ openForm })
 </script>
 <template>
-  <div class="tabs">
+  <div v-if="!embedded" class="tabs">
     <button
       v-for="m in modules"
       :key="m.id"
@@ -180,7 +188,7 @@ const dialog = useDialog(
     <p class="muted">
       {{
         t(
-          '进程策略由执行记录生成，按工作目录、可执行文件和参数匹配。前往进程事件列表，将命令设为信任或不信任；在系统设置中选择审计或防御模式。'
+          '进程策略按工作目录、可执行文件和参数匹配。信任状态在事件列表中管理，工作模式可在防护控制台直接设置。'
         )
       }}
     </p>
