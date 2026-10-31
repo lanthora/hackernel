@@ -258,7 +258,7 @@ p {
   box-shadow: 0 0 0 4px #54b48912;
 }
 
-/* Enabled protection is a solid forest surface; disabled protection stays neutral. */
+/* Soft mint identifies enabled protection; disabled protection stays neutral. */
 .protection-tiles {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -282,9 +282,9 @@ p {
   box-shadow: 0 16px 36px #173e3110;
 }
 .protection-tile.enabled {
-  background: #163d30;
-  border-color: #163d30;
-  color: #c1dccb;
+  background: #e8f4ed;
+  border-color: #cfe4d7;
+  color: #527660;
 }
 .protection-tile.unknown {
   border-style: dashed;
@@ -306,8 +306,8 @@ p {
   color: #8a9e90;
 }
 .enabled .tile-icon {
-  background: #b9f1ce;
-  color: #1f5740;
+  background: #fff;
+  color: #38865c;
 }
 .tile-configure {
   position: relative;
@@ -321,7 +321,7 @@ p {
   color: #8c9c91;
 }
 .enabled .tile-configure {
-  color: #a6c4b3;
+  color: #72937e;
 }
 .tile-configure:hover {
   background: #889d8f12;
@@ -329,8 +329,8 @@ p {
   text-decoration: none;
 }
 .enabled .tile-configure:hover {
-  background: #ffffff12;
-  color: #fff;
+  background: #ffffffa6;
+  color: #2e704b;
 }
 .protection-tile h2 {
   font-size: 24px;
@@ -339,7 +339,7 @@ p {
   color: #4d6556;
 }
 .enabled h2 {
-  color: #fff;
+  color: #284e37;
 }
 .tile-main-link {
   color: inherit;
@@ -374,18 +374,18 @@ p {
   border-radius: 50%;
 }
 .enabled .tile-state-label {
-  color: #b9efce;
+  color: #3d865b;
 }
 .enabled .tile-state-label > span {
-  background: #98e9b9;
-  box-shadow: 0 0 0 4px #98e9b915;
+  background: #4fa772;
+  box-shadow: 0 0 0 4px #4fa77212;
 }
 .unknown .tile-state-label {
   color: #b28d4e;
 }
 .tile-mode {
   font-size: 12px;
-  color: #a0b8a9;
+  color: #78947f;
 }
 .disabled .tile-mode,
 .unknown .tile-mode {
@@ -399,7 +399,7 @@ p {
   color: #93a296;
 }
 .enabled .tile-metric dt {
-  color: #91b39f;
+  color: #759481;
 }
 .tile-metric dd {
   display: flex;
@@ -414,7 +414,7 @@ p {
   font-variant-numeric: tabular-nums;
 }
 .enabled .tile-metric dd {
-  color: #d5f9e2;
+  color: #2b6446;
 }
 .tile-metric dd span {
   font-size: 13px;
@@ -460,23 +460,26 @@ p {
   white-space: nowrap;
 }
 .enabled .tile-attention {
-  background: #ffffff08;
-  color: #8caf9b;
+  background: #ffffff80;
+  color: #7c9988;
 }
 .tile-attention.actionable {
   background: #fff1d7;
   color: #9c6b24;
 }
 .enabled .tile-attention.actionable {
-  background: #294e3d;
-  color: #f3d4a0;
+  background: #fff4df;
+  color: #956721;
 }
 .tile-attention:hover {
   text-decoration: none;
   background: #eaf2ed;
 }
 .enabled .tile-attention:hover {
-  background: #355e48;
+  background: #dceee2;
+}
+.enabled .tile-attention.actionable:hover {
+  background: #ffedcb;
 }
 .control-bottom {
   display: flex;
@@ -501,8 +504,8 @@ p {
 .detail-heading {
   padding: 32px;
   border-radius: 22px;
-  background: #173e31;
-  color: #fff;
+  background: #e8f4ed;
+  color: #284e37;
   margin-bottom: 28px;
 }
 .detail-heading h1 {
@@ -510,7 +513,7 @@ p {
   letter-spacing: -0.8px;
 }
 .detail-heading p {
-  color: #a3bdac;
+  color: #799582;
   margin-top: 8px;
 }
 .detail-title {
@@ -524,8 +527,8 @@ p {
   justify-content: center;
   width: 64px;
   height: 64px;
-  background: #b9efce;
-  color: #24573e;
+  background: #fff;
+  color: #38865c;
   border-radius: 18px;
 }
 .detail-status {
@@ -534,14 +537,14 @@ p {
   gap: 9px;
   padding: 10px 14px;
   border-radius: 30px;
-  background: #ffffff0c;
-  color: #acc1b3;
+  background: #ffffff90;
+  color: #7c9384;
   white-space: nowrap;
   font-size: 13px;
 }
 .detail-status.enabled {
-  color: #b9efce;
-  background: #b9efce12;
+  color: #3d865b;
+  background: #d7edde;
 }
 .rule-inspector {
   padding: 32px;
