@@ -463,23 +463,23 @@ p {
   background: #ffffff80;
   color: #8997a9;
 }
-.tile-attention.actionable {
-  background: #fff1d7;
-  color: #9c6b24;
-}
+.tile-attention.actionable,
 .enabled .tile-attention.actionable {
-  background: #fff4df;
-  color: #956721;
+  background: #f0f4fa;
+  color: #7d8fa7;
 }
-.tile-attention:hover {
-  text-decoration: none;
-  background: #eaf2ed;
+.tile-attention.actionable strong,
+.tile-attention.actionable .tile-attention-action {
+  color: #4f719e;
 }
+.tile-attention:hover,
 .enabled .tile-attention:hover {
+  text-decoration: none;
   background: #e9f0f8;
 }
+.tile-attention.actionable:hover,
 .enabled .tile-attention.actionable:hover {
-  background: #ffedcb;
+  background: #e5edf7;
 }
 .control-bottom {
   display: flex;
