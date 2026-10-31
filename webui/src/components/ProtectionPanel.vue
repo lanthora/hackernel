@@ -33,9 +33,12 @@ const {
     ><AppIcon name="arrow" :size="15" />{{ t('返回防护主页') }}</RouterLink
   >
   <header class="dashboard-heading detail-heading">
-    <div>
-      <h1>{{ t(moduleInfo.name) }}</h1>
-      <p>{{ t('管理此项防护的开关、模式与策略。') }}</p>
+    <div class="detail-title">
+      <span class="detail-icon"><AppIcon :name="configuring" :size="32" /></span>
+      <div>
+        <h1>{{ t(moduleInfo.name) }}</h1>
+        <p>{{ t('管理此项防护的开关、模式与策略。') }}</p>
+      </div>
     </div>
     <span class="detail-status" :class="tileState(configuring)"
       ><span class="status-dot" :class="{ connected: tileState(configuring) === 'enabled' }"></span

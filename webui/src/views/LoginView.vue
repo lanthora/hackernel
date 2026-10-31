@@ -21,7 +21,11 @@ async function login() {
     await loadSession()
     const target = String(route.query.redirect || '/overview')
     await router.replace(
-      /^\/(overview|events|policies|settings|users)([?#]|$)/.test(target) ? target : '/overview'
+      /^\/(overview|events|policies|settings|users|protection\/(process|file|net))([?#]|$)/.test(
+        target
+      )
+        ? target
+        : '/overview'
     )
   } catch (e) {
     error.value = errorMessage(e)
