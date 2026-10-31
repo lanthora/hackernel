@@ -3,7 +3,7 @@ import { t, formatClock } from '../lib/i18n'
 import { modules } from '../lib/api'
 import { useProtection } from '../lib/protection'
 import AppIcon from './AppIcon.vue'
-const { states, core, connectionError, updated, savedMode, tileState } = useProtection()
+const { states, core, connectionError, updated, tileState } = useProtection()
 </script>
 <template>
   <h1 class="sr-only">{{ t('主机防护') }}</h1>
@@ -44,9 +44,7 @@ const { states, core, connectionError, updated, savedMode, tileState } = useProt
                 : '已关闭'
             )
           }}</span
-        ><span v-if="m.id === 'process' && savedMode !== undefined" class="tile-mode">{{
-          t(['关闭判定', '审计模式', '防御模式'][savedMode])
-        }}</span>
+        >
       </div>
       <dl class="tile-metric">
         <dt>{{ t('当前策略') }}</dt>

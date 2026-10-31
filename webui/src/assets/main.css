@@ -383,15 +383,8 @@ p {
 .unknown .tile-state-label {
   color: #b28d4e;
 }
-.tile-mode {
-  font-size: 12px;
-  color: #8594a8;
-}
 .disabled .tile-mode,
-.unknown .tile-mode {
-  color: #9ca99f;
-}
-.tile-metric {
+.unknown .tile-metric {
   margin: 30px 0 30px;
 }
 .tile-metric dt {
