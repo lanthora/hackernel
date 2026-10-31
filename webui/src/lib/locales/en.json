@@ -366,5 +366,8 @@
   "管理此项防护的开关、模式与策略。": "Manage this protection’s switch, mode and policies.",
   "工具与账户": "Tools & account",
   "控制台工具": "Console tools",
-  "关闭工具菜单": "Close tools"
+  "关闭工具菜单": "Close tools",
+  "进程事件": "Process events",
+  "文件事件": "File events",
+  "网络事件": "Network events"
 }

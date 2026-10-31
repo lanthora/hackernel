@@ -199,12 +199,16 @@ p {
   flex: 1;
   min-height: 0;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
   padding: 54px 40px;
   scrollbar-gutter: stable;
 }
 .content-inner {
+  width: 100%;
   max-width: 1240px;
-  margin: 0 auto;
+  flex-shrink: 0;
+  margin: auto;
 }
 .page-heading {
   margin-bottom: 32px;
@@ -1209,7 +1213,7 @@ legend {
 /* Navigation appears on demand, leaving the protection surface uninterrupted. */
 .content {
   padding-top: 64px;
-  padding-bottom: 96px;
+  padding-bottom: 64px;
 }
 .workspace-footer {
   padding-right: 220px;
@@ -1343,7 +1347,7 @@ legend {
 @media (max-width: 760px) {
   .content {
     padding-top: 36px;
-    padding-bottom: 100px;
+    padding-bottom: 36px;
   }
   .workspace-footer {
     padding-right: 175px;

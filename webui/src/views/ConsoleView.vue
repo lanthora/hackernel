@@ -4,7 +4,7 @@ import { computed, ref, watch, provide } from 'vue'
 import { useDialog } from '../lib/dialog'
 import { useProtection, protectionKey } from '../lib/protection'
 import { useRoute, useRouter } from 'vue-router'
-import { api, errorMessage } from '../lib/api'
+import { api, errorMessage, modules, type Module } from '../lib/api'
 import { currentUser } from '../lib/session'
 import AppIcon from '../components/AppIcon.vue'
 import LanguageSwitcher from '../components/LanguageSwitcher.vue'
@@ -44,6 +44,16 @@ const links = [
 const toolLinks = links.filter((link) => link.id === 'settings' || link.id === 'users')
 const page = computed(() => (route.params.module ? 'protection' : String(route.params.page)))
 const currentPage = computed(() => links.find((link) => link.id === page.value))
+const eventTitles: Record<Module, string> = {
+  process: '进程事件',
+  file: '文件事件',
+  net: '网络事件'
+}
+const currentTitle = computed(() =>
+  page.value === 'events'
+    ? t(eventTitles[modules.find((m) => m.id === route.query.module)?.id || 'process'])
+    : t(currentPage.value?.label)
+)
 async function logout() {
   try {
     await api('/auth/logout')
@@ -66,7 +76,7 @@ async function logout() {
           ><AppIcon name="arrow" :size="15" />{{ t('返回防护主页') }}</RouterLink
         >
         <header v-if="currentPage && page !== 'overview'" class="page-heading">
-          <h1>{{ t(currentPage.label) }}</h1>
+          <h1>{{ currentTitle }}</h1>
         </header>
         <OverviewPanel v-if="page === 'overview'" />
         <ProtectionPanel v-else-if="page === 'protection'" :key="String(route.params.module)" />

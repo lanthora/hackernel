@@ -3,7 +3,7 @@ import { t } from '../lib/i18n'
 
 import { useDialog } from '../lib/dialog'
 import { ref, watch, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import {
   api,
   errorMessage,
@@ -13,8 +13,7 @@ import {
   type Module,
   type EventRecord
 } from '../lib/api'
-const route = useRoute(),
-  router = useRouter()
+const route = useRoute()
 const module = computed<Module>(() =>
   modules.some((m) => m.id === route.query.module) ? (route.query.module as Module) : 'process'
 )
@@ -63,6 +62,8 @@ watch(
     cursors.value = [0]
     success.value = ''
     detail.value = null
+    search.value = ''
+    unread.value = false
     load()
   },
   { immediate: true }
@@ -150,17 +151,6 @@ const dialog = useDialog(
 )
 </script>
 <template>
-  <div class="tabs">
-    <button
-      v-for="m in modules"
-      :key="m.id"
-      :class="{ active: module === m.id }"
-      :disabled="busy"
-      @click="router.replace({ query: { module: m.id } })"
-    >
-      {{ t(m.name) }}
-    </button>
-  </div>
   <div class="toolbar">
     <div class="inline">
       <input
