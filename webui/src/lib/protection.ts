@@ -1,8 +1,12 @@
 import { t } from './i18n'
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, inject, type InjectionKey } from 'vue'
 import { api, errorMessage, modules, type ModuleStatus, type CoreStatus, type Module } from './api'
 
+export const protectionKey: InjectionKey<ReturnType<typeof createProtection>> = Symbol('protection')
 export function useProtection() {
+  return inject(protectionKey, null) ?? createProtection()
+}
+function createProtection() {
   const states = ref<Partial<Record<Module, ModuleStatus>>>({})
   const core = ref<CoreStatus | null>(null),
     refreshing = ref(false),

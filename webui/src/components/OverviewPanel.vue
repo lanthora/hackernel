@@ -3,39 +3,10 @@ import { t, formatClock } from '../lib/i18n'
 import { modules } from '../lib/api'
 import { useProtection } from '../lib/protection'
 import AppIcon from './AppIcon.vue'
-const {
-  states,
-  core,
-  refreshing,
-  pending,
-  connectionError,
-  updated,
-  savedMode,
-  refresh,
-  tileState
-} = useProtection()
+const { states, core, connectionError, updated, savedMode, tileState } = useProtection()
 </script>
 <template>
-  <header class="dashboard-heading">
-    <div>
-      <h1>{{ t('主机防护') }}</h1>
-      <p>{{ t('防护状态、策略与待处理事项') }}</p>
-    </div>
-    <div class="dashboard-connection">
-      <span class="status-dot" :class="{ connected: core?.coreOnline }"></span
-      ><span>{{
-        t(core ? (core.coreOnline ? '防护核心已连接' : '防护核心未连接') : '核心状态未知')
-      }}</span
-      ><button
-        class="text-button"
-        :disabled="refreshing || pending !== null"
-        :aria-label="t('刷新状态')"
-        @click="refresh(true)"
-      >
-        <AppIcon name="refresh" :size="15" />
-      </button>
-    </div>
-  </header>
+  <h1 class="sr-only">{{ t('主机防护') }}</h1>
   <p v-if="connectionError" role="alert" class="notice error">{{ t(connectionError) }}</p>
   <p v-else-if="core && !core.coreOnline" role="status" class="notice warning">
     {{ t('请检查主机防护服务；连接恢复前无法确认策略执行结果。') }}

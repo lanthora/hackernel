@@ -56,7 +56,8 @@ function setup() {
     clearInterval,
     window: { confirm: () => confirmation },
     require(name) {
-      if (name === 'vue') return { ...require('vue'), onMounted() {}, onUnmounted() {} }
+      if (name === 'vue')
+        return { ...require('vue'), inject: () => null, onMounted() {}, onUnmounted() {} }
       if (name === './i18n') return { t: (value) => String(value ?? ''), formatClock: () => '' }
       if (name === './api')
         return {

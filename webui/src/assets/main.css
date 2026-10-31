@@ -55,14 +55,14 @@ button:disabled {
 }
 button.primary,
 .button.primary {
-  background: #173e31;
-  border-color: #173e31;
+  background: #273548;
+  border-color: #273548;
   color: #fff;
 }
 button.primary:hover:not(:disabled),
 .button.primary:hover {
-  background: #245640;
-  border-color: #245640;
+  background: #354964;
+  border-color: #354964;
 }
 a {
   color: var(--accent);
@@ -258,7 +258,7 @@ p {
   box-shadow: 0 0 0 4px #54b48912;
 }
 
-/* Soft mint identifies enabled protection; disabled protection stays neutral. */
+/* White surfaces use restrained blue accents to identify enabled protection. */
 .protection-tiles {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -279,12 +279,12 @@ p {
 }
 .protection-tile:hover {
   transform: translateY(-3px);
-  box-shadow: 0 16px 36px #173e3110;
+  box-shadow: 0 16px 36px #27354810;
 }
 .protection-tile.enabled {
-  background: #e8f4ed;
-  border-color: #cfe4d7;
-  color: #527660;
+  background: #ffffff;
+  border-color: #bdcfe7;
+  color: #597290;
 }
 .protection-tile.unknown {
   border-style: dashed;
@@ -306,8 +306,8 @@ p {
   color: #8a9e90;
 }
 .enabled .tile-icon {
-  background: #fff;
-  color: #38865c;
+  background: #edf3fb;
+  color: #557eaf;
 }
 .tile-configure {
   position: relative;
@@ -321,7 +321,7 @@ p {
   color: #8c9c91;
 }
 .enabled .tile-configure {
-  color: #72937e;
+  color: #7c92ad;
 }
 .tile-configure:hover {
   background: #889d8f12;
@@ -330,7 +330,7 @@ p {
 }
 .enabled .tile-configure:hover {
   background: #ffffffa6;
-  color: #2e704b;
+  color: #436b9e;
 }
 .protection-tile h2 {
   font-size: 24px;
@@ -339,7 +339,7 @@ p {
   color: #4d6556;
 }
 .enabled h2 {
-  color: #284e37;
+  color: #293e58;
 }
 .tile-main-link {
   color: inherit;
@@ -374,18 +374,18 @@ p {
   border-radius: 50%;
 }
 .enabled .tile-state-label {
-  color: #3d865b;
+  color: #507bad;
 }
 .enabled .tile-state-label > span {
-  background: #4fa772;
-  box-shadow: 0 0 0 4px #4fa77212;
+  background: #688fc0;
+  box-shadow: 0 0 0 4px #688fc012;
 }
 .unknown .tile-state-label {
   color: #b28d4e;
 }
 .tile-mode {
   font-size: 12px;
-  color: #78947f;
+  color: #8594a8;
 }
 .disabled .tile-mode,
 .unknown .tile-mode {
@@ -399,7 +399,7 @@ p {
   color: #93a296;
 }
 .enabled .tile-metric dt {
-  color: #759481;
+  color: #8392a7;
 }
 .tile-metric dd {
   display: flex;
@@ -414,7 +414,7 @@ p {
   font-variant-numeric: tabular-nums;
 }
 .enabled .tile-metric dd {
-  color: #2b6446;
+  color: #3d5f8c;
 }
 .tile-metric dd span {
   font-size: 13px;
@@ -461,7 +461,7 @@ p {
 }
 .enabled .tile-attention {
   background: #ffffff80;
-  color: #7c9988;
+  color: #8997a9;
 }
 .tile-attention.actionable {
   background: #fff1d7;
@@ -476,7 +476,7 @@ p {
   background: #eaf2ed;
 }
 .enabled .tile-attention:hover {
-  background: #dceee2;
+  background: #e9f0f8;
 }
 .enabled .tile-attention.actionable:hover {
   background: #ffedcb;
@@ -504,8 +504,8 @@ p {
 .detail-heading {
   padding: 32px;
   border-radius: 22px;
-  background: #e8f4ed;
-  color: #284e37;
+  background: #f0f3f8;
+  color: #293e58;
   margin-bottom: 28px;
 }
 .detail-heading h1 {
@@ -513,7 +513,7 @@ p {
   letter-spacing: -0.8px;
 }
 .detail-heading p {
-  color: #799582;
+  color: #8393a8;
   margin-top: 8px;
 }
 .detail-title {
@@ -528,7 +528,7 @@ p {
   width: 64px;
   height: 64px;
   background: #fff;
-  color: #38865c;
+  color: #557eaf;
   border-radius: 18px;
 }
 .detail-status {
@@ -543,8 +543,8 @@ p {
   font-size: 13px;
 }
 .detail-status.enabled {
-  color: #3d865b;
-  background: #d7edde;
+  color: #507bad;
+  background: #e9f0fa;
 }
 .rule-inspector {
   padding: 32px;
@@ -668,7 +668,7 @@ p {
 .tabs button.active {
   background: #fff;
   color: #224e38;
-  box-shadow: 0 2px 5px #173e3108;
+  box-shadow: 0 2px 5px #27354808;
 }
 .toolbar {
   display: flex;
@@ -1021,7 +1021,7 @@ legend {
   background: #fff;
   border: 1px solid #e1eae3;
   border-radius: 24px;
-  box-shadow: 0 24px 80px #173e3109;
+  box-shadow: 0 24px 80px #27354809;
   overflow: hidden;
 }
 .login-window-bar {
@@ -1234,14 +1234,14 @@ legend {
   padding: 12px 18px;
   gap: 10px;
   border-radius: 16px;
-  background: #173e31;
-  border-color: #173e31;
-  color: #d2f3df;
-  box-shadow: 0 8px 28px #173e3120;
+  background: #273548;
+  border-color: #273548;
+  color: #e8eef7;
+  box-shadow: 0 8px 28px #27354820;
 }
 .tools-launcher:hover {
-  background: #245640;
-  border-color: #245640;
+  background: #354964;
+  border-color: #354964;
 }
 .tools-backdrop {
   position: fixed;
@@ -1261,7 +1261,7 @@ legend {
   background: #fff;
   border: 1px solid #e1e9e3;
   border-radius: 24px;
-  box-shadow: 0 16px 70px #173e3124;
+  box-shadow: 0 16px 70px #27354824;
 }
 .tools-heading {
   display: flex;
@@ -1367,4 +1367,31 @@ legend {
     right: 16px;
     bottom: 80px;
   }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.footer-connection {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: #82928a;
+}
+.footer-connection .text-button {
+  min-height: 24px;
+  padding: 3px 5px;
+}
+.enabled .tile-state-label {
+  background: #edf3fb;
+  padding: 5px 9px;
+  border-radius: 8px;
 }

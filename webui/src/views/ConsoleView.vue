@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { t } from '../lib/i18n'
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, provide } from 'vue'
 import { useDialog } from '../lib/dialog'
+import { useProtection, protectionKey } from '../lib/protection'
 import { useRoute, useRouter } from 'vue-router'
 import { api, errorMessage } from '../lib/api'
 import { currentUser } from '../lib/session'
@@ -30,6 +31,9 @@ watch(
   }
 )
 const host = window.location.hostname
+const protection = useProtection()
+provide(protectionKey, protection)
+const { core, refreshing, pending, refresh } = protection
 const links = [
   { id: 'overview', label: '防护控制台', icon: 'shield' },
   { id: 'events', label: '安全事件', icon: 'events' },
@@ -73,7 +77,17 @@ async function logout() {
       </div>
     </main>
     <footer class="workspace-footer">
-      <span>{{ t('product.name') }}<span class="footer-separator">·</span>{{ host }}</span>
+      <span class="footer-connection"
+        ><span class="status-dot" :class="{ connected: core?.coreOnline }"></span
+        >{{ t(core ? (core.coreOnline ? '防护核心已连接' : '防护核心未连接') : '核心状态未知')
+        }}<button
+          class="text-button"
+          :disabled="refreshing || pending !== null"
+          :aria-label="t('刷新状态')"
+          @click="refresh(true)"
+        >
+          <AppIcon name="refresh" :size="14" /></button
+      ></span>
     </footer>
     <button
       class="tools-launcher"
