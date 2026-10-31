@@ -174,85 +174,12 @@ p {
   color: #a27430;
 }
 
-/* One calm navigation surface, with space reserved for the product itself. */
+/* The workspace stays open; navigation lives in the tools launcher. */
 .console-shell {
   display: flex;
   flex-direction: column;
   height: 100dvh;
   overflow: hidden;
-}
-.app-header {
-  display: flex;
-  align-items: center;
-  gap: 40px;
-  padding: 0 40px;
-  min-height: 80px;
-  background: #fff;
-  border-bottom: 1px solid var(--line);
-  flex-shrink: 0;
-}
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  color: #173e31;
-  font-size: 15px;
-  font-weight: 650;
-  white-space: nowrap;
-}
-.brand:hover {
-  text-decoration: none;
-}
-.brand-icon {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  color: #b8efce;
-  background: #173e31;
-}
-.app-nav {
-  display: flex;
-  align-self: stretch;
-  align-items: center;
-  gap: 6px;
-}
-.app-nav a {
-  display: flex;
-  align-items: center;
-  height: 40px;
-  padding: 0 14px;
-  color: #7d8982;
-  border-radius: 8px;
-  font-size: 14px;
-  white-space: nowrap;
-}
-.app-nav a:hover {
-  background: #f3f6f4;
-  text-decoration: none;
-  color: #214d39;
-}
-.app-nav a.router-link-active,
-.app-nav a.nav-current {
-  background: #f0f5f2;
-  color: #173e31;
-  font-weight: 600;
-}
-.account {
-  margin-left: auto;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  font-size: 13px;
-  white-space: nowrap;
-}
-.account-name {
-  color: #718177;
-}
-.account .text-button {
-  font-size: 12px;
 }
 .language-switcher {
   display: inline-flex;
@@ -1152,20 +1079,6 @@ legend {
 }
 
 @media (max-width: 1200px) {
-  .app-header {
-    padding: 0 28px;
-    gap: 24px;
-  }
-  .app-nav {
-    gap: 0;
-  }
-  .app-nav a {
-    padding: 0 10px;
-    font-size: 13px;
-  }
-  .account-name {
-    display: none;
-  }
   .content {
     padding: 42px 28px;
   }
@@ -1180,17 +1093,6 @@ legend {
   }
 }
 @media (max-width: 1000px) {
-  .app-header {
-    flex-wrap: wrap;
-    padding: 20px 28px 0;
-    gap: 14px;
-  }
-  .app-nav {
-    order: 3;
-    width: 100%;
-    padding-bottom: 14px;
-    overflow-x: auto;
-  }
   .dashboard-heading h1 {
     font-size: 34px;
   }
@@ -1272,34 +1174,10 @@ legend {
     padding: 12px 20px;
     font-size: 10px;
   }
-  .workspace-footer > span:last-child {
-    max-width: 50%;
-    text-align: right;
-  }
 }
 @media (max-width: 480px) {
-  .app-header {
-    padding: 16px 16px 0;
-    gap: 12px;
-  }
-  .brand {
-    font-size: 12px;
-    gap: 7px;
-  }
-  .brand-icon {
-    width: 30px;
-    height: 30px;
-    border-radius: 9px;
-  }
-  .account {
-    gap: 4px;
-  }
   .language-switcher > span {
     display: none;
-  }
-  .account .text-button {
-    padding: 4px;
-    font-size: 11px;
   }
   .language-switcher select {
     max-width: 95px;
@@ -1329,5 +1207,161 @@ legend {
   *::before,
   *::after {
     transition: none !important;
+  }
+}
+
+/* Navigation appears on demand, leaving the protection surface uninterrupted. */
+.content {
+  padding-top: 64px;
+  padding-bottom: 96px;
+}
+.workspace-footer {
+  padding-right: 220px;
+}
+.footer-separator {
+  margin: 0 10px;
+  color: #b3beb7;
+}
+.tools-launcher {
+  position: fixed;
+  right: 32px;
+  bottom: 28px;
+  z-index: 21;
+  min-height: 48px;
+  padding: 12px 18px;
+  gap: 10px;
+  border-radius: 16px;
+  background: #173e31;
+  border-color: #173e31;
+  color: #d2f3df;
+  box-shadow: 0 8px 28px #173e3120;
+}
+.tools-launcher:hover {
+  background: #245640;
+  border-color: #245640;
+}
+.tools-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: #142e200e;
+}
+.tools-popover {
+  position: absolute;
+  bottom: 92px;
+  right: 32px;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 120px);
+  overflow: auto;
+  padding: 24px;
+  background: #fff;
+  border: 1px solid #e1e9e3;
+  border-radius: 24px;
+  box-shadow: 0 16px 70px #173e3124;
+}
+.tools-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.tools-heading strong {
+  font-size: 15px;
+  font-weight: 600;
+}
+.tools-heading p {
+  font-size: 12px;
+  color: #91a096;
+  margin-top: 5px;
+}
+.tools-heading .text-button {
+  min-height: 28px;
+  padding: 4px;
+}
+.tools-navigation {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.tools-navigation a {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 86px;
+  padding: 12px 4px;
+  border-radius: 14px;
+  color: #7c9183;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.tools-navigation a:hover {
+  background: #f3f7f4;
+  text-decoration: none;
+  color: #315f43;
+}
+.tools-navigation a.router-link-active,
+.tools-navigation a.nav-current {
+  background: #edf6ef;
+  color: #277b50;
+}
+.tools-preferences {
+  padding: 20px 0 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.tools-preferences .language-switcher {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  color: #82948a;
+  font-size: 13px;
+}
+.tools-preferences .language-switcher > span {
+  display: inline;
+}
+.tools-preferences select {
+  min-height: 36px;
+}
+.tools-account {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  font-size: 13px;
+  color: #7c9183;
+}
+.tools-account > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.tools-account .text-button {
+  font-size: 12px;
+}
+@media (max-width: 760px) {
+  .content {
+    padding-top: 36px;
+    padding-bottom: 100px;
+  }
+  .workspace-footer {
+    padding-right: 175px;
+  }
+  .tools-launcher {
+    right: 20px;
+    bottom: 20px;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 12px;
+    border-radius: 14px;
+  }
+  .tools-popover {
+    right: 16px;
+    bottom: 80px;
   }
 }

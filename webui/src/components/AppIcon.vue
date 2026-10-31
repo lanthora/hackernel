@@ -15,7 +15,8 @@ const paths: Record<string, string[]> = {
   refresh: ['M20 7v5h-5', 'M4 17v-5h5', 'M6 7a7 7 0 0 1 12-2l2 2M4 17l2 2a7 7 0 0 0 12-2'],
   arrow: ['M5 12h14m-5-5 5 5-5 5'],
   close: ['m6 6 12 12M6 18 18 6'],
-  plus: ['M12 5v14M5 12h14']
+  plus: ['M12 5v14M5 12h14'],
+  grid: ['M4 4h5v5H4zM15 4h5v5h-5zM4 15h5v5H4zM15 15h5v5h-5z']
 }
 </script>
 <template>

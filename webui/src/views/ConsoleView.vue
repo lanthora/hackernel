@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { t } from '../lib/i18n'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
+import { useDialog } from '../lib/dialog'
 import { useRoute, useRouter } from 'vue-router'
 import { api, errorMessage } from '../lib/api'
 import { currentUser } from '../lib/session'
@@ -14,15 +15,29 @@ import SettingsPanel from '../components/SettingsPanel.vue'
 import UsersPanel from '../components/UsersPanel.vue'
 const route = useRoute(),
   router = useRouter(),
-  error = ref('')
+  error = ref(''),
+  toolsOpen = ref(false)
+const toolsDialog = useDialog(
+  () => toolsOpen.value,
+  () => {
+    toolsOpen.value = false
+  }
+)
+watch(
+  () => route.fullPath,
+  () => {
+    toolsOpen.value = false
+  }
+)
 const host = window.location.hostname
 const links = [
-  { id: 'overview', label: '防护控制台' },
-  { id: 'events', label: '安全事件' },
-  { id: 'policies', label: '防护策略' },
-  { id: 'settings', label: '系统设置' },
-  { id: 'users', label: '账户管理' }
+  { id: 'overview', label: '防护控制台', icon: 'shield' },
+  { id: 'events', label: '安全事件', icon: 'events' },
+  { id: 'policies', label: '防护策略', icon: 'file' },
+  { id: 'settings', label: '系统设置', icon: 'settings' },
+  { id: 'users', label: '账户管理', icon: 'users' }
 ]
+const toolLinks = links.filter((link) => link.id === 'settings' || link.id === 'users')
 const page = computed(() => (route.params.module ? 'protection' : String(route.params.page)))
 const currentPage = computed(() => links.find((link) => link.id === page.value))
 async function logout() {
@@ -37,30 +52,15 @@ async function logout() {
 </script>
 <template>
   <div class="console-shell">
-    <header class="app-header">
-      <RouterLink to="/overview" class="brand"
-        ><span class="brand-icon"><AppIcon name="shield" :size="22" /></span
-        ><span>{{ t('product.name') }}</span></RouterLink
-      >
-      <nav class="app-nav" :aria-label="t('主导航')">
-        <RouterLink
-          v-for="link in links"
-          :key="link.id"
-          :to="'/' + link.id"
-          :class="{ 'nav-current': link.id === 'overview' && page === 'protection' }"
-          >{{ t(link.label) }}</RouterLink
-        >
-      </nav>
-      <div class="account">
-        <LanguageSwitcher /><span class="account-name">{{
-          currentUser?.aliasName || currentUser?.username
-        }}</span
-        ><button class="text-button" @click="logout">{{ t('退出登录') }}</button>
-      </div>
-    </header>
     <main :key="route.path" class="content">
       <div class="content-inner">
         <p v-if="error" role="alert" class="notice error">{{ t(error) }}</p>
+        <RouterLink
+          v-if="page !== 'overview' && page !== 'protection'"
+          class="back-link"
+          to="/overview"
+          ><AppIcon name="arrow" :size="15" />{{ t('返回防护主页') }}</RouterLink
+        >
         <header v-if="currentPage && page !== 'overview'" class="page-heading">
           <h1>{{ t(currentPage.label) }}</h1>
         </header>
@@ -73,8 +73,54 @@ async function logout() {
       </div>
     </main>
     <footer class="workspace-footer">
-      <span>{{ t('管理主机') }} · {{ host }}</span
-      ><span>{{ t('防护服务独立于界面运行') }}</span>
+      <span>{{ t('product.name') }}<span class="footer-separator">·</span>{{ host }}</span>
     </footer>
+    <button
+      class="tools-launcher"
+      :aria-expanded="toolsOpen"
+      aria-controls="console-tools"
+      aria-haspopup="dialog"
+      @click="toolsOpen = !toolsOpen"
+    >
+      <AppIcon :name="toolsOpen ? 'close' : 'grid'" :size="19" /><span>{{ t('工具与账户') }}</span>
+    </button>
+    <div v-if="toolsOpen" class="tools-backdrop" @click.self="toolsOpen = false">
+      <section
+        id="console-tools"
+        ref="toolsDialog"
+        class="tools-popover"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="t('控制台工具')"
+      >
+        <header class="tools-heading">
+          <div>
+            <strong>{{ t('product.name') }}</strong>
+            <p>{{ host }}</p>
+          </div>
+          <button class="text-button" :aria-label="t('关闭工具菜单')" @click="toolsOpen = false">
+            <AppIcon name="close" :size="18" />
+          </button>
+        </header>
+        <p v-if="error" role="alert" class="notice error">{{ t(error) }}</p>
+        <nav class="tools-navigation" :aria-label="t('主导航')">
+          <RouterLink
+            v-for="link in toolLinks"
+            :key="link.id"
+            :to="'/' + link.id"
+            @click="toolsOpen = false"
+            ><AppIcon :name="link.icon" :size="21" /><span>{{ t(link.label) }}</span></RouterLink
+          >
+        </nav>
+        <div class="tools-preferences"><LanguageSwitcher /></div>
+        <div class="tools-account">
+          <span
+            ><AppIcon name="users" :size="17" />{{
+              currentUser?.aliasName || currentUser?.username
+            }}</span
+          ><button class="text-button" @click="logout">{{ t('退出登录') }}</button>
+        </div>
+      </section>
+    </div>
   </div>
 </template>

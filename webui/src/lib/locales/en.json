@@ -363,5 +363,8 @@
   "模块开关": "Module switch",
   "启用或关闭此项防护功能。": "Enable or disable this protection module.",
   "返回防护主页": "Back to protection home",
-  "管理此项防护的开关、模式与策略。": "Manage this protection’s switch, mode and policies."
+  "管理此项防护的开关、模式与策略。": "Manage this protection’s switch, mode and policies.",
+  "工具与账户": "Tools & account",
+  "控制台工具": "Console tools",
+  "关闭工具菜单": "Close tools"
 }
