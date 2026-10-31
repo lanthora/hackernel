@@ -4,14 +4,10 @@ import fs from 'node:fs'
 import vm from 'node:vm'
 import { createRequire } from 'node:module'
 import ts from 'typescript'
-import { parse, compileScript } from '@vue/compiler-sfc'
 
 const require = createRequire(import.meta.url)
-const { descriptor } = parse(
-  fs.readFileSync(new URL('../src/components/OverviewPanel.vue', import.meta.url), 'utf8')
-)
 const javascript = ts.transpileModule(
-  compileScript(descriptor, { id: 'protection-test' }).content,
+  fs.readFileSync(new URL('../src/lib/protection.ts', import.meta.url), 'utf8'),
   { compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true } }
 ).outputText
 function setup() {
@@ -61,9 +57,8 @@ function setup() {
     window: { confirm: () => confirmation },
     require(name) {
       if (name === 'vue') return { ...require('vue'), onMounted() {}, onUnmounted() {} }
-      if (name === '../lib/i18n')
-        return { t: (value) => String(value ?? ''), formatClock: () => '' }
-      if (name === '../lib/api')
+      if (name === './i18n') return { t: (value) => String(value ?? ''), formatClock: () => '' }
+      if (name === './api')
         return {
           api,
           errorMessage: (error) => error.message,
@@ -73,7 +68,7 @@ function setup() {
       throw new Error(`Unexpected import ${name}`)
     }
   })
-  const view = module.exports.default.setup({}, { expose() {} })
+  const view = module.exports.useProtection()
   return {
     view,
     server,
@@ -183,14 +178,19 @@ test('cancelled confirmations and disconnected core never issue control requests
 })
 
 test('tile color represents enabled, disabled and unknown states without treating an offline core as enabled', async () => {
-  const app = setup(); await app.view.refresh(true)
+  const app = setup()
+  await app.view.refresh(true)
   assert.equal(app.view.tileState('process'), 'disabled')
-  app.server.modules.process = 1; await app.view.refresh(true)
+  app.server.modules.process = 1
+  await app.view.refresh(true)
   assert.equal(app.view.tileState('process'), 'enabled')
-  app.server.coreOnline = false; await app.view.refresh(true)
+  app.server.coreOnline = false
+  await app.view.refresh(true)
   assert.equal(app.view.tileState('process'), 'unknown')
   app.server.coreOnline = true
-  app.overrides.set('/file/showModuleStatus', async () => { throw new Error('Permission denied') })
+  app.overrides.set('/file/showModuleStatus', async () => {
+    throw new Error('Permission denied')
+  })
   await app.view.refresh(true)
   assert.equal(app.view.tileState('file'), 'unknown')
 })

@@ -13,6 +13,7 @@ const router = createRouter({
     { path: '/home', redirect: '/overview' },
     { path: '/login', component: LoginView },
     { path: '/:page(overview|events|policies|settings|users)', component: ConsoleView },
+    { path: '/protection/:module(process|file|net)', component: ConsoleView },
     { path: '/:pathMatch(.*)*', redirect: '/overview' }
   ]
 })

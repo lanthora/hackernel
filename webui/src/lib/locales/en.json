@@ -361,5 +361,7 @@
   "查看记录": "View events",
   "关闭配置": "Close settings",
   "模块开关": "Module switch",
-  "启用或关闭此项防护功能。": "Enable or disable this protection module."
+  "启用或关闭此项防护功能。": "Enable or disable this protection module.",
+  "返回防护主页": "Back to protection home",
+  "管理此项防护的开关、模式与策略。": "Manage this protection’s switch, mode and policies."
 }

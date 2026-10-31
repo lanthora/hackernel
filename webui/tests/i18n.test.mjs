@@ -134,7 +134,8 @@ test('all UI source messages and server errors have English translations', () =>
       inspect(baseParse(descriptor.template.content))
     }
   }
-  inspectScript(fs.readFileSync(path.join(root, 'src/lib/api.ts'), 'utf8'), 'api.ts')
+  for (const filename of ['api.ts', 'protection.ts'])
+    inspectScript(fs.readFileSync(path.join(root, 'src/lib', filename), 'utf8'), filename)
   const server = fs.readFileSync(path.join(root, '../apps/internal/web/render/render.go'), 'utf8')
   for (const match of server.matchAll(/"([^"\n]*[\u3400-\u9fff][^"\n]*)"/g))
     assert.ok(Object.hasOwn(english, match[1]), `Untranslated API error: ${match[1]}`)
