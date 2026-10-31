@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { t, formatClock } from '../lib/i18n'
+
 import { ref, onMounted, onUnmounted } from 'vue'
 import {
   api,
@@ -12,7 +14,7 @@ const states = ref<Partial<Record<Module, ModuleStatus>>>({}),
   core = ref<CoreStatus | null>(null)
 const error = ref(''),
   loading = ref(false),
-  updated = ref('')
+  updated = ref<number | null>(null)
 let timer: ReturnType<typeof setInterval>,
   active = true
 async function refresh() {
@@ -31,7 +33,7 @@ async function refresh() {
   })
   const failed = results.find((result) => result.status === 'rejected')
   if (failed?.status === 'rejected') error.value = errorMessage(failed.reason)
-  updated.value = new Date().toLocaleTimeString('zh-CN', { hour12: false })
+  updated.value = Date.now()
   loading.value = false
 }
 onMounted(() => {
@@ -47,52 +49,71 @@ onUnmounted(() => {
   <section class="health-banner">
     <div class="health-symbol">◈</div>
     <div>
-      <p class="eyebrow">核心连接</p>
-      <h2>{{ core ? (core.coreOnline ? '防护核心已连接' : '防护核心未连接') : '核心状态未知' }}</h2>
+      <p class="eyebrow">{{ t('核心连接') }}</p>
+      <h2>
+        {{
+          core ? (core.coreOnline ? t('防护核心已连接') : t('防护核心未连接')) : t('核心状态未知')
+        }}
+      </h2>
       <p>
         {{
           core?.coreOnline
-            ? '管理服务可以与防护核心通信。'
-            : '请检查主机防护服务；连接恢复前无法确认策略执行结果。'
+            ? t('管理服务可以与防护核心通信。')
+            : t('请检查主机防护服务；连接恢复前无法确认策略执行结果。')
         }}
       </p>
     </div>
-    <button @click="refresh" :disabled="loading">{{ loading ? '刷新中…' : '刷新状态' }}</button>
+    <button @click="refresh" :disabled="loading">
+      {{ loading ? t('刷新中…') : t('刷新状态') }}
+    </button>
   </section>
-  <p v-if="error" class="notice error" role="alert">{{ error }}</p>
+  <p v-if="error" class="notice error" role="alert">{{ t(error) }}</p>
   <div class="section-heading">
-    <h2>防护模块</h2>
-    <span class="muted">每 10 秒刷新 · {{ updated || '等待响应' }}</span>
+    <h2>{{ t('防护模块') }}</h2>
+    <span class="muted"
+      >{{ t('每 10 秒刷新 ·') }} {{ updated ? formatClock(updated) : t('等待响应') }}</span
+    >
   </div>
   <div class="module-grid">
     <article v-for="m in modules" :key="m.id" class="panel module-card">
       <div class="module-heading">
         <span class="module-icon">{{ m.id === 'process' ? '⌘' : m.id === 'file' ? '▤' : '⇄' }}</span
         ><span class="pill" :class="states[m.id]?.status === 1 ? 'success' : 'neutral'">{{
-          states[m.id] ? (states[m.id]?.status === 1 ? '配置启用' : '配置关闭') : '状态未知'
+          states[m.id]
+            ? states[m.id]?.status === 1
+              ? t('配置启用')
+              : t('配置关闭')
+            : t('状态未知')
         }}</span>
       </div>
-      <h2>{{ m.name }}</h2>
-      <p class="muted">{{ m.description }}</p>
+      <h2>{{ t(m.name) }}</h2>
+      <p class="muted">{{ t(m.description) }}</p>
       <div class="metrics">
         <div>
           <strong>{{ states[m.id]?.policyCount ?? '—' }}</strong
-          ><span>策略 / 记录</span>
+          ><span>{{ t('策略 / 记录') }}</span>
         </div>
         <div>
           <strong>{{ states[m.id]?.unreadEventCount ?? '—' }}</strong
-          ><span>待处理事件</span>
+          ><span>{{ t('待处理事件') }}</span>
         </div>
       </div>
       <RouterLink :to="{ path: '/events', query: { module: m.id } }" class="card-link"
-        >查看安全事件 <span>↗</span></RouterLink
+        >{{ t('查看安全事件') }} <span>↗</span></RouterLink
+      >
+      <RouterLink class="card-link" :to="{ path: '/settings', hash: '#' + m.id }"
+        >{{ t('配置防护') }} →</RouterLink
       >
     </article>
   </div>
   <div class="panel explanation">
-    <h3>状态说明</h3>
+    <h3>{{ t('状态说明') }}</h3>
     <p class="muted">
-      模块状态来自已保存配置；核心连接仅代表通信正常。当前核心接口不提供各模块实时启用状态，实际执行结果以操作反馈为准。关闭浏览器不会停止后台防护。
+      {{
+        t(
+          '模块状态来自已保存配置；核心连接仅代表通信正常。当前核心接口不提供各模块实时启用状态，实际执行结果以操作反馈为准。关闭浏览器不会停止后台防护。'
+        )
+      }}
     </p>
   </div>
 </template>

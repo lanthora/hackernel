@@ -4,6 +4,10 @@ import ConsoleView from '../views/ConsoleView.vue'
 import { currentUser, loadSession } from '../lib/session'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, _from, saved) {
+    if (saved) return saved
+    return to.hash ? { el: to.hash, top: 24 } : { top: 0 }
+  },
   routes: [
     { path: '/', redirect: '/overview' },
     { path: '/home', redirect: '/overview' },

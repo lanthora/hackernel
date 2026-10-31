@@ -955,3 +955,42 @@ legend {
   font-size: 36px;
   letter-spacing: 0;
 }
+
+.language-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+}
+.language-switcher select {
+  padding: 6px 9px;
+  max-width: 125px;
+}
+.login-language {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 26px;
+}
+.setting-row[id] {
+  scroll-margin-top: 24px;
+}
+@media (max-width: 760px) {
+  .topbar {
+    height: auto;
+    min-height: 55px;
+    gap: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .account {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .language-switcher > span {
+    display: none;
+  }
+}

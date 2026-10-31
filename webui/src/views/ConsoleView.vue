@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { t } from '../lib/i18n'
+
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, errorMessage } from '../lib/api'
@@ -35,43 +38,47 @@ async function logout() {
   <div class="console-shell">
     <aside class="sidebar">
       <RouterLink to="/overview" class="brand"
-        ><span>HIDS<small>主机安全控制台</small></span></RouterLink
+        ><span
+          >{{ t('product.name') }}<small>{{ t('主机安全控制台') }}</small></span
+        ></RouterLink
       >
-      <p class="nav-label">工作空间</p>
+      <p class="nav-label">{{ t('工作空间') }}</p>
       <nav>
         <RouterLink v-for="link in links" :key="link.id" :to="'/' + link.id"
           ><span>{{ link.icon }}</span
-          >{{ link.label }}</RouterLink
+          >{{ t(link.label) }}</RouterLink
         >
       </nav>
       <div class="sidebar-footer">
-        <span class="dot"></span> 主机防护服务<small>防护服务独立于界面运行</small>
+        <span class="dot"></span> {{ t('主机防护服务')
+        }}<small>{{ t('防护服务独立于界面运行') }}</small>
       </div>
     </aside>
     <div class="workspace">
       <header class="topbar">
-        <span>工作空间 <span class="muted">/</span> {{ title }}</span>
+        <span>{{ t('工作空间') }} <span class="muted">/</span> {{ t(title) }}</span>
         <div class="account">
+          <LanguageSwitcher />
           <span>{{ currentUser?.aliasName || currentUser?.username }}</span
-          ><button class="text-button" @click="logout">退出登录</button>
+          ><button class="text-button" @click="logout">{{ t('退出登录') }}</button>
         </div>
       </header>
       <main class="content">
         <div class="page-heading">
           <div>
-            <p class="eyebrow">主机入侵检测系统</p>
-            <h1>{{ title }}</h1>
+            <p class="eyebrow">{{ t('product.description') }}</p>
+            <h1>{{ t(title) }}</h1>
           </div>
-          <span class="pill neutral">本机管理</span>
+          <span class="pill neutral">{{ t('本机管理') }}</span>
         </div>
-        <p v-if="error" role="alert" class="notice error">{{ error }}</p>
+        <p v-if="error" role="alert" class="notice error">{{ t(error) }}</p>
         <OverviewPanel v-if="page === 'overview'" /><EventsPanel
           v-else-if="page === 'events'"
         /><PoliciesPanel v-else-if="page === 'policies'" /><SettingsPanel
           v-else-if="page === 'settings'"
         /><UsersPanel v-else-if="page === 'users'" />
       </main>
-      <footer class="workspace-footer">HIDS · 主机入侵检测系统</footer>
+      <footer class="workspace-footer">{{ t('product.name') }}</footer>
     </div>
   </div>
 </template>

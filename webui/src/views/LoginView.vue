@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { t } from '../lib/i18n'
+
+import LanguageSwitcher from '../components/LanguageSwitcher.vue'
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { api, errorMessage } from '../lib/api'
@@ -29,39 +32,45 @@ async function login() {
 <template>
   <main class="login-page">
     <section class="login-intro">
-      <h1>HIDS</h1>
-      <p>主机入侵检测系统</p>
-      <p>查看安全事件，管理进程、文件和网络防护。</p>
-      <span class="subtle">Linux 主机管理</span>
+      <h1>{{ t('product.name') }}</h1>
+      <p>{{ t('product.description') }}</p>
+      <p>{{ t('查看安全事件，管理进程、文件和网络防护。') }}</p>
+      <span class="subtle">{{ t('Linux 主机管理') }}</span>
     </section>
     <section class="login-card">
-      <p class="eyebrow">欢迎使用 HIDS</p>
-      <h2>登录管理控制台</h2>
-      <p class="muted">使用主机管理账户继续。</p>
+      <div class="login-language"><LanguageSwitcher /></div>
+      <p class="eyebrow">{{ t('欢迎使用') }}</p>
+      <h2>{{ t('登录管理控制台') }}</h2>
+      <p class="muted">{{ t('使用主机管理账户继续。') }}</p>
       <form @submit.prevent="login">
         <label
-          >用户名<input
+          >{{ t('用户名')
+          }}<input
             v-model.trim="username"
             autocomplete="username"
             required
             maxlength="128"
             autofocus /></label
         ><label
-          >密码<input
+          >{{ t('密码')
+          }}<input
             v-model="password"
             type="password"
             autocomplete="current-password"
             required
             maxlength="72"
         /></label>
-        <p v-if="error" class="notice error" role="alert">{{ error }}</p>
+        <p v-if="error" class="notice error" role="alert">{{ t(error) }}</p>
         <button class="primary full" :disabled="busy">
-          {{ busy ? '正在登录…' : '登录控制台 →' }}
+          {{ busy ? t('正在登录…') : t('登录控制台 →') }}
         </button>
       </form>
       <p class="setup-note">
-        首次使用：数据库中没有账户时，本次输入的用户名和密码将创建为管理员（密码为 8–72
-        字节）。请在可信的本机环境中完成初始化。
+        {{
+          t(
+            '首次使用：数据库中没有账户时，本次输入的用户名和密码将创建为管理员（密码为 8–72 字节）。请在可信的本机环境中完成初始化。'
+          )
+        }}
       </p>
     </section>
   </main>

@@ -1,3 +1,4 @@
+import { t, locale } from './i18n'
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message)
@@ -14,7 +15,7 @@ export async function api<T = void>(path: string, body: unknown = {}): Promise<T
       body: JSON.stringify(body),
       signal: controller.signal
     })
-    if (!response.ok) throw new Error(`服务请求失败（HTTP ${response.status}）`)
+    if (!response.ok) throw new Error(t('服务请求失败（HTTP {p0}）', { p0: response.status }))
     const result = await response.json()
     if (result.status !== 0) {
       if (result.status === 100) window.dispatchEvent(new Event('session-expired'))
@@ -102,6 +103,9 @@ export const permissionBits = [
   '审计重命名'
 ]
 export const permissionsText = (perm: number) =>
-  permissionBits.filter((_, bit) => perm & (1 << bit)).join('、') || '无'
+  permissionBits
+    .filter((_, bit) => perm & (1 << bit))
+    .map((label) => t(label))
+    .join(locale.value === 'en' ? ', ' : '、') || t('无')
 export const formatTime = (timestamp?: number) =>
-  timestamp ? new Date(timestamp * 1000).toLocaleString('zh-CN', { hour12: false }) : '—'
+  timestamp ? new Date(timestamp * 1000).toLocaleString(locale.value, { hour12: false }) : '—'

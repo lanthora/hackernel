@@ -10,7 +10,8 @@
     "type-check": "vue-tsc --noEmit -p tsconfig.app.json --composite false && tsc --noEmit -p tsconfig.node.json",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "format": "prettier --write src/",
-    "build:embed": "npm run build && node scripts/embed.mjs"
+    "build:embed": "npm run build && node scripts/embed.mjs",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "vue": "^3.5.44",

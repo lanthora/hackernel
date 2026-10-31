@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { t } from '../lib/i18n'
+
 import { onMounted, ref } from 'vue'
 import {
   api,
@@ -38,7 +40,7 @@ async function load() {
   if (failure?.status === 'rejected') error.value = errorMessage(failure.reason)
 }
 async function apply(path: string, body: unknown = {}, confirm?: string) {
-  if (confirm && !window.confirm(confirm)) return
+  if (confirm && !window.confirm(t(confirm))) return
   busy.value = true
   error.value = ''
   success.value = ''
@@ -57,7 +59,7 @@ function toggleModule(m: { id: Module; name: string }) {
   return apply(
     `/${m.id}/${enabled ? 'disableModule' : 'enableModule'}`,
     {},
-    enabled ? `确定关闭${m.name}？` : undefined
+    enabled ? t('确定关闭{p0}？', { p0: t(m.name) }) : undefined
   )
 }
 function saveMode() {
@@ -93,77 +95,90 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <p v-if="error" class="notice error" role="alert">{{ error }}</p>
-  <p v-if="success" class="notice success" role="status">{{ success }}</p>
+  <p v-if="error" class="notice error" role="alert">{{ t(error) }}</p>
+  <p v-if="success" class="notice success" role="status">{{ t(success) }}</p>
   <section class="panel settings-section">
-    <h2>防护模块</h2>
-    <p class="muted">开关展示已保存配置，操作需要核心连接正常。</p>
-    <div v-for="m in modules" :key="m.id" class="setting-row">
+    <h2>{{ t('防护模块') }}</h2>
+    <p class="muted">{{ t('开关展示已保存配置，操作需要核心连接正常。') }}</p>
+    <div v-for="m in modules" :key="m.id" :id="m.id" class="setting-row">
       <div>
-        <h3>{{ m.name }}</h3>
+        <h3>{{ t(m.name) }}</h3>
+        <p v-if="m.id === 'process'" class="muted">
+          {{ t('启用模块后，请选择并保存工作模式。建议先使用审计模式。') }}
+        </p>
         <p class="muted">
-          {{ states[m.id] ? (states[m.id]?.status === 1 ? '配置启用' : '配置关闭') : '配置未知' }}
+          {{
+            states[m.id]
+              ? states[m.id]?.status === 1
+                ? t('配置启用')
+                : t('配置关闭')
+              : t('配置未知')
+          }}
         </p>
       </div>
       <button :disabled="busy || !states[m.id] || !core?.coreOnline" @click="toggleModule(m)">
-        {{ states[m.id]?.status === 1 ? '关闭模块' : '启用模块' }}
+        {{ states[m.id]?.status === 1 ? t('关闭模块') : t('启用模块') }}
       </button>
     </div>
   </section>
   <section class="panel settings-section">
-    <h2>进程执行策略</h2>
+    <h2>{{ t('进程执行策略') }}</h2>
     <form @submit.prevent="saveMode">
       <label
-        >工作模式<select v-model.number="mode" :disabled="!modeLoaded">
-          <option :value="0">关闭判定</option>
-          <option :value="1">审计模式</option>
-          <option :value="2">防御模式</option>
+        >{{ t('工作模式')
+        }}<select v-model.number="mode" :disabled="!modeLoaded">
+          <option :value="0">{{ t('关闭判定') }}</option>
+          <option :value="1">{{ t('审计模式') }}</option>
+          <option :value="2">{{ t('防御模式') }}</option>
         </select></label
       >
-      <p class="muted">审计模式记录执行事件；防御模式对命令执行进行信任判定。</p>
+      <p class="muted">{{ t('审计模式记录执行事件；防御模式对命令执行进行信任判定。') }}</p>
       <button class="primary" :disabled="busy || !core?.coreOnline || !modeLoaded">
-        保存工作模式
+        {{ t('保存工作模式') }}
       </button>
     </form>
     <hr />
     <form @submit.prevent="saveDefault">
       <label
-        >新命令的默认状态<select v-model.number="defaultStatus" :disabled="!defaultLoaded">
-          <option :value="0">待处理</option>
-          <option :value="1">不信任</option>
-          <option :value="2">信任</option>
+        >{{ t('新命令的默认状态')
+        }}<select v-model.number="defaultStatus" :disabled="!defaultLoaded">
+          <option :value="0">{{ t('待处理') }}</option>
+          <option :value="1">{{ t('不信任') }}</option>
+          <option :value="2">{{ t('信任') }}</option>
         </select></label
-      ><button :disabled="busy || !defaultLoaded">保存默认状态</button>
+      ><button :disabled="busy || !defaultLoaded">{{ t('保存默认状态') }}</button>
     </form>
   </section>
   <section class="panel settings-section">
-    <h2>诊断与服务</h2>
+    <h2>{{ t('诊断与服务') }}</h2>
     <div class="setting-row">
       <div>
-        <h3>核心通信</h3>
-        <p class="muted">{{ core ? (core.coreOnline ? '已连接' : '未连接') : '未知' }}</p>
+        <h3>{{ t('核心通信') }}</h3>
+        <p class="muted">
+          {{ core ? (core.coreOnline ? t('已连接') : t('未连接')) : t('未知') }}
+        </p>
       </div>
-      <button :disabled="busy" @click="checkCore">重新检查</button>
+      <button :disabled="busy" @click="checkCore">{{ t('重新检查') }}</button>
     </div>
     <div class="setting-row">
       <div>
-        <h3>性能诊断</h3>
+        <h3>{{ t('性能诊断') }}</h3>
         <p class="muted">
-          {{ core ? (core.debugEnabled ? '已开启' : '已关闭') : '未知' }} · 仅在排查问题时启用
-          pprof。
+          {{ core ? (core.debugEnabled ? t('已开启') : t('已关闭')) : t('未知') }}
+          {{ t('· 仅在排查问题时启用 pprof。') }}
         </p>
       </div>
       <button :disabled="busy || !core" @click="toggleDebug">
-        {{ core?.debugEnabled ? '关闭诊断' : '开启诊断' }}
+        {{ core?.debugEnabled ? t('关闭诊断') : t('开启诊断') }}
       </button>
     </div>
     <div class="setting-row">
       <div>
-        <h3>停止防护核心</h3>
-        <p class="muted">停止后会失去防护能力。systemd 可能按服务配置重新启动核心。</p>
+        <h3>{{ t('停止防护核心') }}</h3>
+        <p class="muted">{{ t('停止后会失去防护能力。systemd 可能按服务配置重新启动核心。') }}</p>
       </div>
       <button class="danger-text" :disabled="busy || !core?.coreOnline" @click="stopCore">
-        停止核心
+        {{ t('停止核心') }}
       </button>
     </div>
   </section>
